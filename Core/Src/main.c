@@ -21,8 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "ssd1306.h"
-#include "ssd1306_tests.h"
+#include <string.h>
+#include <stdio.h>
+
 
 /* USER CODE END Includes */
 
@@ -33,7 +34,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#include "ssd1306.h"
+#include "ssd1306_tests.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,6 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -52,6 +57,7 @@ SPI_HandleTypeDef hspi1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -91,11 +97,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();
-  ssd1306_TestDrawBitmap();
-
-
+  ssd1306_UpdateScreen();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,9 +111,30 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	//Romain Toggle pin text
-	  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
-	  HAL_Delay(1000);
+	//Testing the buttons
+	ssd1306_SetCursor(2, 10);
+	char message_button3[] = "Button 3";
+	char message_button4[] = "Button 4";
+	char message_pressed[] = "Pressed ";
+	//Romain refactor rapidement
+	if (HAL_GPIO_ReadPin(Button3_GPIO_Port, Button3_Pin)== 0){
+		ssd1306_WriteString(message_pressed, Font_6x8, White);
+	}
+	else{
+		ssd1306_WriteString(message_button3, Font_6x8, White);
+	}
+
+	ssd1306_UpdateScreen();
+
+	ssd1306_SetCursor(2, 20);
+	if (HAL_GPIO_ReadPin(Button4_GPIO_Port, Button4_Pin)== 0){
+		ssd1306_WriteString(message_pressed, Font_6x8, White);
+	}
+	else{
+		ssd1306_WriteString(message_button4, Font_6x8, White);
+	}
+
+	ssd1306_UpdateScreen();
 
 
 
@@ -196,6 +222,39 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -208,26 +267,30 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, OLED_DC_Pin|OLED_Res_Pin|OLED_CS_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_CHECK_GPIO_Port, LED_CHECK_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pins : OLED_DC_Pin OLED_Res_Pin */
-  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_Res_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : OLED_CS_Pin LED_CHECK_Pin */
-  GPIO_InitStruct.Pin = OLED_CS_Pin|LED_CHECK_Pin;
+  /*Configure GPIO pins : OLED_DC_Pin OLED_CS_Pin */
+  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : OLED_Res_Pin */
+  GPIO_InitStruct.Pin = OLED_Res_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(OLED_Res_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Button4_Pin Button3_Pin */
+  GPIO_InitStruct.Pin = Button4_Pin|Button3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

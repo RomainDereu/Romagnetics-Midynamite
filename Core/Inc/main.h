@@ -62,8 +62,10 @@ void Error_Handler(void);
 #define OLED_Res_GPIO_Port GPIOA
 #define OLED_CS_Pin GPIO_PIN_3
 #define OLED_CS_GPIO_Port GPIOA
-#define LED_CHECK_Pin GPIO_PIN_10
-#define LED_CHECK_GPIO_Port GPIOA
+#define Button4_Pin GPIO_PIN_5
+#define Button4_GPIO_Port GPIOB
+#define Button3_Pin GPIO_PIN_6
+#define Button3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
