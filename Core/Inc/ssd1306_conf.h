@@ -37,8 +37,8 @@
 #define SSD1306_Reset_Pin       OLED_Res_Pin
 
 // Mirror the screen if needed
-// #define SSD1306_MIRROR_VERT
-// #define SSD1306_MIRROR_HORIZ
+//#define SSD1306_MIRROR_VERT
+//#define SSD1306_MIRROR_HORIZ
 
 // Set inverse color if needed
 // # define SSD1306_INVERSE_COLOR
@@ -48,9 +48,7 @@
 #define SSD1306_INCLUDE_FONT_7x10
 #define SSD1306_INCLUDE_FONT_11x18
 #define SSD1306_INCLUDE_FONT_16x26
-
 #define SSD1306_INCLUDE_FONT_16x24
-
 #define SSD1306_INCLUDE_FONT_16x15
 
 // The width of the screen can be set using this

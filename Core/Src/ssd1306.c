@@ -92,6 +92,31 @@ void ssd1306_Init(void) {
     ssd1306_WriteCommand(0xC8); //Set COM Output Scan Direction
 #endif
 
+#ifdef SSD1306_MIRROR_HORIZ
+    ssd1306_WriteCommand(0xA0); // Mirror horizontally
+#else
+    ssd1306_WriteCommand(0xA1); //--set segment re-map 0 to 127 - CHECK
+#endif
+
+    //Romain test
+
+    //A0 A1: Segment remap
+    //A1: Normal
+    //A0 Mirror horizontaly
+
+    //C0 C8 Scan direction
+    //C0 Mirror Verticaly
+
+    //Default A1
+    //Default C8
+    //Default 20
+
+    ssd1306_WriteCommand(0xA1);
+    ssd1306_WriteCommand(0xC8);
+
+
+    //Default low 00
+    //Default high 10
     ssd1306_WriteCommand(0x00); //---set low column address
     ssd1306_WriteCommand(0x10); //---set high column address
 
@@ -99,11 +124,7 @@ void ssd1306_Init(void) {
 
     ssd1306_SetContrast(0xFF);
 
-#ifdef SSD1306_MIRROR_HORIZ
-    ssd1306_WriteCommand(0xA0); // Mirror horizontally
-#else
-    ssd1306_WriteCommand(0xA1); //--set segment re-map 0 to 127 - CHECK
-#endif
+
 
 #ifdef SSD1306_INVERSE_COLOR
     ssd1306_WriteCommand(0xA7); //--set inverse color
@@ -152,7 +173,7 @@ void ssd1306_Init(void) {
 #endif
 
     ssd1306_WriteCommand(0xDB); //--set vcomh
-    ssd1306_WriteCommand(0x20); //0x20,0.77xVcc
+
 
     ssd1306_WriteCommand(0x8D); //--set DC-DC enable
     ssd1306_WriteCommand(0x14); //
