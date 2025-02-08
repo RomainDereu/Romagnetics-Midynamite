@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -55,7 +56,26 @@ TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
 
+/* Definitions for midi_send */
+osThreadId_t midi_sendHandle;
+const osThreadAttr_t midi_send_attributes = {
+  .name = "midi_send",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityRealtime,
+};
+/* Definitions for other_tasks */
+osThreadId_t other_tasksHandle;
+const osThreadAttr_t other_tasks_attributes = {
+  .name = "other_tasks",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityBelowNormal,
+};
 /* USER CODE BEGIN PV */
+
+uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
+uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
 
 /* USER CODE END PV */
 
@@ -67,6 +87,9 @@ static void MX_USB_OTG_FS_USB_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_USART2_UART_Init(void);
+void StartDefaultTask(void *argument);
+void StartTask02(void *argument);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -116,9 +139,46 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
-  uint32_t counter1 = 0;
-  uint32_t counter2 = 0;
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();
+
+  /* USER CODE BEGIN RTOS_MUTEX */
+  /* add mutexes, ... */
+  /* USER CODE END RTOS_MUTEX */
+
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* add semaphores, ... */
+  /* USER CODE END RTOS_SEMAPHORES */
+
+  /* USER CODE BEGIN RTOS_TIMERS */
+  /* start timers, add new ones, ... */
+  /* USER CODE END RTOS_TIMERS */
+
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
+  /* USER CODE END RTOS_QUEUES */
+
+  /* Create the thread(s) */
+  /* creation of midi_send */
+  midi_sendHandle = osThreadNew(StartDefaultTask, NULL, &midi_send_attributes);
+
+  /* creation of other_tasks */
+  other_tasksHandle = osThreadNew(StartTask02, NULL, &other_tasks_attributes);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+  /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
+
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -126,75 +186,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-
-
-	/* Test code BEGIN
-	//Testing the buttons
-	debug_Testbutton(Btn1_GPIO_Port, Btn1_Pin,
-					 "Button 1", "Pressed ", 2, 10, huart2);
-
-	debug_Testbutton(Btn2_GPIO_Port, Btn2_Pin,
-		             "Button 2", "Pressed ", 2, 20, huart2);
-
-	debug_Testbutton(Btn3_GPIO_Port, Btn3_Pin,
-					 "Button 3", "Pressed ", 2, 30, huart2);
-
-	debug_Testbutton(Btn4_GPIO_Port, Btn4_Pin,
-		             "Button 4", "Pressed ", 2, 40, huart2);
-
-	//Testing the Rotary
-	counter1 = __HAL_TIM_GET_COUNTER(&htim3);
-	counter2 = __HAL_TIM_GET_COUNTER(&htim4);
-
-	debug_Rotaryencoder(counter1, htim3, 90, 10);
-	debug_Rotaryencoder(counter2, htim4, 90, 20);
-
-	Test code END */
-
-
-	//Sending a Midi clock at 60 bpm
-	//Start Midi clock
-	uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-	uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
-	uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
-	uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
-
-
-	ssd1306_SetCursor(30, 30);
-	ssd1306_WriteString("60", Font_6x8, White);
-	ssd1306_UpdateScreen();
-
-
-
-	if (HAL_GPIO_ReadPin(Btn2_GPIO_Port, Btn2_Pin)== 0){
-		ssd1306_SetCursor(10, 10);
-		ssd1306_WriteString("All Stop      ", Font_6x8, White);
-		ssd1306_UpdateScreen();
-		HAL_UART_Transmit(&huart2, all_stop, 3, 1000);
-		HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
-	}
-
-
-
-	if (HAL_GPIO_ReadPin(Btn3_GPIO_Port, Btn3_Pin)== 0){
-		ssd1306_SetCursor(10, 10);
-		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
-		ssd1306_UpdateScreen();
-		HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
-	}
-
-
-	if (HAL_GPIO_ReadPin(Btn4_GPIO_Port, Btn4_Pin)== 0){
-		ssd1306_SetCursor(10, 10);
-		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
-		ssd1306_UpdateScreen();
-		HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
-	}
-
-
-
   }
   /* USER CODE END 3 */
 }
@@ -472,7 +464,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : Btn1_Pin Btn4_Pin Btn3_Pin Btn2_Pin */
   GPIO_InitStruct.Pin = Btn1_Pin|Btn4_Pin|Btn3_Pin|Btn2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -498,13 +490,99 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_I2C2;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+    switch(GPIO_Pin)
+  {
+    // Tempo on
+    case Btn3_Pin :
+		ssd1306_SetCursor(10, 10);
+		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
+		ssd1306_UpdateScreen();
+		HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
+		break;
+	//Tempo off
+    case Btn4_Pin :
+		ssd1306_SetCursor(10, 10);
+		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
+		ssd1306_UpdateScreen();
+		HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
+		break;
+    default :
+		break;
+  }
+
+}
+
 /* USER CODE END 4 */
+
+/* USER CODE BEGIN Header_StartDefaultTask */
+/**
+  * @brief  Function implementing the midi_send thread.
+  * @param  argument: Not used
+  * @retval None
+  */
+/* USER CODE END Header_StartDefaultTask */
+void StartDefaultTask(void *argument)
+{
+  /* USER CODE BEGIN 5 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_StartTask02 */
+/**
+* @brief Function implementing the other_tasks thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask02 */
+void StartTask02(void *argument)
+{
+  /* USER CODE BEGIN StartTask02 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTask02 */
+}
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
