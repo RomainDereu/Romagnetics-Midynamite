@@ -25,6 +25,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 
 /* USER CODE END Includes */
@@ -41,6 +42,7 @@
 #include "ssd1306_fonts.h"
 
 #include "debug.h"
+#include "midi_tempo.h"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -72,14 +74,11 @@ const osThreadAttr_t other_tasks_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
-uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
-uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
-
-
 uint32_t tempo = 60;
 uint32_t tempo_counter = 240;
+
+bool is_playing = 0;
+bool previous_is_playing = 0;
 
 /* USER CODE END PV */
 
@@ -511,18 +510,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     // Tempo on
     case Btn3_Pin :
+		is_playing = 1;
 		ssd1306_SetCursor(10, 10);
 		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
 		ssd1306_UpdateScreen();
-		HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
 		break;
 	//Tempo off
     case Btn4_Pin :
+		is_playing = 0;
 		ssd1306_SetCursor(10, 10);
 		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
 		ssd1306_UpdateScreen();
-		HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
 		break;
+	//Screen Reset
+	case Btn2_Pin :
+		ssd1306_Fill(Black);
+		ssd1306_UpdateScreen();
+		break;
+
+
     default :
 		break;
   }
@@ -537,6 +543,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   * @param  argument: Not used
   * @retval None
   */
+
+uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
+uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
+
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
@@ -544,7 +556,38 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+	  if (is_playing == 0 ){
+		  if(previous_is_playing == 0){
+			  osDelay(1);
+		  }
+		  else if (previous_is_playing == 1){
+			  HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
+			  osDelay(1);
+		  }
+	  }
+
+	  else if(is_playing == 1){
+		  //rounding to ms but may need some adjustments in the future
+		  int interval_click_ms = 60000/(tempo*24);
+		  //interval_clicks_ms needs to be at least one
+		  if(interval_click_ms == 0){interval_click_ms = 1;}
+
+		  if(previous_is_playing == 0){
+			  HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
+			  HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
+			  osDelay(interval_click_ms);
+		  }
+		  else if(previous_is_playing == 1){
+			  HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
+			  osDelay(interval_click_ms);
+		  }
+
+
+	  }
+
+	  previous_is_playing = is_playing;
+
   }
   /* USER CODE END 5 */
 }
@@ -581,10 +624,9 @@ void StartTask02(void *argument)
 	  //blank spaces are added to delete any remaining numbers on the screen
       char fullmessage[7];
       sprintf(fullmessage, "%s   ", number_print);
-	  ssd1306_SetCursor(30, 30);
+	  ssd1306_SetCursor(40, 40);
 	  ssd1306_WriteString(fullmessage, Font_16x24, White);
 	  ssd1306_UpdateScreen();
-    osDelay(10);
   }
   /* USER CODE END StartTask02 */
 }
