@@ -58,18 +58,18 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define OLED_DC_Pin GPIO_PIN_1
 #define OLED_DC_GPIO_Port GPIOA
-#define OLED_Res_Pin GPIO_PIN_2
-#define OLED_Res_GPIO_Port GPIOA
-#define OLED_CS_Pin GPIO_PIN_3
-#define OLED_CS_GPIO_Port GPIOA
+#define OLED_Res_Pin GPIO_PIN_0
+#define OLED_Res_GPIO_Port GPIOB
+#define OLED_CS_Pin GPIO_PIN_1
+#define OLED_CS_GPIO_Port GPIOB
+#define Btn1_Pin GPIO_PIN_12
+#define Btn1_GPIO_Port GPIOB
 #define Btn4_Pin GPIO_PIN_13
 #define Btn4_GPIO_Port GPIOB
 #define Btn3_Pin GPIO_PIN_14
 #define Btn3_GPIO_Port GPIOB
 #define Btn2_Pin GPIO_PIN_15
 #define Btn2_GPIO_Port GPIOB
-#define Btn1_Pin GPIO_PIN_8
-#define Btn1_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

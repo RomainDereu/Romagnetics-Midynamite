@@ -53,9 +53,7 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
-UART_HandleTypeDef huart1;
-
-HCD_HandleTypeDef hhcd_USB_OTG_FS;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
@@ -65,10 +63,10 @@ HCD_HandleTypeDef hhcd_USB_OTG_FS;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_USB_OTG_FS_HCD_Init(void);
+static void MX_USB_OTG_FS_USB_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -108,10 +106,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
-  MX_USART1_UART_Init();
-  MX_USB_OTG_FS_HCD_Init();
+  MX_USB_OTG_FS_USB_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();
 
@@ -132,62 +130,69 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 
+	/* Test code BEGIN
 	//Testing the buttons
 	debug_Testbutton(Btn1_GPIO_Port, Btn1_Pin,
-					 "Button 1", "Pressed ", 2, 10);
-
-	//Roro to be refactored
-	counter1 = __HAL_TIM_GET_COUNTER(&htim3);
-	  if (counter1 > 60000)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim3,0);
-	    counter1=0;
-	  }
-	  if (counter1 > 100)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim3,100);
-	    counter1=100;
-	  }
-	char fullmessage1[20];
-	itoa(counter1 ,fullmessage1,10);
-	ssd1306_SetCursor(90, 10);
-	ssd1306_WriteString(fullmessage1, Font_6x8, White);
-	ssd1306_UpdateScreen();
-	HAL_Delay(counter1);
-	//Roro refactor end
-
-
-	//Roro to be refactored
-	counter2 = __HAL_TIM_GET_COUNTER(&htim4);
-	  if (counter2 > 60000)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim4,0);
-	    counter2=0;
-	  }
-	  if (counter2 > 100)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim4,100);
-	    counter2=100;
-	  }
-
-	char fullmessage2[20];
-	itoa(counter2 ,fullmessage2,10);
-	ssd1306_SetCursor(90, 20);
-	ssd1306_WriteString(fullmessage2, Font_6x8, White);
-	ssd1306_UpdateScreen();
-	HAL_Delay(counter2);
-	//Roro refactor end
-
-
+					 "Button 1", "Pressed ", 2, 10, huart2);
 
 	debug_Testbutton(Btn2_GPIO_Port, Btn2_Pin,
-		             "Button 2", "Pressed ", 2, 20);
+		             "Button 2", "Pressed ", 2, 20, huart2);
 
 	debug_Testbutton(Btn3_GPIO_Port, Btn3_Pin,
-					 "Button 3", "Pressed ", 2, 30);
+					 "Button 3", "Pressed ", 2, 30, huart2);
 
 	debug_Testbutton(Btn4_GPIO_Port, Btn4_Pin,
-		             "Button 4", "Pressed ", 2, 40);
+		             "Button 4", "Pressed ", 2, 40, huart2);
+
+	//Testing the Rotary
+	counter1 = __HAL_TIM_GET_COUNTER(&htim3);
+	counter2 = __HAL_TIM_GET_COUNTER(&htim4);
+
+	debug_Rotaryencoder(counter1, htim3, 90, 10);
+	debug_Rotaryencoder(counter2, htim4, 90, 20);
+
+	Test code END */
+
+
+	//Sending a Midi clock at 60 bpm
+	//Start Midi clock
+	uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+	uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
+	uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+	uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
+
+
+	ssd1306_SetCursor(30, 30);
+	ssd1306_WriteString("60", Font_6x8, White);
+	ssd1306_UpdateScreen();
+
+
+
+	if (HAL_GPIO_ReadPin(Btn2_GPIO_Port, Btn2_Pin)== 0){
+		ssd1306_SetCursor(10, 10);
+		ssd1306_WriteString("All Stop      ", Font_6x8, White);
+		ssd1306_UpdateScreen();
+		HAL_UART_Transmit(&huart2, all_stop, 3, 1000);
+		HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
+	}
+
+
+
+	if (HAL_GPIO_ReadPin(Btn3_GPIO_Port, Btn3_Pin)== 0){
+		ssd1306_SetCursor(10, 10);
+		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
+		ssd1306_UpdateScreen();
+		HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
+	}
+
+
+	if (HAL_GPIO_ReadPin(Btn4_GPIO_Port, Btn4_Pin)== 0){
+		ssd1306_SetCursor(10, 10);
+		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
+		ssd1306_UpdateScreen();
+		HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
+	}
+
 
 
   }
@@ -376,35 +381,35 @@ static void MX_TIM4_Init(void)
 }
 
 /**
-  * @brief USART1 Initialization Function
+  * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART1_Init 0 */
+  /* USER CODE BEGIN USART2_Init 0 */
 
-  /* USER CODE END USART1_Init 0 */
+  /* USER CODE END USART2_Init 0 */
 
-  /* USER CODE BEGIN USART1_Init 1 */
+  /* USER CODE BEGIN USART2_Init 1 */
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 31250;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART1_Init 2 */
+  /* USER CODE BEGIN USART2_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -413,7 +418,7 @@ static void MX_USART1_UART_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USB_OTG_FS_HCD_Init(void)
+static void MX_USB_OTG_FS_USB_Init(void)
 {
 
   /* USER CODE BEGIN USB_OTG_FS_Init 0 */
@@ -423,16 +428,6 @@ static void MX_USB_OTG_FS_HCD_Init(void)
   /* USER CODE BEGIN USB_OTG_FS_Init 1 */
 
   /* USER CODE END USB_OTG_FS_Init 1 */
-  hhcd_USB_OTG_FS.Instance = USB_OTG_FS;
-  hhcd_USB_OTG_FS.Init.Host_channels = 8;
-  hhcd_USB_OTG_FS.Init.speed = HCD_SPEED_FULL;
-  hhcd_USB_OTG_FS.Init.dma_enable = DISABLE;
-  hhcd_USB_OTG_FS.Init.phy_itface = HCD_PHY_EMBEDDED;
-  hhcd_USB_OTG_FS.Init.Sof_enable = DISABLE;
-  if (HAL_HCD_Init(&hhcd_USB_OTG_FS) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN USB_OTG_FS_Init 2 */
 
   /* USER CODE END USB_OTG_FS_Init 2 */
@@ -456,26 +451,44 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, OLED_DC_Pin|OLED_Res_Pin|OLED_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(OLED_DC_GPIO_Port, OLED_DC_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : OLED_DC_Pin OLED_Res_Pin OLED_CS_Pin */
-  GPIO_InitStruct.Pin = OLED_DC_Pin|OLED_Res_Pin|OLED_CS_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, OLED_Res_Pin|OLED_CS_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : OLED_DC_Pin */
+  GPIO_InitStruct.Pin = OLED_DC_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(OLED_DC_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Btn4_Pin Btn3_Pin Btn2_Pin */
-  GPIO_InitStruct.Pin = Btn4_Pin|Btn3_Pin|Btn2_Pin;
+  /*Configure GPIO pins : OLED_Res_Pin OLED_CS_Pin */
+  GPIO_InitStruct.Pin = OLED_Res_Pin|OLED_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Btn1_Pin Btn4_Pin Btn3_Pin Btn2_Pin */
+  GPIO_InitStruct.Pin = Btn1_Pin|Btn4_Pin|Btn3_Pin|Btn2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Btn1_Pin */
-  GPIO_InitStruct.Pin = Btn1_Pin;
+  /*Configure GPIO pins : PA8 PA10 PA11 PA12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(Btn1_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PB3 */
   GPIO_InitStruct.Pin = GPIO_PIN_3;
