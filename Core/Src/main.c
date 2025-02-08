@@ -77,6 +77,10 @@ uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
 
+
+uint32_t tempo = 60;
+uint32_t tempo_counter = 240;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -555,10 +559,32 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
+	__HAL_TIM_SET_COUNTER(&htim3,tempo_counter);
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+	  tempo_counter = __HAL_TIM_GET_COUNTER(&htim3);
+	  tempo = tempo_counter / 4;
+	  if (tempo_counter > 60000  || tempo_counter < 120)
+	  {
+	    __HAL_TIM_SET_COUNTER(&htim3,120);
+	    tempo =30;
+	  }
+	  if (tempo_counter > 1200)
+	  {
+	    __HAL_TIM_SET_COUNTER(&htim3,1200);
+	    tempo =300;
+	  }
+	  char number_print[3];
+	  itoa(tempo ,number_print,10);
+	  //blank spaces are added to delete any remaining numbers on the screen
+      char fullmessage[7];
+      sprintf(fullmessage, "%s   ", number_print);
+	  ssd1306_SetCursor(30, 30);
+	  ssd1306_WriteString(fullmessage, Font_16x24, White);
+	  ssd1306_UpdateScreen();
+    osDelay(10);
   }
   /* USER CODE END StartTask02 */
 }
