@@ -53,6 +53,7 @@
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
@@ -74,11 +75,10 @@ const osThreadAttr_t other_tasks_attributes = {
 };
 /* USER CODE BEGIN PV */
 
+//All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t tempo = 60;
 uint32_t tempo_counter = 240;
-
-bool is_playing = 0;
-bool previous_is_playing = 0;
+uint32_t tempo_click_rate = 416;
 
 /* USER CODE END PV */
 
@@ -90,6 +90,7 @@ static void MX_USB_OTG_FS_USB_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
 
@@ -136,6 +137,7 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();
 
@@ -189,6 +191,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -274,6 +277,51 @@ static void MX_SPI1_Init(void)
   /* USER CODE BEGIN SPI1_Init 2 */
 
   /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 6000-1;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 416;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -494,7 +542,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -510,14 +558,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     // Tempo on
     case Btn3_Pin :
-		is_playing = 1;
+    	//Clock start and starting the timer
+    	uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+    	HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
+    	HAL_TIM_Base_Start_IT(&htim2);
+    	//Screen update
 		ssd1306_SetCursor(10, 10);
 		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
 		ssd1306_UpdateScreen();
 		break;
 	//Tempo off
     case Btn4_Pin :
-		is_playing = 0;
+    	//Stopping the timer and sending stop message
+    	HAL_TIM_Base_Stop_IT(&htim2);
+    	uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
+    	HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
+    	//Screen update
 		ssd1306_SetCursor(10, 10);
 		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
 		ssd1306_UpdateScreen();
@@ -544,11 +600,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   * @retval None
   */
 
-uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
-uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
-uint8_t all_stop[3]  = {0xfF, 0x00, 0x00};
-
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
@@ -556,37 +607,7 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-
-	  if (is_playing == 0 ){
-		  if(previous_is_playing == 0){
-			  osDelay(1);
-		  }
-		  else if (previous_is_playing == 1){
-			  HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
-			  osDelay(1);
-		  }
-	  }
-
-	  else if(is_playing == 1){
-		  //rounding to ms but may need some adjustments in the future
-		  int interval_click_ms = 60000/(tempo*24);
-		  //interval_clicks_ms needs to be at least one
-		  if(interval_click_ms == 0){interval_click_ms = 1;}
-
-		  if(previous_is_playing == 0){
-			  HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
-			  HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
-			  osDelay(interval_click_ms);
-		  }
-		  else if(previous_is_playing == 1){
-			  HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
-			  osDelay(interval_click_ms);
-		  }
-
-
-	  }
-
-	  previous_is_playing = is_playing;
+	  osDelay(100);
 
   }
   /* USER CODE END 5 */
@@ -609,15 +630,18 @@ void StartTask02(void *argument)
 
 	  tempo_counter = __HAL_TIM_GET_COUNTER(&htim3);
 	  tempo = tempo_counter / 4;
+	  tempo_click_rate = 600000/(tempo*24);
 	  if (tempo_counter > 60000  || tempo_counter < 120)
 	  {
 	    __HAL_TIM_SET_COUNTER(&htim3,120);
 	    tempo =30;
+	    tempo_click_rate = 208;
 	  }
 	  if (tempo_counter > 1200)
 	  {
 	    __HAL_TIM_SET_COUNTER(&htim3,1200);
 	    tempo =300;
+	    tempo_click_rate = 2083;
 	  }
 	  char number_print[3];
 	  itoa(tempo ,number_print,10);
@@ -648,6 +672,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+
+  if (htim->Instance == TIM2) {
+
+  uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+  HAL_UART_Transmit(&huart2, clock_send_tempo, 3, 1000);
+  //Adjusting the tempo if needed
+  if (TIM2->ARR != tempo_click_rate){
+	  TIM2->ARR = tempo_click_rate;
+  }
+  osDelay(1);
+
+  }
 
   /* USER CODE END Callback 1 */
 }
