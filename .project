@@ -76,6 +76,16 @@
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c</location>
 		</link>
 		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pcd.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c</location>
+		</link>
+		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pcd_ex.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c</location>
+		</link>
+		<link>
 			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.c</name>
 			<type>1</type>
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c</location>
@@ -114,6 +124,11 @@
 			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_uart.c</name>
 			<type>1</type>
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c</location>
+		</link>
+		<link>
+			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_ll_usb.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c</location>
 		</link>
 		<link>
 			<name>Middlewares/FreeRTOS/cmsis_os2.c</name>
@@ -164,6 +179,26 @@
 			<name>Middlewares/FreeRTOS/timers.c</name>
 			<type>1</type>
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/Third_Party/FreeRTOS/Source/timers.c</location>
+		</link>
+		<link>
+			<name>Middlewares/USB_Device_Library/usbd_core.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c</location>
+		</link>
+		<link>
+			<name>Middlewares/USB_Device_Library/usbd_ctlreq.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c</location>
+		</link>
+		<link>
+			<name>Middlewares/USB_Device_Library/usbd_hid.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c</location>
+		</link>
+		<link>
+			<name>Middlewares/USB_Device_Library/usbd_ioreq.c</name>
+			<type>1</type>
+			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c</location>
 		</link>
 	</linkedResources>
 </projectDescription>

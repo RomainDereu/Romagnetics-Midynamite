@@ -11,3 +11,6 @@
 #endif /* INC_DEBUG_H_ */
 
 #include "main.h"
+
+
+void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t* tempo_click_rate_ptr);
