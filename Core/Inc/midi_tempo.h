@@ -20,3 +20,6 @@ void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t* tempo_click_r
 void mt_press_btn3(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, screen_driver_Font_t * font);
 
 void mt_press_btn4(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, screen_driver_Font_t * font);
+
+
+void midi_tempo_counter(TIM_HandleTypeDef * timer, screen_driver_Font_t * font);

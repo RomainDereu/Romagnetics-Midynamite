@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+
  void debug_testbutton(GPIO_TypeDef * button_GPIO_Port, uint16_t  button_pin,
 		  	  	  	  	char message_idle[], char message_pressed[],
 						int cursor_x, int cursor_y, UART_HandleTypeDef uart_p){

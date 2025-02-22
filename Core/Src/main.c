@@ -75,8 +75,6 @@ const osThreadAttr_t other_tasks_attributes = {
 };
 /* USER CODE BEGIN PV */
 
-//All the tempo variables are set for a tempo of 60 but are dynamically changed in code
-uint32_t tempo = 60;
 uint32_t tempo_counter = 240;
 uint32_t tempo_click_rate = 416;
 
@@ -578,29 +576,11 @@ void StartTask02(void *argument)
   for(;;)
   {
 
-	  tempo_counter = __HAL_TIM_GET_COUNTER(&htim3);
-	  tempo = tempo_counter / 4;
-	  tempo_click_rate = 600000/(tempo*24);
-	  if (tempo_counter > 60000  || tempo_counter < 120)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim3,120);
-	    tempo =30;
-	    tempo_click_rate = 208;
-	  }
-	  if (tempo_counter > 1200)
-	  {
-	    __HAL_TIM_SET_COUNTER(&htim3,1200);
-	    tempo =300;
-	    tempo_click_rate = 2083;
-	  }
-	  char number_print[3];
-	  itoa(tempo ,number_print,10);
-	  //blank spaces are added to delete any remaining numbers on the screen
-      char fullmessage[7];
-      sprintf(fullmessage, "%s   ", number_print);
-	  screen_driver_SetCursor(40, 40);
-	  screen_driver_WriteString(fullmessage, Font_16x24, White);
-	  screen_driver_UpdateScreen();
+	  //menu
+
+
+
+	  midi_tempo_counter(&htim3,  &Font_16x24);
   }
   /* USER CODE END StartTask02 */
 }
