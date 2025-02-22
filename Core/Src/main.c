@@ -42,6 +42,7 @@
 #include "screen_driver_fonts.h"
 
 #include "debug.h"
+#include "menu.h"
 #include "midi_tempo.h"
 /* USER CODE END PD */
 
@@ -77,6 +78,8 @@ const osThreadAttr_t other_tasks_attributes = {
 //Romagnetics code
 uint32_t tempo_counter = 240;
 uint32_t tempo_click_rate = 416;
+
+uint8_t current_menu_counter = 0;
 uint8_t current_menu = MIDI_TEMPO;
 
 /* USER CODE END PV */
@@ -527,6 +530,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		break;
 
     case Btn4_Pin :
+    	current_menu = current_menu_counter/4;
     	if(current_menu == MIDI_TEMPO){
     	//tempo off
     	mt_press_btn4(&huart2, &htim2, &Font_6x8);
@@ -578,16 +582,24 @@ void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
 	__HAL_TIM_SET_COUNTER(&htim3,tempo_counter);
+	__HAL_TIM_SET_COUNTER(&htim4,current_menu);
   /* Infinite loop */
   for(;;)
   {
-  //Romagnetics code
-  //Menu
-	 menu_display(&Font_6x8);
-
+     //Romagnetics code
+     //Menu
+	menu_change(&htim4, &current_menu);
   	if(current_menu == MIDI_TEMPO){
+  	  menu_display(&Font_6x8, &current_menu);
 	  midi_tempo_counter(&htim3,  &Font_16x24);
     }
+  	else if(current_menu != MIDI_TEMPO){
+  		screen_driver_Fill(Black);
+  	    screen_driver_UpdateScreen();
+    }
+
+	osDelay(50);
+
   }
   /* USER CODE END StartTask02 */
 }
@@ -609,11 +621,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+  //Romagnetics code
 
   if (htim->Instance == TIM2) {
 
 	send_midi_to_midi_out(huart2, &tempo_click_rate);
   }
+
 
   /* USER CODE END Callback 1 */
 }

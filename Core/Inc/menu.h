@@ -11,6 +11,8 @@
 #include "main.h"
 #include "screen_driver.h"
 
-void menu_display(screen_driver_Font_t * font);
+void menu_display(const screen_driver_Font_t * font, uint8_t * current_menu);
+
+void menu_change(TIM_HandleTypeDef * timer, uint8_t * current_menu);
 
 #endif /* INC_MENU_H_ */
