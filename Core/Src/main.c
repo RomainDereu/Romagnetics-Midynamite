@@ -74,9 +74,10 @@ const osThreadAttr_t other_tasks_attributes = {
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
 /* USER CODE BEGIN PV */
-
+//Romagnetics code
 uint32_t tempo_counter = 240;
 uint32_t tempo_click_rate = 416;
+uint8_t current_menu = MIDI_TEMPO;
 
 /* USER CODE END PV */
 
@@ -515,16 +516,21 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
+  //Romagnetics code
     switch(GPIO_Pin)
   {
     case Btn3_Pin :
+    	if(current_menu == MIDI_TEMPO){
     	//tempo_on
     	mt_press_btn3(&huart2, &htim2, &Font_6x8);
+    	}
 		break;
 
     case Btn4_Pin :
+    	if(current_menu == MIDI_TEMPO){
     	//tempo off
     	mt_press_btn4(&huart2, &htim2, &Font_6x8);
+    	}
 		break;
 	//Screen Reset
 	case Btn2_Pin :
@@ -575,12 +581,13 @@ void StartTask02(void *argument)
   /* Infinite loop */
   for(;;)
   {
+  //Romagnetics code
+  //Menu
+	 menu_display(&Font_6x8);
 
-	  //menu
-
-
-
+  	if(current_menu == MIDI_TEMPO){
 	  midi_tempo_counter(&htim3,  &Font_16x24);
+    }
   }
   /* USER CODE END StartTask02 */
 }

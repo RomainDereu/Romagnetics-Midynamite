@@ -11,4 +11,6 @@
 #include "main.h"
 #include "screen_driver.h"
 
+void menu_display(screen_driver_Font_t * font);
+
 #endif /* INC_MENU_H_ */

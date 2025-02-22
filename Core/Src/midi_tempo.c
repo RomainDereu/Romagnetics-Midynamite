@@ -65,7 +65,7 @@ void mt_press_btn4(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, screen_
 
 
 
-
+//Font is 16x24
 void midi_tempo_counter(TIM_HandleTypeDef * timer, screen_driver_Font_t * font){
 	  tempo_counter = __HAL_TIM_GET_COUNTER(timer);
 	  tempo = tempo_counter / 4;
@@ -87,7 +87,7 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer, screen_driver_Font_t * font){
 	  //blank spaces are added to delete any remaining numbers on the screen
     char fullmessage[7];
     sprintf(fullmessage, "%s   ", number_print);
-	  screen_driver_SetCursor(40, 40);
+	  screen_driver_SetCursor(48, 30);
 	  screen_driver_WriteString(fullmessage, *font, White);
 	  screen_driver_UpdateScreen();
 }

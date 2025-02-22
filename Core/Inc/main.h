@@ -78,7 +78,8 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 
-
+#define MIDI_TEMPO 0
+#define DEBUG 1
 
 /* USER CODE END Private defines */
 

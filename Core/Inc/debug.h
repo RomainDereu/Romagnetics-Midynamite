@@ -8,7 +8,7 @@
 
 #ifndef INC_DEBUG_H_
 #define INC_DEBUG_H_
-#endif /* INC_DEBUG_H_ */
+
 
 #include "main.h"
 #include "screen_driver.h"
@@ -23,3 +23,5 @@ void debug_testbutton(GPIO_TypeDef * button_GPIO_Port, uint16_t  button_pin,
 
 void debug_rotaryencoder(uint32_t counter, TIM_HandleTypeDef timer_p,
 						int cursor_x, int cursor_y);
+
+#endif /* INC_DEBUG_H_ */
