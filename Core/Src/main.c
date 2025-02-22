@@ -38,9 +38,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#include "ssd1306.h"
-#include "ssd1306_tests.h"
-#include "ssd1306_fonts.h"
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
 
 #include "debug.h"
 #include "midi_tempo.h"
@@ -138,7 +137,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  ssd1306_Init();
+  screen_driver_Init();
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -520,32 +519,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   /* Prevent unused argument(s) compilation warning */
     switch(GPIO_Pin)
   {
-    // Tempo on
     case Btn3_Pin :
-    	//Clock start and starting the timer
-    	uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-    	HAL_UART_Transmit(&huart2, clock_start, 3, 1000);
-    	HAL_TIM_Base_Start_IT(&htim2);
-    	//Screen update
-		ssd1306_SetCursor(10, 10);
-		ssd1306_WriteString("Tempo On   ", Font_6x8, White);
-		ssd1306_UpdateScreen();
+    	//tempo_on
+    	mt_press_btn3(&huart2, &htim2, &Font_6x8);
 		break;
-	//Tempo off
+
     case Btn4_Pin :
-    	//Stopping the timer and sending stop message
-    	HAL_TIM_Base_Stop_IT(&htim2);
-    	uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
-    	HAL_UART_Transmit(&huart2, clock_stop, 3, 1000);
-    	//Screen update
-		ssd1306_SetCursor(10, 10);
-		ssd1306_WriteString("Tempo Off   ", Font_6x8, White);
-		ssd1306_UpdateScreen();
+    	//tempo off
+    	mt_press_btn4(&huart2, &htim2, &Font_6x8);
 		break;
 	//Screen Reset
 	case Btn2_Pin :
-		ssd1306_Fill(Black);
-		ssd1306_UpdateScreen();
 		break;
 
 
@@ -614,9 +598,9 @@ void StartTask02(void *argument)
 	  //blank spaces are added to delete any remaining numbers on the screen
       char fullmessage[7];
       sprintf(fullmessage, "%s   ", number_print);
-	  ssd1306_SetCursor(40, 40);
-	  ssd1306_WriteString(fullmessage, Font_16x24, White);
-	  ssd1306_UpdateScreen();
+	  screen_driver_SetCursor(40, 40);
+	  screen_driver_WriteString(fullmessage, Font_16x24, White);
+	  screen_driver_UpdateScreen();
   }
   /* USER CODE END StartTask02 */
 }

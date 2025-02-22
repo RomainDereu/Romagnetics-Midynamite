@@ -11,8 +11,8 @@
 #endif /* INC_DEBUG_H_ */
 
 #include "main.h"
-#include "ssd1306.h"
-#include "ssd1306_fonts.h"
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
 
 
 void debug_testbutton(GPIO_TypeDef * button_GPIO_Port, uint16_t  button_pin,

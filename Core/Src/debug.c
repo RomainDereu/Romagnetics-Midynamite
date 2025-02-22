@@ -14,15 +14,15 @@
 		  	  	  	  	char message_idle[], char message_pressed[],
 						int cursor_x, int cursor_y, UART_HandleTypeDef uart_p){
 
-		ssd1306_SetCursor(cursor_x, cursor_y);
+		screen_driver_SetCursor(cursor_x, cursor_y);
 		if (HAL_GPIO_ReadPin(button_GPIO_Port, button_pin)== 0){
-			ssd1306_WriteString(message_pressed, Font_6x8, White);
+			screen_driver_WriteString(message_pressed, Font_6x8, White);
 		}
 		else{
-			ssd1306_WriteString(message_idle, Font_6x8, White);
+			screen_driver_WriteString(message_idle, Font_6x8, White);
 		}
 
-		ssd1306_UpdateScreen();
+		screen_driver_UpdateScreen();
   }
 
 
@@ -44,8 +44,8 @@
 	  //blank spaces are added to delete any remaining numbers on the screen
       char fullmessage[7];
       sprintf(fullmessage, "%s   ", number_print);
-	  ssd1306_SetCursor(cursor_x, cursor_y);
-	  ssd1306_WriteString(fullmessage, Font_16x24, White);
-	  ssd1306_UpdateScreen();
+	  screen_driver_SetCursor(cursor_x, cursor_y);
+	  screen_driver_WriteString(fullmessage, Font_16x24, White);
+	  screen_driver_UpdateScreen();
 	  HAL_Delay(counter);
  }
