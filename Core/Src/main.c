@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,6 +43,7 @@
 #include "debug.h"
 #include "menu.h"
 #include "midi_tempo.h"
+#include "midi_modify.h"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,6 +61,8 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
+
+HCD_HandleTypeDef hhcd_USB_OTG_FS;
 
 /* Definitions for midi_send */
 osThreadId_t midi_sendHandle;
@@ -95,6 +97,7 @@ static void MX_TIM4_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_USB_OTG_FS_HCD_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
 
@@ -104,6 +107,8 @@ void StartTask02(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//Romagnetics code
+uint8_t midi_rx_buff[10];
 
 /* USER CODE END 0 */
 
@@ -142,6 +147,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_ADC1_Init();
+  MX_USB_OTG_FS_HCD_Init();
   /* USER CODE BEGIN 2 */
   screen_driver_Init();
 
@@ -513,6 +519,37 @@ static void MX_USART2_UART_Init(void)
 }
 
 /**
+  * @brief USB_OTG_FS Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USB_OTG_FS_HCD_Init(void)
+{
+
+  /* USER CODE BEGIN USB_OTG_FS_Init 0 */
+
+  /* USER CODE END USB_OTG_FS_Init 0 */
+
+  /* USER CODE BEGIN USB_OTG_FS_Init 1 */
+
+  /* USER CODE END USB_OTG_FS_Init 1 */
+  hhcd_USB_OTG_FS.Instance = USB_OTG_FS;
+  hhcd_USB_OTG_FS.Init.Host_channels = 8;
+  hhcd_USB_OTG_FS.Init.speed = HCD_SPEED_FULL;
+  hhcd_USB_OTG_FS.Init.dma_enable = DISABLE;
+  hhcd_USB_OTG_FS.Init.phy_itface = HCD_PHY_EMBEDDED;
+  hhcd_USB_OTG_FS.Init.Sof_enable = DISABLE;
+  if (HAL_HCD_Init(&hhcd_USB_OTG_FS) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USB_OTG_FS_Init 2 */
+
+  /* USER CODE END USB_OTG_FS_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -615,8 +652,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
   for(;;)
@@ -646,11 +681,22 @@ void StartTask02(void *argument)
      //Menu
 	menu_change(&htim4, &current_menu);
   	if(current_menu == MIDI_TEMPO){
-  	  menu_display(&Font_6x8, &current_menu);
+  	  screen_driver_Fill(Black);
+  	  char message_midi_tempo[20] = "Send Midi Tempo     ";
+  	  menu_display(&Font_6x8, &message_midi_tempo);
 	  midi_tempo_counter(&htim3,  &Font_16x24);
     }
-  	else if(current_menu != MIDI_TEMPO){
+  	else if(current_menu == MIDI_MODIFY){
   		screen_driver_Fill(Black);
+    	char message_midi_modify[20] = "Midi Modify         ";
+    	menu_display(&Font_6x8, &message_midi_modify);
+    	display_incoming_midi(huart2, &midi_rx_buff, &Font_6x8);
+  	    screen_driver_UpdateScreen();
+    }
+  	else if(current_menu == SETTINGS){
+  		screen_driver_Fill(Black);
+    	char message_settings[20] = "Settings            ";
+    	menu_display(&Font_6x8, &message_settings);
   	    screen_driver_UpdateScreen();
     }
 
