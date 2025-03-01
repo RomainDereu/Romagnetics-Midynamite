@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
+#include "screen_driver.h"
 #include "midi_tempo.h"
 #include "cmsis_os.h"
 
@@ -41,7 +41,7 @@ void mt_press_btn3(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const s
 		HAL_TIM_Base_Start_IT(timer);
 	//Screen update
 	screen_driver_SetCursor(30, 80);
-	screen_driver_WriteString("Tempo On   ", *font , White);
+	screen_driver_WriteString("Tempo On   ", *font , White); // @suppress("Symbol is not resolved")
 	screen_driver_UpdateScreen();
 }
 

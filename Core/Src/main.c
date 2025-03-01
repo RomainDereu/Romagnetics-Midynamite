@@ -83,8 +83,7 @@ const osThreadAttr_t other_tasks_attributes = {
 uint32_t tempo_counter = 240;
 uint32_t tempo_click_rate = 416;
 
-uint8_t current_menu_counter = 0;
-uint8_t current_menu = MIDI_TEMPO;
+uint8_t current_menu = MIDI_MODIFY;
 
 /* USER CODE END PV */
 
@@ -108,7 +107,7 @@ void StartTask02(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //Romagnetics code
-uint8_t midi_rx_buff[10];
+uint8_t midi_rx_buff[3];
 
 /* USER CODE END 0 */
 
@@ -149,10 +148,15 @@ int main(void)
   MX_ADC1_Init();
   MX_USB_OTG_FS_HCD_Init();
   /* USER CODE BEGIN 2 */
+  //Romagnetics code
   screen_driver_Init();
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+
+  __HAL_TIM_SET_COUNTER(&htim4, current_menu*4);
+
+  HAL_UART_Receive_IT(&huart2, midi_rx_buff, 3);
 
   /* USER CODE END 2 */
 
@@ -623,7 +627,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		break;
 
     case Btn4_Pin :
-    	current_menu = current_menu_counter/4;
     	if(current_menu == MIDI_TEMPO){
     	//tempo off
     	mt_press_btn4(&huart2, &htim2, &Font_6x8);
@@ -637,6 +640,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     default :
 		break;
   }
+
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2){
+
+	//Romain réactiver après
+  	//if(current_menu == MIDI_MODIFY){
+    //	display_incoming_midi(*huart2, &midi_rx_buff, &Font_6x8);
+  	//}
+
+	screen_driver_SetCursor(30, 80);
+	screen_driver_WriteString("Data Received  ", Font_6x8 , White); // @suppress("Symbol is not resolved")
+	screen_driver_UpdateScreen();
 
 }
 
@@ -673,7 +689,7 @@ void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
 	__HAL_TIM_SET_COUNTER(&htim3,tempo_counter);
-	__HAL_TIM_SET_COUNTER(&htim4,current_menu);
+	__HAL_TIM_SET_COUNTER(&htim4,current_menu*4);
   /* Infinite loop */
   for(;;)
   {
@@ -682,7 +698,7 @@ void StartTask02(void *argument)
 	menu_change(&htim4, &current_menu);
   	if(current_menu == MIDI_TEMPO){
   	  screen_driver_Fill(Black);
-  	  char message_midi_tempo[20] = "Send Midi Tempo     ";
+  	  char message_midi_tempo[20] = "Send Midi Tempo    ";
   	  menu_display(&Font_6x8, &message_midi_tempo);
 	  midi_tempo_counter(&htim3,  &Font_16x24);
     }
@@ -690,7 +706,6 @@ void StartTask02(void *argument)
   		screen_driver_Fill(Black);
     	char message_midi_modify[20] = "Midi Modify         ";
     	menu_display(&Font_6x8, &message_midi_modify);
-    	display_incoming_midi(huart2, &midi_rx_buff, &Font_6x8);
   	    screen_driver_UpdateScreen();
     }
   	else if(current_menu == SETTINGS){
@@ -700,7 +715,7 @@ void StartTask02(void *argument)
   	    screen_driver_UpdateScreen();
     }
 
-	osDelay(50);
+	osDelay(1);
 
   }
   /* USER CODE END StartTask02 */
