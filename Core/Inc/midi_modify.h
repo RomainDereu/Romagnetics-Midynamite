@@ -11,8 +11,7 @@
 #include "main.h"
 #include "screen_driver.h"
 
-void display_incoming_midi(UART_HandleTypeDef huart_ptr,
-						   uint8_t (* midi_rx_buff_ptr)[3],
+void display_incoming_midi(uint8_t * midi_rx_buff_ptr,
 						   const screen_driver_Font_t * font);
 
 #endif /* INC_MIDI_MODIFY_H_ */

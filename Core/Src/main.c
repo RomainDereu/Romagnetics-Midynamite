@@ -108,6 +108,7 @@ void StartTask02(void *argument);
 /* USER CODE BEGIN 0 */
 //Romagnetics code
 uint8_t midi_rx_buff[3];
+uint8_t * midi_rx_buff_ptr = &midi_rx_buff[0];
 
 /* USER CODE END 0 */
 
@@ -156,7 +157,7 @@ int main(void)
 
   __HAL_TIM_SET_COUNTER(&htim4, current_menu*4);
 
-  HAL_UART_Receive_IT(&huart2, midi_rx_buff, 3);
+  HAL_UART_Receive_IT(&huart2, midi_rx_buff_ptr, 3);
 
   /* USER CODE END 2 */
 
@@ -561,8 +562,8 @@ static void MX_USB_OTG_FS_HCD_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
@@ -607,8 +608,8 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -643,16 +644,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 }
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2){
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
-	//Romain réactiver après
-  	//if(current_menu == MIDI_MODIFY){
-    //	display_incoming_midi(*huart2, &midi_rx_buff, &Font_6x8);
-  	//}
-
-	screen_driver_SetCursor(30, 80);
-	screen_driver_WriteString("Data Received  ", Font_6x8 , White); // @suppress("Symbol is not resolved")
-	screen_driver_UpdateScreen();
+  	if(current_menu == MIDI_MODIFY){
+  		HAL_UART_Receive_IT(&huart2, midi_rx_buff_ptr, 3);
+  	}
 
 }
 
@@ -706,6 +702,7 @@ void StartTask02(void *argument)
   		screen_driver_Fill(Black);
     	char message_midi_modify[20] = "Midi Modify         ";
     	menu_display(&Font_6x8, &message_midi_modify);
+    	display_incoming_midi(midi_rx_buff_ptr, &Font_6x8);
   	    screen_driver_UpdateScreen();
     }
   	else if(current_menu == SETTINGS){
@@ -715,7 +712,7 @@ void StartTask02(void *argument)
   	    screen_driver_UpdateScreen();
     }
 
-	osDelay(1);
+	osDelay(1000);
 
   }
   /* USER CODE END StartTask02 */
@@ -734,7 +731,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1) {
+  if (htim->Instance == TIM1)
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
