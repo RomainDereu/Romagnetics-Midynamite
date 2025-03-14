@@ -1,0 +1,4 @@
+../Core/Src/midi_tempo.c:25:6:send_midi_to_midi_out	2
+../Core/Src/midi_tempo.c:37:6:mt_press_btn3	1
+../Core/Src/midi_tempo.c:50:6:mt_press_btn4	1
+../Core/Src/midi_tempo.c:63:6:midi_tempo_counter	4

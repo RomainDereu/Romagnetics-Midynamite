@@ -1,0 +1,10 @@
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:279:16:USBD_HID_Init	3
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:326:16:USBD_HID_DeInit	2
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:357:16:USBD_HID_Setup	18
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:489:9:USBD_HID_SendReport	4
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:522:10:USBD_HID_GetPollingInterval	2
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:552:17:USBD_HID_GetFSCfgDesc	2
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:572:17:USBD_HID_GetHSCfgDesc	2
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:592:17:USBD_HID_GetOtherSpeedCfgDesc	2
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:613:16:USBD_HID_DataIn	1
+C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/ST/STM32_USB_Device_Library/Class/HID/Src/usbd_hid.c:630:17:USBD_HID_GetDeviceQualifierDesc	1
