@@ -20,21 +20,21 @@
 //#define STM32G0
 
 // Choose a bus
-//#define screen_driver_USE_I2C
-#define screen_driver_USE_SPI
+#define screen_driver_USE_I2C
+//#define screen_driver_USE_SPI
 
 // I2C Configuration
-// #define screen_driver_I2C_PORT        hi2c1
-// #define screen_driver_I2C_ADDR        (0x3C << 1)
+#define screen_driver_I2C_PORT        hi2c1
+#define screen_driver_I2C_ADDR        (0x3C << 1)
 
 // SPI Configuration
-#define screen_driver_SPI_PORT        hspi1
-#define screen_driver_CS_Port         OLED_CS_GPIO_Port
-#define screen_driver_CS_Pin          OLED_CS_Pin
-#define screen_driver_DC_Port         OLED_DC_GPIO_Port
-#define screen_driver_DC_Pin          OLED_DC_Pin
-#define screen_driver_Reset_Port      OLED_Res_GPIO_Port
-#define screen_driver_Reset_Pin       OLED_Res_Pin
+//#define screen_driver_SPI_PORT        hspi1
+//#define screen_driver_CS_Port         OLED_CS_GPIO_Port
+//#define screen_driver_CS_Pin          OLED_CS_Pin
+//#define screen_driver_DC_Port         OLED_DC_GPIO_Port
+//#define screen_driver_DC_Pin          OLED_DC_Pin
+//#define screen_driver_Reset_Port      OLED_Res_GPIO_Port
+//#define screen_driver_Reset_Pin       OLED_Res_Pin
 
 // Mirror the screen if needed
 //#define screen_driver_MIRROR_VERT
@@ -62,6 +62,6 @@
 
 // The height can be changed as well if necessary.
 // It can be 32, 64 or 128. The default value is 64.
-#define screen_driver_HEIGHT          128
+#define screen_driver_HEIGHT          64
 
 #endif /* __screen_driver_CONF_H__ */
