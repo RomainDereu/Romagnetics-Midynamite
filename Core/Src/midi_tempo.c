@@ -17,10 +17,9 @@
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t tempo = 60;
+uint32_t old_tempo = 0;
 extern uint32_t tempo_counter;
 extern uint32_t tempo_click_rate;
-
-
 
 void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t *tempo_click_rate_ptr){
 	  uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
@@ -40,7 +39,7 @@ void mt_press_btn3(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const s
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
 		HAL_TIM_Base_Start_IT(timer);
 	//Screen update
-	screen_driver_SetCursor(30, 80);
+	screen_driver_SetCursor(30, 50);
 	screen_driver_WriteString("Tempo On   ", *font , White); // @suppress("Symbol is not resolved")
 	screen_driver_UpdateScreen();
 }
@@ -52,8 +51,8 @@ void mt_press_btn4(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const s
 		HAL_TIM_Base_Stop_IT(timer);
 		uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
-	//Screen update
-	screen_driver_SetCursor(30, 80);
+    //Screen update
+	screen_driver_SetCursor(30, 50);
 	screen_driver_WriteString("Tempo Off   ", *font, White);
 	screen_driver_UpdateScreen();
 }
@@ -76,14 +75,19 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer, const screen_driver_Font_t * 
 	    tempo =300;
 	    tempo_click_rate = 2083;
 	  }
-	  char number_print[3];
-	  itoa(tempo ,number_print,10);
-	  //blank spaces are added to delete any remaining numbers on the screen
-    char fullmessage[7];
-    sprintf(fullmessage, "%s   ", number_print);
-	screen_driver_SetCursor(48, 30);
-	screen_driver_WriteString(fullmessage, *font, White);
-	screen_driver_UpdateScreen();
+
+	  if (old_tempo != tempo){
+		  //updating the screen if a new value appears
+		  char number_print[3];
+		  itoa(tempo ,number_print,10);
+		  //blank spaces are added to delete any remaining numbers on the screen
+		  char fullmessage[7];
+		  sprintf(fullmessage, "%s   ", number_print);
+		  screen_driver_SetCursor(48, 30);
+		  screen_driver_WriteString(fullmessage, *font, White);
+		  screen_driver_UpdateScreen();
+		  old_tempo = tempo;
+	  }
 }
 
 

@@ -45,6 +45,8 @@
 #include "menu.h"
 #include "midi_tempo.h"
 #include "midi_modify.h"
+#include "settings.h"
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -81,7 +83,21 @@ const osThreadAttr_t other_tasks_attributes = {
 uint32_t tempo_counter = 240;
 uint32_t tempo_click_rate = 416;
 
-uint8_t current_menu = MIDI_MODIFY;
+uint8_t current_menu = MIDI_TEMPO;
+uint8_t old_menu = 127;
+
+//the settings struct is saved in the settings_memory
+uint32_t settings_mem_add = 0x08040000;
+struct settings_struct settings_memory;
+
+
+/*Romain continuer ici avec le struct qui va être copié
+uint8_t *settings_p = &settings_struct;
+
+for ( i = 0; i < sizeof(DataLogTypeDef); i++, data_p++, settingsmemory++ )
+    HAL_FLASH_Program(type_byte, flash_address, *data_p);
+
+*/
 
 /* USER CODE END PV */
 
@@ -357,7 +373,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -512,8 +528,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pins : Btn1_Pin Btn4_Pin Btn3_Pin Btn2_Pin */
-  GPIO_InitStruct.Pin = Btn1_Pin|Btn4_Pin|Btn3_Pin|Btn2_Pin;
+  /*Configure GPIO pins : Btn3_Pin Btn4_Pin Btn1_Pin Btn2_Pin */
+  GPIO_InitStruct.Pin = Btn3_Pin|Btn4_Pin|Btn1_Pin|Btn2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -616,27 +632,30 @@ void StartTask02(void *argument)
      //Romagnetics code
      //Menu
 	menu_change(&htim4, &current_menu);
+	//Wiping if menu has changed
+  	if(old_menu != current_menu){
+  	    screen_driver_Fill(Black);
+  	   old_menu = current_menu;
+    }
+
   	if(current_menu == MIDI_TEMPO){
-  	  screen_driver_Fill(Black);
-  	  char message_midi_tempo[20] = "Send Midi Tempo    ";
+  	  char message_midi_tempo[30] = "Send Midi Tempo              ";
   	  menu_display(&Font_6x8, &message_midi_tempo);
 	  midi_tempo_counter(&htim3,  &Font_16x24);
     }
   	else if(current_menu == MIDI_MODIFY){
-  		screen_driver_Fill(Black);
-    	char message_midi_modify[20] = "Midi Modify         ";
+    	char message_midi_modify[30] = "Midi Modify                   ";
     	menu_display(&Font_6x8, &message_midi_modify);
     	display_incoming_midi(midi_rx_buff_ptr, &Font_6x8);
   	    screen_driver_UpdateScreen();
     }
   	else if(current_menu == SETTINGS){
-  		screen_driver_Fill(Black);
-    	char message_settings[20] = "Settings            ";
+    	char message_settings[30] = "Settings                      ";
     	menu_display(&Font_6x8, &message_settings);
   	    screen_driver_UpdateScreen();
     }
 
-	osDelay(10);
+	osDelay(500);
 
   }
   /* USER CODE END StartTask02 */

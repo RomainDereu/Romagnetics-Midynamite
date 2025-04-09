@@ -11,8 +11,8 @@
 
 
 void menu_display(const screen_driver_Font_t * font, char (* message)[20]){
-	screen_driver_Line(0, 15, 127, 15, White);
-	screen_driver_SetCursor(1, 1);
+	screen_driver_Line(0, 10, 127, 10, White);
+	screen_driver_SetCursor(0, 0);
 	screen_driver_WriteString(*message, *font , White);
 	screen_driver_UpdateScreen();
 }

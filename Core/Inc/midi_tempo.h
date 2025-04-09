@@ -21,6 +21,7 @@ void mt_press_btn3(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const s
 
 void mt_press_btn4(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const screen_driver_Font_t * font);
 
+int compareArrays(double a[], double b[], int n);
 
 void midi_tempo_counter(TIM_HandleTypeDef * timer, const screen_driver_Font_t * font);
 

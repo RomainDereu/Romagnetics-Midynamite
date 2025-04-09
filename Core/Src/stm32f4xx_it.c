@@ -59,6 +59,7 @@ extern PCD_HandleTypeDef hpcd_USB_OTG_FS;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern TIM_HandleTypeDef htim1;
 
@@ -221,6 +222,20 @@ void TIM4_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles USART1 global interrupt.
+  */
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART2 global interrupt.
   */
 void USART2_IRQHandler(void)
@@ -242,9 +257,9 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
   /* USER CODE END EXTI15_10_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(Btn1_Pin);
-  HAL_GPIO_EXTI_IRQHandler(Btn4_Pin);
   HAL_GPIO_EXTI_IRQHandler(Btn3_Pin);
+  HAL_GPIO_EXTI_IRQHandler(Btn4_Pin);
+  HAL_GPIO_EXTI_IRQHandler(Btn1_Pin);
   HAL_GPIO_EXTI_IRQHandler(Btn2_Pin);
   /* USER CODE BEGIN EXTI15_10_IRQn 1 */
 
