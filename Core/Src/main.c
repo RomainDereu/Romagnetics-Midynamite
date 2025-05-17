@@ -167,7 +167,7 @@ int main(void)
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
-  __HAL_TIM_SET_COUNTER(&htim4, current_menu*4);
+  __HAL_TIM_SET_COUNTER(&htim3, current_menu*4);
 
   HAL_UART_Receive_IT(&huart2, midi_rx_buff_ptr, 3);
 
@@ -373,7 +373,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -422,7 +422,7 @@ static void MX_TIM4_Init(void)
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -624,14 +624,14 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
-	__HAL_TIM_SET_COUNTER(&htim3,tempo_counter);
-	__HAL_TIM_SET_COUNTER(&htim4,current_menu*4);
+	__HAL_TIM_SET_COUNTER(&htim4,tempo_counter);
+	__HAL_TIM_SET_COUNTER(&htim3,current_menu*4);
   /* Infinite loop */
   for(;;)
   {
      //Romagnetics code
      //Menu
-	menu_change(&htim4, &current_menu);
+	menu_change(&htim3, &current_menu);
 	//Wiping if menu has changed
   	if(old_menu != current_menu){
   	    screen_driver_Fill(Black);
@@ -641,7 +641,7 @@ void StartTask02(void *argument)
   	if(current_menu == MIDI_TEMPO){
   	  char message_midi_tempo[30] = "Send Midi Tempo              ";
   	  menu_display(&Font_6x8, &message_midi_tempo);
-	  midi_tempo_counter(&htim3,  &Font_16x24);
+	  midi_tempo_counter(&htim4,  &Font_16x24);
     }
   	else if(current_menu == MIDI_MODIFY){
     	char message_midi_modify[30] = "Midi Modify                   ";
