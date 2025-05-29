@@ -14,6 +14,7 @@
 
 #include "midi_tempo.h"
 #include "cmsis_os.h"
+#include "menu.h"
 
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code

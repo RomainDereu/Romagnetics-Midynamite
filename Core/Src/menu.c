@@ -10,7 +10,7 @@
 #include "menu.h"
 
 
-void menu_display(const screen_driver_Font_t * font, char (* message)[20]){
+void menu_display(const screen_driver_Font_t * font, char (* message)[30]){
 	screen_driver_Line(0, 10, 127, 10, White);
 	screen_driver_SetCursor(0, 0);
 	screen_driver_WriteString(*message, *font , White);
