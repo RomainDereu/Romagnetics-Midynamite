@@ -14,12 +14,15 @@
 #include "cmsis_os.h"
 
 
-
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t tempo = 60;
 uint32_t old_tempo = 0;
 extern uint32_t tempo_counter;
 extern uint32_t tempo_click_rate;
+
+
+uint8_t start_stop_status = CURRENTLY_STOP;
+
 
 void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t *tempo_click_rate_ptr){
 	  uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
@@ -33,29 +36,34 @@ void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t *tempo_click_r
 
 
 //Interrupter method. Do not add delay
-void mt_press_btn3(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const screen_driver_Font_t * font){
-	//Clock start and starting the timer
+void mt_start_stop(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const screen_driver_Font_t * font){
+	if(start_stop_status == CURRENTLY_STOP){
+		//Clock start and starting the timer
 		uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
 		HAL_TIM_Base_Start_IT(timer);
-	//Screen update
-	screen_driver_SetCursor(30, 50);
-	screen_driver_WriteString("Tempo On   ", *font , White); // @suppress("Symbol is not resolved")
-	screen_driver_UpdateScreen();
-}
+		//Screen update
+		screen_driver_SetCursor(30, 50);
+		screen_driver_WriteString("Tempo On   ", *font , White); // @suppress("Symbol is not resolved")
+		screen_driver_UpdateScreen();
+		start_stop_status = CURRENTLY_START;
+	}
 
-
-//Interrupter method. Do not add delay
-void mt_press_btn4(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const screen_driver_Font_t * font){
-	//Stopping the timer and sending stop message
+	else if(start_stop_status == CURRENTLY_START){
+		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
 		uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
-    //Screen update
-	screen_driver_SetCursor(30, 50);
-	screen_driver_WriteString("Tempo Off   ", *font, White);
-	screen_driver_UpdateScreen();
+	    //Screen update
+		screen_driver_SetCursor(30, 50);
+		screen_driver_WriteString("Tempo Off   ", *font, White);
+		screen_driver_UpdateScreen();
+		start_stop_status = CURRENTLY_STOP;
+	}
+
+	osDelay(100);
 }
+
 
 
 //Font is 16x24

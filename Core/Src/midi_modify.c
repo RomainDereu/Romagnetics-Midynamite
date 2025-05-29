@@ -34,7 +34,7 @@ void display_incoming_midi(uint8_t * midi_rx_buff_ptr, const screen_driver_Font_
 
 
 			//screen_driver_WriteString(byte_print_hex, *font , White);
-			screen_driver_SetCursor(50, 50);
+			screen_driver_SetCursor(0, 54);
 			screen_driver_WriteString(byte_print_hex, *font , White);
 			screen_driver_UpdateScreen();
 

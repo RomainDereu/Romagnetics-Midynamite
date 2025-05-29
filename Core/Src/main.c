@@ -422,11 +422,11 @@ static void MX_TIM4_Init(void)
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
-  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC2Filter = 0;
@@ -530,7 +530,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : Btn3_Pin Btn4_Pin Btn1_Pin Btn2_Pin */
   GPIO_InitStruct.Pin = Btn3_Pin|Btn4_Pin|Btn1_Pin|Btn2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Mode = GPIO_MODE_EVT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
@@ -542,45 +542,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_I2C2;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  /* Prevent unused argument(s) compilation warning */
-  //Romagnetics code
-    switch(GPIO_Pin)
-  {
-    case Btn3_Pin :
-    	if(current_menu == MIDI_TEMPO){
-    	//tempo_on
-    	mt_press_btn3(&huart2, &htim2, &Font_6x8);
-    	}
-		break;
-
-    case Btn4_Pin :
-    	if(current_menu == MIDI_TEMPO){
-    	//tempo off
-    	mt_press_btn4(&huart2, &htim2, &Font_6x8);
-    	}
-		break;
-	//Screen Reset
-	case Btn2_Pin :
-		break;
-
-
-    default :
-		break;
-  }
-
-}
+//Romagnetics code
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
@@ -608,8 +575,21 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  osDelay(100);
-
+	  uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+	  if(Btn3State == 1)
+	     {
+		  	 //The following code will need to be moved to a different class.
+	         osDelay(30);
+	         Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+	         if(Btn3State == 1)
+	         {
+	        	 if(current_menu == MIDI_TEMPO)
+	        	 {
+	        	 mt_start_stop(&huart2, &htim2, &Font_6x8);
+	         }
+	     }
+  }
+  osDelay(50);
   }
   /* USER CODE END 5 */
 }
@@ -655,7 +635,7 @@ void StartTask02(void *argument)
   	    screen_driver_UpdateScreen();
     }
 
-	osDelay(500);
+	osDelay(10);
 
   }
   /* USER CODE END StartTask02 */
