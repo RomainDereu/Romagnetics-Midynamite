@@ -82,13 +82,14 @@ const osThreadAttr_t other_tasks_attributes = {
 //Romagnetics code
 //structs containing the informaiton for each mode
 struct midi_tempo_data_struct midi_tempo_data = {.tempo_counter = 240,
-												 .tempo_click_rate = 416};
+												 .tempo_click_rate = 416,
+												 .currently_sending = 0};
 
 
 uint32_t tempo_click_rate = 416;
 
 uint8_t current_menu = MIDI_TEMPO;
-uint8_t old_menu = 127;
+uint8_t old_menu = MIDI_TEMPO;
 
 //the settings struct is saved in the settings_memory
 uint32_t settings_mem_add = 0x08040000;
@@ -589,7 +590,7 @@ void StartDefaultTask(void *argument)
 	         {
 	        	 if(current_menu == MIDI_TEMPO)
 	        	 {
-	        	 mt_start_stop(&huart2, &htim2, &Font_6x8);
+	        	 mt_start_stop(&huart2, &htim2);
 	         }
 	     }
   }
@@ -617,26 +618,34 @@ void StartTask02(void *argument)
      //Menu
 	menu_change(&htim3, &current_menu);
 	//Wiping if menu has changed
-  	if(old_menu != current_menu){
-  	    screen_driver_Fill(Black);
-  	   old_menu = current_menu;
-    }
-
   	if(current_menu == MIDI_TEMPO){
-  	  char message_midi_tempo[30] = "Send Midi Tempo              ";
-  	  menu_display(&Font_6x8, &message_midi_tempo);
-	  midi_tempo_counter(&htim4,  &Font_16x24);
+  		midi_tempo_counter(&htim4);
+  	  	if(old_menu != current_menu){
+		screen_driver_Fill(Black);
+  		screen_update_midi_tempo(&midi_tempo_data);
+   	    old_menu = current_menu;
+  	    }
     }
   	else if(current_menu == MIDI_MODIFY){
+  	  	if(old_menu != current_menu){
+			screen_driver_Fill(Black);
+			old_menu = current_menu;
+			}
     	char message_midi_modify[30] = "Midi Modify                   ";
     	menu_display(&Font_6x8, &message_midi_modify);
     	display_incoming_midi(midi_rx_buff_ptr, &Font_6x8);
   	    screen_driver_UpdateScreen();
+
     }
   	else if(current_menu == SETTINGS){
+  	  	if(old_menu != current_menu){
+			screen_driver_Fill(Black);
+			old_menu = current_menu;
+			}
     	char message_settings[30] = "Settings                      ";
     	menu_display(&Font_6x8, &message_settings);
   	    screen_driver_UpdateScreen();
+
     }
 
 	osDelay(10);

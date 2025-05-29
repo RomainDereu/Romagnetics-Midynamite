@@ -14,4 +14,7 @@
 void display_incoming_midi(uint8_t * midi_rx_buff_ptr,
 						   const screen_driver_Font_t * font);
 
+
+
+
 #endif /* INC_MIDI_MODIFY_H_ */

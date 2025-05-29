@@ -38,6 +38,7 @@ extern "C" {
 struct midi_tempo_data_struct{
 	uint32_t tempo_counter;
 	uint32_t tempo_click_rate;
+	uint8_t currently_sending;
 };
 
 
