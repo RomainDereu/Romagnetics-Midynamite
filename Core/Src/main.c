@@ -80,7 +80,11 @@ const osThreadAttr_t other_tasks_attributes = {
 };
 /* USER CODE BEGIN PV */
 //Romagnetics code
-uint32_t tempo_counter = 240;
+//structs containing the informaiton for each mode
+struct midi_tempo_data_struct midi_tempo_data = {.tempo_counter = 240,
+												 .tempo_click_rate = 416};
+
+
 uint32_t tempo_click_rate = 416;
 
 uint8_t current_menu = MIDI_TEMPO;
@@ -604,7 +608,7 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
-	__HAL_TIM_SET_COUNTER(&htim4,tempo_counter);
+	__HAL_TIM_SET_COUNTER(&htim4,midi_tempo_data.tempo_counter);
 	__HAL_TIM_SET_COUNTER(&htim3,current_menu*4);
   /* Infinite loop */
   for(;;)
@@ -663,7 +667,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2) {
 
-	send_midi_to_midi_out(huart2, &tempo_click_rate);
+	send_midi_to_midi_out(huart2, &midi_tempo_data.tempo_click_rate);
   }
 
 

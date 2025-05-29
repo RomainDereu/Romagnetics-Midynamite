@@ -15,10 +15,10 @@
 
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
-uint32_t tempo = 60;
-uint32_t old_tempo = 0;
-extern uint32_t tempo_counter;
-extern uint32_t tempo_click_rate;
+uint32_t current_tempo;
+uint32_t old_tempo;
+extern struct midi_tempo_data_struct midi_tempo_data;
+
 
 
 uint8_t start_stop_status = CURRENTLY_STOP;
@@ -68,33 +68,33 @@ void mt_start_stop(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer, const s
 
 //Font is 16x24
 void midi_tempo_counter(TIM_HandleTypeDef * timer, const screen_driver_Font_t * font){
-	  tempo_counter = __HAL_TIM_GET_COUNTER(timer);
-	  tempo = tempo_counter / 4;
-	  tempo_click_rate = 600000/(tempo*24);
-	  if (tempo_counter > 60000  || tempo_counter < 120)
+	  midi_tempo_data.tempo_counter = __HAL_TIM_GET_COUNTER(timer);
+	  current_tempo = midi_tempo_data.tempo_counter / 4;
+	  midi_tempo_data.tempo_click_rate = 600000/(current_tempo*24);
+	  if (midi_tempo_data.tempo_counter > 60000  || midi_tempo_data.tempo_counter < 120)
 	  {
 	    __HAL_TIM_SET_COUNTER(timer,120);
-	    tempo =30;
-	    tempo_click_rate = 208;
+	    current_tempo =30;
+	    midi_tempo_data.tempo_click_rate = 208;
 	  }
-	  if (tempo_counter > 1200)
+	  if (midi_tempo_data.tempo_counter > 1200)
 	  {
 	    __HAL_TIM_SET_COUNTER(timer,1200);
-	    tempo =300;
-	    tempo_click_rate = 2083;
+	    current_tempo =300;
+	    midi_tempo_data.tempo_click_rate = 2083;
 	  }
 
-	  if (old_tempo != tempo){
+	  if (old_tempo != current_tempo){
 		  //updating the screen if a new value appears
 		  char number_print[3];
-		  itoa(tempo ,number_print,10);
+		  itoa(current_tempo ,number_print,10);
 		  //blank spaces are added to delete any remaining numbers on the screen
 		  char fullmessage[7];
 		  sprintf(fullmessage, "%s   ", number_print);
 		  screen_driver_SetCursor(48, 30);
 		  screen_driver_WriteString(fullmessage, *font, White);
 		  screen_driver_UpdateScreen();
-		  old_tempo = tempo;
+		  old_tempo = current_tempo;
 	  }
 }
 

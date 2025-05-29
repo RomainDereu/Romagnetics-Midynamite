@@ -35,6 +35,11 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+struct midi_tempo_data_struct{
+	uint32_t tempo_counter;
+	uint32_t tempo_click_rate;
+};
+
 
 /* USER CODE END ET */
 
