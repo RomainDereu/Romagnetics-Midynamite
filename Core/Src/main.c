@@ -580,13 +580,13 @@ void StartDefaultTask(void *argument)
 	  uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 	  if(Btn3State == 1)
 	     {
+     	 if(current_menu == MIDI_TEMPO)
+     	 {
 		  	 //The following code will need to be moved to a different class.
 	         osDelay(30);
 	         Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 	         if(Btn3State == 1)
 	         {
-	        	 if(current_menu == MIDI_TEMPO)
-	        	 {
 	        	 mt_start_stop(&huart2, &htim2, &midi_tempo_data);
 	         }
 	     }

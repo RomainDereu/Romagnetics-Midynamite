@@ -75,9 +75,8 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 		uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
 		HAL_TIM_Base_Start_IT(timer);
-		//Screen update
-		screen_update_midi_tempo(midi_tempo_data);
 		midi_tempo_data->currently_sending = 1;
+		screen_update_midi_tempo(midi_tempo_data);
 	}
 
 	else if(midi_tempo_data->currently_sending == 1){
@@ -85,9 +84,8 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 		HAL_TIM_Base_Stop_IT(timer);
 		uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
-	    //Screen update
-		screen_update_midi_tempo(midi_tempo_data);
 		midi_tempo_data->currently_sending = 0;
+		screen_update_midi_tempo(midi_tempo_data);
 	}
 
 	osDelay(100);
