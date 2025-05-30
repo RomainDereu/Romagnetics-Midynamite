@@ -85,9 +85,6 @@ struct midi_tempo_data_struct midi_tempo_data = {.tempo_counter = 240,
 												 .tempo_click_rate = 416,
 												 .currently_sending = 0};
 
-
-uint32_t tempo_click_rate = 416;
-
 uint8_t current_menu = MIDI_TEMPO;
 uint8_t old_menu = MIDI_TEMPO;
 
@@ -590,7 +587,7 @@ void StartDefaultTask(void *argument)
 	         {
 	        	 if(current_menu == MIDI_TEMPO)
 	        	 {
-	        	 mt_start_stop(&huart2, &htim2);
+	        	 mt_start_stop(&huart2, &htim2, &midi_tempo_data);
 	         }
 	     }
   }
@@ -619,7 +616,7 @@ void StartTask02(void *argument)
 	menu_change(&htim3, &current_menu);
 	//Wiping if menu has changed
   	if(current_menu == MIDI_TEMPO){
-  		midi_tempo_counter(&htim4);
+  		midi_tempo_counter(&htim4, &midi_tempo_data);
   	  	if(old_menu != current_menu){
 		screen_driver_Fill(Black);
   		screen_update_midi_tempo(&midi_tempo_data);

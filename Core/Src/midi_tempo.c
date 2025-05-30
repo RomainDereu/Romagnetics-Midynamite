@@ -20,7 +20,6 @@
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t current_tempo;
 uint32_t old_tempo;
-extern struct midi_tempo_data_struct midi_tempo_data;
 
 void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
 
@@ -68,25 +67,27 @@ void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t *tempo_click_r
 
 
 //Interrupter method. Do not add delay
-void mt_start_stop(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer){
-	if(midi_tempo_data.currently_sending == 0){
+void mt_start_stop(UART_HandleTypeDef * uart,
+		           TIM_HandleTypeDef * timer,
+				   struct midi_tempo_data_struct * midi_tempo_data){
+	if(midi_tempo_data->currently_sending == 0){
 		//Clock start and starting the timer
 		uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
 		HAL_TIM_Base_Start_IT(timer);
 		//Screen update
-		screen_update_midi_tempo(&midi_tempo_data);
-		midi_tempo_data.currently_sending = 1;
+		screen_update_midi_tempo(midi_tempo_data);
+		midi_tempo_data->currently_sending = 1;
 	}
 
-	else if(midi_tempo_data.currently_sending == 1){
+	else if(midi_tempo_data->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
 		uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
 	    //Screen update
-		screen_update_midi_tempo(&midi_tempo_data);
-		midi_tempo_data.currently_sending = 0;
+		screen_update_midi_tempo(midi_tempo_data);
+		midi_tempo_data->currently_sending = 0;
 	}
 
 	osDelay(100);
@@ -94,26 +95,26 @@ void mt_start_stop(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer){
 
 
 
-void midi_tempo_counter(TIM_HandleTypeDef * timer){
-	  midi_tempo_data.tempo_counter = __HAL_TIM_GET_COUNTER(timer);
-	  current_tempo = midi_tempo_data.tempo_counter / 4;
-	  midi_tempo_data.tempo_click_rate = 600000/(current_tempo*24);
-	  if (midi_tempo_data.tempo_counter > 60000  || midi_tempo_data.tempo_counter < 120)
+void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct * midi_tempo_data){
+	  midi_tempo_data->tempo_counter = __HAL_TIM_GET_COUNTER(timer);
+	  current_tempo = midi_tempo_data->tempo_counter / 4;
+	  midi_tempo_data->tempo_click_rate = 600000/(current_tempo*24);
+	  if (midi_tempo_data->tempo_counter > 60000  || midi_tempo_data->tempo_counter < 120)
 	  {
 	    __HAL_TIM_SET_COUNTER(timer,120);
 	    current_tempo =30;
-	    midi_tempo_data.tempo_click_rate = 208;
+	    midi_tempo_data->tempo_click_rate = 208;
 	  }
-	  if (midi_tempo_data.tempo_counter > 1200)
+	  if (midi_tempo_data->tempo_counter > 1200)
 	  {
 	    __HAL_TIM_SET_COUNTER(timer,1200);
 	    current_tempo =300;
-	    midi_tempo_data.tempo_click_rate = 2083;
+	    midi_tempo_data->tempo_click_rate = 2083;
 	  }
 
 	  if (old_tempo != current_tempo){
 		  //updating the screen if a new value appears
-		  screen_update_midi_tempo(&midi_tempo_data);
+		  screen_update_midi_tempo(midi_tempo_data);
 		  old_tempo = current_tempo;
 	  }
 }

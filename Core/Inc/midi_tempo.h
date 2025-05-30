@@ -19,11 +19,14 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data);
 void send_midi_to_midi_out(UART_HandleTypeDef huart_ptr, uint32_t* tempo_click_rate_ptr);
 
 
-void mt_start_stop(UART_HandleTypeDef * uart, TIM_HandleTypeDef * timer);
+void mt_start_stop(UART_HandleTypeDef * uart,
+		           TIM_HandleTypeDef * timer,
+				   struct midi_tempo_data_struct * midi_tempo_data);
 
 int compareArrays(double a[], double b[], int n);
 
-void midi_tempo_counter(TIM_HandleTypeDef * timer);
+void midi_tempo_counter(TIM_HandleTypeDef * timer,
+						struct midi_tempo_data_struct * midi_tempo_data);
 
 
 #endif /* INC_DEBUG_H_ */
