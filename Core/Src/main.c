@@ -88,18 +88,23 @@ struct midi_tempo_data_struct midi_tempo_data = {.tempo_counter = 240,
 uint8_t current_menu = MIDI_TEMPO;
 uint8_t old_menu = MIDI_TEMPO;
 
+//Button information
+uint8_t Btn2State;
+uint8_t Btn3State;
+
+//Romagnetics: saved for later (settings)
 //the settings struct is saved in the settings_memory
-uint32_t settings_mem_add = 0x08040000;
-struct settings_struct settings_memory;
+//uint32_t settings_mem_add = 0x08040000;
+//struct settings_struct settings_memory;
+//
+//
+//Romain continuer ici avec le struct qui va être copié
+//uint8_t *settings_p = &settings_struct;
+//
+//for ( i = 0; i < sizeof(DataLogTypeDef); i++, data_p++, settingsmemory++ )
+//    HAL_FLASH_Program(type_byte, flash_address, *data_p);
 
 
-/*Romain continuer ici avec le struct qui va être copié
-uint8_t *settings_p = &settings_struct;
-
-for ( i = 0; i < sizeof(DataLogTypeDef); i++, data_p++, settingsmemory++ )
-    HAL_FLASH_Program(type_byte, flash_address, *data_p);
-
-*/
 
 /* USER CODE END PV */
 
@@ -574,24 +579,26 @@ void StartDefaultTask(void *argument)
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 5 */
+
+
   /* Infinite loop */
   for(;;)
   {
-	  uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-	  if(Btn3State == 1)
-	     {
-     	 if(current_menu == MIDI_TEMPO)
-     	 {
-		  	 //The following code will need to be moved to a different class.
-	         osDelay(30);
-	         Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-	         if(Btn3State == 1)
-	         {
-	        	 mt_start_stop(&huart2, &htim2, &midi_tempo_data);
-	         }
-	     }
+  //Button2 (Value)
+  Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+  //Button3 (Start/Stop)
+  Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+  if(Btn3State == 1)
+	 {
+	 if(current_menu == MIDI_TEMPO)
+	 {
+		 //The following code will need to be moved to a different class.
+		 osDelay(10);
+		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+		 if(Btn3State == 1){mt_start_stop(&huart2, &htim2, &midi_tempo_data);}
+	 }
   }
-  osDelay(50);
+  osDelay(10);
   }
   /* USER CODE END 5 */
 }
@@ -673,7 +680,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2) {
 
-	send_midi_to_midi_out(huart2, &midi_tempo_data.tempo_click_rate);
+	send_midi_tempo_out(huart2, &midi_tempo_data.tempo_click_rate);
   }
 
 
