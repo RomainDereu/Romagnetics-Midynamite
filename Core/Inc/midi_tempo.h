@@ -16,7 +16,7 @@
 
 void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data);
 
-void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t* tempo_click_rate_ptr);
+void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo);
 
 
 void mt_start_stop(UART_HandleTypeDef * uart,
