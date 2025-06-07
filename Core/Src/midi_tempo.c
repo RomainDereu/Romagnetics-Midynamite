@@ -19,7 +19,6 @@
 
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
-uint32_t current_tempo;
 uint32_t old_tempo;
 //Saving a copy of the latest value of the
 uint32_t old_timer = 0;
@@ -34,8 +33,7 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
 	  screen_driver_Line(64, 10, 64, 64, White);
  	  //Tempo
 	  char tempo_number[3];
-	  current_tempo = midi_tempo_data->tempo_counter/4;
-	  itoa(current_tempo ,tempo_number,10);
+	  itoa(midi_tempo_data->current_tempo ,tempo_number,10);
 	  //blank spaces are added to delete any remaining numbers on the screen
 	  char tempo_print[7];
 	  sprintf(tempo_print, "%s   ", tempo_number);
@@ -98,37 +96,36 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 
 
 void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct * midi_tempo_data){
-	  //Checking if the timer has changed
-      uint32_t new_timer = __HAL_TIM_GET_COUNTER(timer);
-	  if (new_timer > old_timer){
-		  midi_tempo_data->tempo_counter+= 4;
-		  }
-	  else if(new_timer < old_timer){
-		  midi_tempo_data->tempo_counter-= 4;
+	  //checking if the values are out of bounds
+	  if (midi_tempo_data->current_tempo > 60000  || midi_tempo_data->current_tempo < 30)
+	  {
+		  midi_tempo_data->current_tempo = 30;
+	  }
+	  if (midi_tempo_data->current_tempo > 300)
+	  {
+		  midi_tempo_data->current_tempo = 300;
 	  }
 
-	  //checking if the values are out of bounds
-	  if (midi_tempo_data->tempo_counter > 60000  || midi_tempo_data->tempo_counter < 120)
-	  {
-		  midi_tempo_data->tempo_counter = 120;
-	  }
-	  if (midi_tempo_data->tempo_counter > 1200)
-	  {
-		  midi_tempo_data->tempo_counter = 1200;
+	  //Checking if the timer has changed
+      uint32_t new_timer = __HAL_TIM_GET_COUNTER(timer);
+	  if (new_timer > old_timer && old_timer != 0){
+		  midi_tempo_data->current_tempo++;
+		  }
+	  else if(new_timer < old_timer){
+		  midi_tempo_data->current_tempo--;
 	  }
 
 	  //Changing the current values to reflect everything
-	  current_tempo = midi_tempo_data->tempo_counter / 4;
-	  midi_tempo_data->tempo_click_rate = 600000/(current_tempo*24);
-	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->tempo_counter);
+	  midi_tempo_data->tempo_click_rate = 600000/(midi_tempo_data->current_tempo*24);
+	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->current_tempo);
 
 
 
 
-	  if (old_tempo != current_tempo){
+	  if (old_tempo != midi_tempo_data->current_tempo){
 		  //updating the screen if a new value appears
 		  screen_update_midi_tempo(midi_tempo_data);
-		  old_tempo = current_tempo;
+		  old_tempo = midi_tempo_data->current_tempo;
 	  }
 	  old_timer = __HAL_TIM_GET_COUNTER(timer);
 }

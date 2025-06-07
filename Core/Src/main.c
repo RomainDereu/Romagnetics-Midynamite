@@ -81,7 +81,7 @@ const osThreadAttr_t other_tasks_attributes = {
 /* USER CODE BEGIN PV */
 //Romagnetics code
 //structs containing the informaiton for each mode
-struct midi_tempo_data_struct midi_tempo_data = {.tempo_counter = 240,
+struct midi_tempo_data_struct midi_tempo_data = {.current_tempo = 60,
 												 .tempo_click_rate = 416,
 												 .currently_sending = 0};
 
@@ -613,7 +613,7 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
-	__HAL_TIM_SET_COUNTER(&htim4,midi_tempo_data.tempo_counter);
+	__HAL_TIM_SET_COUNTER(&htim4,midi_tempo_data.current_tempo);
 	__HAL_TIM_SET_COUNTER(&htim3,current_menu*4);
   /* Infinite loop */
   for(;;)
