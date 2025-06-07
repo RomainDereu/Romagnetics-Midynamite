@@ -159,9 +159,6 @@ int main(void)
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
-
-  __HAL_TIM_SET_COUNTER(&htim3, current_menu*4);
-
   HAL_UART_Receive_IT(&huart2, midi_rx_buff_ptr, 3);
 
   /* USER CODE END 2 */
@@ -572,7 +569,7 @@ void StartDefaultTask(void *argument)
 	 {
 	 if(current_menu == MIDI_TEMPO)
 	 {
-		 //The following code will need to be moved to a different class.
+		 //Debouncing
 		 osDelay(10);
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 		 if(Btn3State == 1){mt_start_stop(&huart2, &htim2, &midi_tempo_data);}
@@ -593,13 +590,12 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
-	__HAL_TIM_SET_COUNTER(&htim3,current_menu*4);
   /* Infinite loop */
   for(;;)
   {
      //Romagnetics code
      //Menu
-	menu_change(&htim3, &current_menu);
+	menu_change(&current_menu);
 	//Wiping if menu has changed
   	if(current_menu == MIDI_TEMPO){
   		midi_tempo_counter(&htim4, &midi_tempo_data);
@@ -621,6 +617,7 @@ void StartTask02(void *argument)
 
     }
   	else if(current_menu == SETTINGS){
+  	  	settings_saved();
   	  	if(old_menu != current_menu){
   	  	  	if(old_menu != current_menu){
 			screen_driver_Fill(Black);

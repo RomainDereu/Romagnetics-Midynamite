@@ -7,7 +7,9 @@
 
 
 
+#include "cmsis_os.h"
 #include "menu.h"
+#include "main.h"
 
 
 void menu_display(const screen_driver_Font_t * font, char (* message)[30]){
@@ -19,17 +21,17 @@ void menu_display(const screen_driver_Font_t * font, char (* message)[30]){
 
 
 
-void menu_change(TIM_HandleTypeDef * timer, uint8_t * current_menu){
-	  uint8_t current_menu_counter = __HAL_TIM_GET_COUNTER(timer);
-	  if (current_menu_counter > 9 && current_menu_counter < 60000)
-	  {
-	    __HAL_TIM_SET_COUNTER(timer,8);
-	    current_menu_counter = 8;
+void menu_change(uint8_t * current_menu_ptr){
+	uint8_t Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
+	  if(Btn4State == 0)
+		 {
+			 //Debouncing
+			 osDelay(10);
+			 Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
+			 if(Btn4State == 0){*current_menu_ptr+=1;}
+			 if(*current_menu_ptr == 3){*current_menu_ptr = 0;}
+			 //Delay to allow for continuous pressing of the button
+			 osDelay(300);
 	  }
-	  else if (current_menu_counter > 60000)
-	  {
-	    __HAL_TIM_SET_COUNTER(timer,0);
-	    current_menu_counter = 0;
-	  }
-	  *current_menu = current_menu_counter/4;
+
 }
