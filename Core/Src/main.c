@@ -82,7 +82,6 @@ const osThreadAttr_t other_tasks_attributes = {
 //Romagnetics code
 //structs containing the informaiton for each mode
 struct midi_tempo_data_struct midi_tempo_data = {.current_tempo = 60,
-												 .tempo_click_rate = 416,
 												 .currently_sending = 0};
 
 uint8_t current_menu = MIDI_TEMPO;
@@ -680,7 +679,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2) {
 
-	send_midi_tempo_out(huart2, &midi_tempo_data.tempo_click_rate);
+	send_midi_tempo_out(huart2, midi_tempo_data.current_tempo);
   }
 
 

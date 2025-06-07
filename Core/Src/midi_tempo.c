@@ -57,12 +57,14 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
 }
 
 
-void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t *tempo_click_rate_ptr){
+void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t *current_tempo_ptr){
 	  uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 	  HAL_UART_Transmit(&huart_ptr, clock_send_tempo, 3, 1000);
+
+	  uint32_t tempo_click_rate = 600000/(*current_tempo_ptr*24);
 	  //Adjusting the tempo if needed
-	  if (TIM2->ARR != *tempo_click_rate_ptr){
-		  TIM2->ARR = *tempo_click_rate_ptr;
+	  if (TIM2->ARR != tempo_click_rate){
+		  TIM2->ARR = tempo_click_rate;
 	  }
 	  osDelay(1);
 }
@@ -115,12 +117,7 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct
 		  midi_tempo_data->current_tempo--;
 	  }
 
-	  //Changing the current values to reflect everything
-	  midi_tempo_data->tempo_click_rate = 600000/(midi_tempo_data->current_tempo*24);
 	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->current_tempo);
-
-
-
 
 	  if (old_tempo != midi_tempo_data->current_tempo){
 		  //updating the screen if a new value appears
