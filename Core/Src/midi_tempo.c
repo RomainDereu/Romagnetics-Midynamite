@@ -17,7 +17,6 @@
 #include "menu.h"
 #include "main.h"
 
-
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t old_tempo;
 //Saving a copy of the latest value of the
@@ -66,7 +65,6 @@ void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
 	  if (TIM2->ARR != tempo_click_rate){
 		  TIM2->ARR = tempo_click_rate;
 	  }
-	  osDelay(1);
 }
 
 
@@ -92,7 +90,7 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 		screen_update_midi_tempo(midi_tempo_data);
 	}
 
-	osDelay(100);
+	osDelay(10);
 }
 
 
