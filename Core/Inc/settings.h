@@ -10,12 +10,6 @@
 
 #include "main.h"
 
-struct settings_struct{
-	uint8_t midi2out;
-	uint8_t tempo;
-	uint8_t modify;
-};
-
 
 
 #endif /* INC_SETTINGS_H_ */

@@ -90,18 +90,6 @@ uint8_t old_menu = MIDI_TEMPO;
 //Button information
 uint8_t Btn3State;
 
-//Romagnetics: saved for later (settings)
-//the settings struct is saved in the settings_memory
-//uint32_t settings_mem_add = 0x08040000;
-//struct settings_struct settings_memory;
-//
-//
-//Romain continuer ici avec le struct qui va être copié
-//uint8_t *settings_p = &settings_struct;
-//
-//for ( i = 0; i < sizeof(DataLogTypeDef); i++, data_p++, settingsmemory++ )
-//    HAL_FLASH_Program(type_byte, flash_address, *data_p);
-
 
 
 /* USER CODE END PV */
@@ -633,7 +621,7 @@ void StartTask02(void *argument)
 			}
     	char message_midi_modify[30] = "Midi Modify                   ";
     	menu_display(&Font_6x8, &message_midi_modify);
-    	display_incoming_midi(midi_rx_buff_ptr, &Font_6x8);
+    	display_incoming_midi(midi_rx_buff_ptr);
   	    screen_driver_UpdateScreen();
 
     }

@@ -9,12 +9,15 @@
 #include "midi_modify.h"
 #include "cmsis_os.h"
 
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
+
 #include <stdio.h>
 #include <stdint.h>
 
 
 
-void display_incoming_midi(uint8_t * midi_rx_buff_ptr, const screen_driver_Font_t * font){
+void display_incoming_midi(uint8_t * midi_rx_buff_ptr){
 
 
 			uint8_t midi_one_byte_uint = *midi_rx_buff_ptr;
@@ -35,7 +38,7 @@ void display_incoming_midi(uint8_t * midi_rx_buff_ptr, const screen_driver_Font_
 
 			//screen_driver_WriteString(byte_print_hex, *font , White);
 			screen_driver_SetCursor(0, 54);
-			screen_driver_WriteString(byte_print_hex, *font , White);
+			screen_driver_WriteString(byte_print_hex, Font_6x8 , White);
 			screen_driver_UpdateScreen();
 
 }
