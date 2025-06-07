@@ -21,6 +21,10 @@
 uint32_t old_tempo;
 //Saving a copy of the latest value of the
 uint32_t old_timer = 0;
+//Midi messages constants
+const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
 
 void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
@@ -58,7 +62,6 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
 
 void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
 	  uint32_t tempo_click_rate = 600000/(current_tempo*24);
-	  uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 	  HAL_UART_Transmit(&huart_ptr, clock_send_tempo, 3, 1000);
 	  //Adjusting the tempo if needed
 	  if (TIM2->ARR != tempo_click_rate){
@@ -73,7 +76,6 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 				   struct midi_tempo_data_struct * midi_tempo_data_ptr){
 	if(midi_tempo_data_ptr->currently_sending == 0){
 		//Clock start and starting the timer
-		uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
 		HAL_TIM_Base_Start_IT(timer);
 		midi_tempo_data_ptr->currently_sending = 1;
@@ -83,7 +85,6 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 	else if(midi_tempo_data_ptr->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
-		uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
 		midi_tempo_data_ptr->currently_sending = 0;
 		screen_update_midi_tempo(midi_tempo_data_ptr);

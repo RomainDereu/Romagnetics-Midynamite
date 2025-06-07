@@ -207,13 +207,9 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  while (1)
-  {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
   /* USER CODE END 3 */
 }
 
@@ -597,7 +593,6 @@ void StartDefaultTask(void *argument)
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
-	__HAL_TIM_SET_COUNTER(&htim4,midi_tempo_data.current_tempo);
 	__HAL_TIM_SET_COUNTER(&htim3,current_menu*4);
   /* Infinite loop */
   for(;;)
