@@ -10,6 +10,9 @@
 
 #include "main.h"
 
+void screen_update_settings();
+
+void settings_saved();
 
 
 #endif /* INC_SETTINGS_H_ */

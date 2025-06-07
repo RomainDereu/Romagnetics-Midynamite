@@ -15,6 +15,5 @@ void menu_display(const screen_driver_Font_t * font, char (* message)[30]);
 
 void menu_change(TIM_HandleTypeDef * timer, uint8_t * current_menu);
 
-void display_settings(struct settings_data_struct * settings_data);
 
 #endif /* INC_MENU_H_ */

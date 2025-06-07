@@ -627,17 +627,18 @@ void StartTask02(void *argument)
     }
   	else if(current_menu == SETTINGS){
   	  	if(old_menu != current_menu){
+  	  	  	if(old_menu != current_menu){
 			screen_driver_Fill(Black);
+			screen_update_settings();
 			old_menu = current_menu;
+  	  	    }
 			}
     	char message_settings[30] = "Settings                      ";
     	menu_display(&Font_6x8, &message_settings);
   	    screen_driver_UpdateScreen();
 
     }
-
 	osDelay(10);
-
   }
   /* USER CODE END StartTask02 */
 }
