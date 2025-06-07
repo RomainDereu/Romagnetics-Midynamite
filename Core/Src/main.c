@@ -88,7 +88,6 @@ uint8_t current_menu = MIDI_TEMPO;
 uint8_t old_menu = MIDI_TEMPO;
 
 //Button information
-uint8_t Btn2State;
 uint8_t Btn3State;
 
 //Romagnetics: saved for later (settings)
@@ -583,8 +582,6 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-  //Button2 (Value)
-  Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
   //Button3 (Start/Stop)
   Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
   if(Btn3State == 1)
