@@ -50,10 +50,10 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
       char no_sending_print[10] = "Sending   ";
 
       if(midi_tempo_data->currently_sending==0){
-    	  screen_driver_WriteString(&sending_print[0], Font_6x8 , White);
+    	  screen_driver_WriteString(sending_print, Font_6x8 , White);
       }
       else if (midi_tempo_data->currently_sending==1){
-    	  screen_driver_WriteString(&no_sending_print[0], Font_6x8 , White);
+    	  screen_driver_WriteString(no_sending_print, Font_6x8 , White);
       }
       screen_driver_UpdateScreen();
 

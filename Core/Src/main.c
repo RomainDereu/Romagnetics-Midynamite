@@ -88,8 +88,8 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_I2C1_Init(void);
-void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
+void StartMidiSend(void *argument);
+void StartOtherTasks(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -169,10 +169,10 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of midi_send */
-  midi_sendHandle = osThreadNew(StartDefaultTask, NULL, &midi_send_attributes);
+  midi_sendHandle = osThreadNew(StartMidiSend, NULL, &midi_send_attributes);
 
   /* creation of other_tasks */
-  other_tasksHandle = osThreadNew(StartTask02, NULL, &other_tasks_attributes);
+  other_tasksHandle = osThreadNew(StartOtherTasks, NULL, &other_tasks_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -530,15 +530,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_StartMidiSend */
 /**
   * @brief  Function implementing the midi_send thread.
   * @param  argument: Not used
   * @retval None
   */
-
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_StartMidiSend */
+void StartMidiSend(void *argument)
 {
   /* init code for USB_DEVICE */
   MX_USB_DEVICE_Init();
@@ -566,59 +565,59 @@ void StartDefaultTask(void *argument)
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_StartTask02 */
+/* USER CODE BEGIN Header_StartOtherTasks */
 /**
 * @brief Function implementing the other_tasks thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
+/* USER CODE END Header_StartOtherTasks */
+void StartOtherTasks(void *argument)
 {
-  /* USER CODE BEGIN StartTask02 */
+  /* USER CODE BEGIN StartOtherTasks */
   /* Infinite loop */
   for(;;)
   {
-     //Romagnetics code
-     //Menu
-	menu_change(&current_menu);
-	//Wiping if menu has changed
-  	if(current_menu == MIDI_TEMPO){
-  		midi_tempo_counter(&htim4, &midi_tempo_data);
-  	  	if(old_menu != current_menu){
-		screen_driver_Fill(Black);
-  		screen_update_midi_tempo(&midi_tempo_data);
-   	    old_menu = current_menu;
-  	    }
-    }
-  	else if(current_menu == MIDI_MODIFY){
-  	  	if(old_menu != current_menu){
-			screen_driver_Fill(Black);
-			old_menu = current_menu;
-			}
-    	char message_midi_modify[30] = "Midi Modify                   ";
-    	menu_display(&Font_6x8, &message_midi_modify);
-    	display_incoming_midi(midi_rx_buff_ptr);
-  	    screen_driver_UpdateScreen();
+	     //Romagnetics code
+	     //Menu
+		menu_change(&current_menu);
+		//Wiping if menu has changed
+	  	if(current_menu == MIDI_TEMPO){
+	  		midi_tempo_counter(&htim4, &midi_tempo_data);
+	  	  	if(old_menu != current_menu){
+				screen_driver_Fill(Black);
+				screen_update_midi_tempo(&midi_tempo_data);
+				old_menu = current_menu;
+	  	    }
+	    }
+	  	else if(current_menu == MIDI_MODIFY){
+	  	  	if(old_menu != current_menu){
+				screen_driver_Fill(Black);
+				old_menu = current_menu;
+				}
+	    	char message_midi_modify[30] = "Midi Modify                   ";
+	    	menu_display(&Font_6x8, &message_midi_modify);
+	    	display_incoming_midi(midi_rx_buff_ptr);
+	  	    screen_driver_UpdateScreen();
 
-    }
-  	else if(current_menu == SETTINGS){
-  	  	settings_saved();
-  	  	if(old_menu != current_menu){
-  	  	  	if(old_menu != current_menu){
-			screen_driver_Fill(Black);
-			screen_update_settings();
-			old_menu = current_menu;
-  	  	    }
-			}
-    	char message_settings[30] = "Settings                      ";
-    	menu_display(&Font_6x8, &message_settings);
-  	    screen_driver_UpdateScreen();
+	    }
+	  	else if(current_menu == SETTINGS){
+	  	  	settings_saved();
+	  	  	if(old_menu != current_menu){
+	  	  	  	if(old_menu != current_menu){
+				screen_driver_Fill(Black);
+				screen_update_settings();
+				old_menu = current_menu;
+	  	  	    }
+				}
+	    	char message_settings[30] = "Settings                      ";
+	    	menu_display(&Font_6x8, &message_settings);
+	  	    screen_driver_UpdateScreen();
 
-    }
-	osDelay(10);
+	    }
+		osDelay(10);
   }
-  /* USER CODE END StartTask02 */
+  /* USER CODE END StartOtherTasks */
 }
 
 /**
