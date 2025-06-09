@@ -1,20 +1,4 @@
 /* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -89,6 +73,7 @@ uint8_t old_menu = MIDI_TEMPO;
 
 //Button information
 uint8_t Btn3State;
+uint8_t OldBtn3State = 0;
 
 
 
@@ -572,9 +557,10 @@ void StartDefaultTask(void *argument)
 		 //Debouncing
 		 osDelay(10);
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-		 if(Btn3State == 1){mt_start_stop(&huart2, &htim2, &midi_tempo_data);}
+		 if(Btn3State == 1 && OldBtn3State == 0){mt_start_stop(&huart2, &htim2, &midi_tempo_data);}
 	 }
   }
+  OldBtn3State = Btn3State;
   osDelay(10);
   }
   /* USER CODE END 5 */
