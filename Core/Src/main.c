@@ -111,6 +111,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  //Initialiazing the memory
+  midi_tempo_data.current_tempo = 60;
+  midi_tempo_data.currently_sending = 0;
 
   /* USER CODE END 1 */
 
@@ -141,6 +144,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //Romagnetics code
   screen_driver_Init();
+
+  //Initiation of the memory
+  //Will be moved to another function
+  struct save_struct flash_save = read_settings();
+  //Cheking if the save is valie
+  if (flash_save.check_data_validity == 42817){
+	  //Overwrite the default values
+	  midi_tempo_data = flash_save.midi_tempo_data;
+  }
+
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);

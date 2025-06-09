@@ -18,9 +18,15 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
 struct midi_tempo_data_struct{
 	uint32_t current_tempo;
-	uint8_t currently_sending;
+	uint32_t currently_sending;
+};
+
+struct save_struct{
+	struct midi_tempo_data_struct midi_tempo_data;
+	uint32_t check_data_validity;
 };
 
 
@@ -59,6 +65,8 @@ void Error_Handler(void);
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1
 #define SETTINGS 2
+
+#define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 /* USER CODE END Private defines */
 
