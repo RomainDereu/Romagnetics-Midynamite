@@ -61,7 +61,7 @@ void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
 
 
 void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
-	  uint32_t tempo_click_rate = 600000/(current_tempo*24);
+	  uint32_t tempo_click_rate = 6000000/(current_tempo*24);
 	  HAL_UART_Transmit(&huart_ptr, clock_send_tempo, 3, 1000);
 	  //Adjusting the tempo if needed
 	  if (TIM2->ARR != tempo_click_rate){
