@@ -583,11 +583,13 @@ void StartOtherTasks(void *argument)
 		menu_change(&current_menu);
 		//Wiping if menu has changed
 	  	if(current_menu == MIDI_TEMPO){
-	  		midi_tempo_counter(&htim4, &midi_tempo_data);
 	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
-				screen_update_midi_tempo(&midi_tempo_data);
+		  		midi_tempo_counter(&htim4, &midi_tempo_data);
 				old_menu = current_menu;
+	  	    }
+	  	  	else{
+		  	midi_tempo_counter(&htim4, &midi_tempo_data);
 	  	    }
 	    }
 	  	else if(current_menu == MIDI_MODIFY){
