@@ -26,7 +26,8 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 int compareArrays(double a[], double b[], int n);
 
 void midi_tempo_counter(TIM_HandleTypeDef * timer,
-						struct midi_tempo_data_struct * midi_tempo_data);
+						struct midi_tempo_data_struct * midi_tempo_data,
+						uint8_t needs_refresh);
 
 
 #endif /* INC_DEBUG_H_ */

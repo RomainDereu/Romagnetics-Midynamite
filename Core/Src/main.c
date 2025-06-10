@@ -151,8 +151,8 @@ int main(void)
   }
   //If the save is corrupt, use default values
   else {
-	  struct midi_tempo_data_struct midi_tempo_data = {.current_tempo = 60,
-	  												 .currently_sending = 0};
+	  midi_tempo_data.current_tempo = 60;
+	  midi_tempo_data.currently_sending = 0;
   }
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -596,25 +596,26 @@ void StartOtherTasks(void *argument)
 		menu_change(&current_menu);
 		//Wiping if menu has changed
 	  	if(current_menu == MIDI_TEMPO){
+	  		uint8_t needs_refresh = 0;
 	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
-		  		midi_tempo_counter(&htim4, &midi_tempo_data);
-				old_menu = current_menu;
+				uint8_t needs_refresh = 1;
+		  		midi_tempo_counter(&htim4, &midi_tempo_data, needs_refresh);
 	  	    }
 	  	  	else{
-		  	midi_tempo_counter(&htim4, &midi_tempo_data);
+		  	midi_tempo_counter(&htim4, &midi_tempo_data, needs_refresh);
 	  	    }
+			old_menu = current_menu;
 	    }
 	  	else if(current_menu == MIDI_MODIFY){
 	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
-				old_menu = current_menu;
 				}
 	    	char message_midi_modify[30] = "Midi Modify                   ";
 	    	menu_display(&Font_6x8, &message_midi_modify);
 	    	display_incoming_midi(midi_rx_buff_ptr);
 	  	    screen_driver_UpdateScreen();
-
+			old_menu = current_menu;
 	    }
 	  	else if(current_menu == SETTINGS){
 	  	  	settings_saved();
@@ -622,13 +623,12 @@ void StartOtherTasks(void *argument)
 	  	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
 				screen_update_settings();
-				old_menu = current_menu;
 	  	  	    }
-				}
+			}
 	    	char message_settings[30] = "Settings                      ";
 	    	menu_display(&Font_6x8, &message_settings);
 	  	    screen_driver_UpdateScreen();
-
+			old_menu = current_menu;
 	    }
 		osDelay(10);
   }

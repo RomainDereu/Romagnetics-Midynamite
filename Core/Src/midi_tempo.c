@@ -95,7 +95,9 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 
 
 
-void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct * midi_tempo_data){
+void midi_tempo_counter(TIM_HandleTypeDef * timer,
+		                struct midi_tempo_data_struct * midi_tempo_data,
+						uint8_t needs_refresh){
 	  //IF pressed, button 2 multiplies the tempo change by 10
 	  uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
 	  uint8_t change_value = 1;
@@ -104,10 +106,10 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct
 		  }
 	  //Checking if the timer has changed
       uint32_t new_timer = __HAL_TIM_GET_COUNTER(timer);
-	  if (new_timer > old_timer && old_timer != 0){
+	  if (new_timer > old_timer && old_timer != 0 && needs_refresh == 0){
 		  midi_tempo_data->current_tempo+= change_value;
 		  }
-	  else if(new_timer < old_timer){
+	  else if(new_timer < old_timer && needs_refresh == 0){
 		  midi_tempo_data->current_tempo-= change_value;
 	  }
 
@@ -123,7 +125,7 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer, struct midi_tempo_data_struct
 
 	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->current_tempo);
 
-	  if (old_tempo != midi_tempo_data->current_tempo){
+	  if (old_tempo != midi_tempo_data->current_tempo || needs_refresh == 1){
 		  //updating the screen if a new value appears
 		  screen_update_midi_tempo(midi_tempo_data);
 		  old_tempo = midi_tempo_data->current_tempo;

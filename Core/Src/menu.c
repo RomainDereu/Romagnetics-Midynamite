@@ -21,15 +21,15 @@ void menu_display(const screen_driver_Font_t * font, char (* message)[30]){
 
 
 
-void menu_change(uint8_t * current_menu_ptr){
+void menu_change(uint8_t * current_menu){
 	uint8_t Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
 	  if(Btn4State == 0)
 		 {
 			 //Debouncing
 			 osDelay(10);
 			 Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
-			 if(Btn4State == 0){*current_menu_ptr+=1;}
-			 if(*current_menu_ptr == 3){*current_menu_ptr = 0;}
+			 if(Btn4State == 0){*current_menu+=1;}
+			 if(*current_menu == 3){*current_menu = 0;}
 			 //Delay to allow for continuous pressing of the button
 			 osDelay(300);
 	  }

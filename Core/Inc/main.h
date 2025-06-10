@@ -66,6 +66,7 @@ void Error_Handler(void);
 #define MIDI_MODIFY 1
 #define SETTINGS 2
 
+
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 /* USER CODE END Private defines */
