@@ -45,11 +45,18 @@ void settings_saved(){
 			  if(Btn1State == 0)
 				 {
 				 //Saving the current configuration to the memory
+				 char saving_print[6] = "Saving";
+				 char saved_print[6] = "Saved!";
+				 char saved__clear_print[6] = "      ";
+
+				 screen_driver_SetCursor(90, 56);
+				 screen_driver_WriteString(saving_print, Font_6x8, White);
+				 screen_driver_UpdateScreen();
+
 				 struct save_struct memory_to_be_saved = creating_save(&midi_tempo_data);
 				 store_settings(&memory_to_be_saved);
 
-				 char saved_print[6] = "Saved!";
-				 char saved__clear_print[6] = "      ";
+
 				 screen_driver_SetCursor(90, 56);
 				 screen_driver_WriteString(saved_print, Font_6x8, White);
 				 screen_driver_UpdateScreen();
