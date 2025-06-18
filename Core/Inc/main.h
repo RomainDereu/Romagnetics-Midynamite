@@ -25,6 +25,7 @@ extern "C" {
 typedef struct {
 	uint32_t current_tempo;
 	uint32_t currently_sending;
+	uint8_t send_channels;
 }midi_tempo_data_struct;
 
 typedef struct {

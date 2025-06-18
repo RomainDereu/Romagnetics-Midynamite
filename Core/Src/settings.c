@@ -59,7 +59,7 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
 	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
 	//Random number, just to check that the data works
-	this_save.check_data_validity = 42817;
+	this_save.check_data_validity = 42818;
 	return this_save;
 }
 

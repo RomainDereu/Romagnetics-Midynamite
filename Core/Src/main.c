@@ -73,9 +73,6 @@ uint8_t old_menu = MIDI_TEMPO;
 uint8_t Btn3State;
 uint8_t OldBtn3State = 0;
 
-//Defining the channels send_channels_midi_tempo will be sent to
-uint8_t send_channels_midi_tempo;
-
 UART_HandleTypeDef *UART_list[2];
 
 
@@ -150,7 +147,7 @@ int main(void)
   //Will be moved to another function
   save_struct flash_save = read_settings();
   //Cheking if the save is valid
-  if (flash_save.check_data_validity == 42817){
+  if (flash_save.check_data_validity == 42818){
 	  //Overwrite the default values
 	  midi_tempo_data = flash_save.midi_tempo_data;
   }
@@ -158,14 +155,10 @@ int main(void)
   else {
 	  midi_tempo_data.current_tempo = 60;
 	  midi_tempo_data.currently_sending = 0;
+	  midi_tempo_data.send_channels = MIDI_OUT_1_2;
+	  save_struct emergency_save = creating_save(&midi_tempo_data);
+	  store_settings(&emergency_save);
   }
-
-  //Roro this will need to be updated once midi_send_channel is sent somewhere else
-  //If midi_send_channel isn't defined, 1 is the default (huart2 / Midi out 1)
-  if (send_channels_midi_tempo > MIDI_OUT_1 || send_channels_midi_tempo < 7)
-  	  {
-	  send_channels_midi_tempo = MIDI_OUT_1_2;
-  	}
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -610,7 +603,7 @@ void StartMidiSend(void *argument)
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 		 if(Btn3State == 1 && OldBtn3State == 0)
 		 {
-		   list_of_UART_to_send_to(send_channels_midi_tempo, UART_list);
+		   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
 		   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
 		 }
 	 }
