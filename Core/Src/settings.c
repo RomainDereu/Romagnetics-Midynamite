@@ -5,6 +5,7 @@
  *      Author: Astaa
  */
 
+#include <string.h>
 
 #include "cmsis_os.h"
 #include "settings.h"
@@ -26,6 +27,33 @@ screen_driver_WriteString(save_settings_message, Font_6x8, White);
 screen_driver_UpdateScreen();
 }
 
+void list_of_UART_to_send_to(uint8_t send_channels,
+                           	 UART_HandleTypeDef **UART_list){
+	extern UART_HandleTypeDef huart1;
+	extern UART_HandleTypeDef huart2;
+
+	if (send_channels == MIDI_OUT_1){
+		UART_list[0] = &huart1;
+		UART_list[1] = NULL;
+	}
+
+	else if (send_channels == MIDI_OUT_2){
+		UART_list[0] = &huart2;
+		UART_list[1] = NULL;
+	}
+
+	else if (send_channels == MIDI_OUT_1_2){
+		UART_list[0] = &huart1;
+		UART_list[1] = &huart2;
+	}
+
+	else{
+		UART_list[0] = NULL;
+		UART_list[1] = NULL;
+	}
+
+}
+
 
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
 	save_struct this_save;
@@ -36,7 +64,7 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
 }
 
 
-void settings_saved(){
+void saving_settings(){
 	uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
 	  if(Btn1State == 0)
 		 {
@@ -110,9 +138,7 @@ HAL_StatusTypeDef store_settings(save_struct *data){
 
     // Lock Flash again
     HAL_FLASH_Lock();
-
     return HAL_OK;
-
 }
 
 

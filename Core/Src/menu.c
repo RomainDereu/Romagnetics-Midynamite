@@ -33,5 +33,4 @@ void menu_change(uint8_t * current_menu){
 			 //Delay to allow for continuous pressing of the button
 			 osDelay(300);
 	  }
-
 }

@@ -19,6 +19,9 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+
+
+
 typedef struct {
 	uint32_t current_tempo;
 	uint32_t currently_sending;
@@ -65,6 +68,14 @@ void Error_Handler(void);
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1
 #define SETTINGS 2
+
+#define MIDI_OUT_1 1
+#define MIDI_OUT_2 2
+#define MIDI_OUT_1_2 3
+#define MIDI_OUT_USB 4
+#define MIDI_OUT_USB_1 5
+#define MIDI_OUT_USB_2 6
+#define MIDI_OUT_USB_1_2 7
 
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)

@@ -60,9 +60,14 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 }
 
 
-void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
+void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], uint32_t current_tempo){
 	  uint32_t tempo_click_rate = 6000000/(current_tempo*24);
-	  HAL_UART_Transmit(&huart_ptr, clock_send_tempo, 3, 1000);
+	  if (UART_list[0] != NULL){
+		  HAL_UART_Transmit(UART_list[0], clock_send_tempo, 3, 1000);
+	  }
+	  if (UART_list[1] != NULL){
+		  HAL_UART_Transmit(UART_list[1], clock_send_tempo, 3, 1000);
+	  }
 	  //Adjusting the tempo if needed
 	  if (TIM2->ARR != tempo_click_rate){
 		  TIM2->ARR = tempo_click_rate;
@@ -71,12 +76,18 @@ void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
 
 
 //Interrupter method. Do not add delay
-void mt_start_stop(UART_HandleTypeDef * uart,
+void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		           TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data_ptr){
 	if(midi_tempo_data_ptr->currently_sending == 0){
 		//Clock start and starting the timer
-		HAL_UART_Transmit(uart, clock_start, 3, 1000);
+		if (UART_list[0] != NULL){
+			HAL_UART_Transmit(UART_list[0], clock_start, 3, 1000);
+		}
+		if (UART_list[1] != NULL){
+			HAL_UART_Transmit(UART_list[1], clock_start, 3, 1000);
+		}
+
 		HAL_TIM_Base_Start_IT(timer);
 		midi_tempo_data_ptr->currently_sending = 1;
 		screen_update_midi_tempo(midi_tempo_data_ptr);
@@ -85,7 +96,13 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 	else if(midi_tempo_data_ptr->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
-		HAL_UART_Transmit(uart, clock_stop, 3, 1000);
+		if (UART_list[0] != NULL){
+			HAL_UART_Transmit(UART_list[0], clock_stop, 3, 1000);
+		}
+		if (UART_list[1] != NULL){
+			HAL_UART_Transmit(UART_list[1], clock_stop, 3, 1000);
+		}
+
 		midi_tempo_data_ptr->currently_sending = 0;
 		screen_update_midi_tempo(midi_tempo_data_ptr);
 	}

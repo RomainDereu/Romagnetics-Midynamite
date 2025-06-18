@@ -73,6 +73,10 @@ uint8_t old_menu = MIDI_TEMPO;
 uint8_t Btn3State;
 uint8_t OldBtn3State = 0;
 
+//Defining the channels send_channels_midi_tempo will be sent to
+uint8_t send_channels_midi_tempo;
+
+UART_HandleTypeDef *UART_list[2];
 
 
 /* USER CODE END PV */
@@ -155,6 +159,13 @@ int main(void)
 	  midi_tempo_data.current_tempo = 60;
 	  midi_tempo_data.currently_sending = 0;
   }
+
+  //Roro this will need to be updated once midi_send_channel is sent somewhere else
+  //If midi_send_channel isn't defined, 1 is the default (huart2 / Midi out 1)
+  if (send_channels_midi_tempo > MIDI_OUT_1 || send_channels_midi_tempo < 7)
+  	  {
+	  send_channels_midi_tempo = MIDI_OUT_1_2;
+  	}
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -597,7 +608,11 @@ void StartMidiSend(void *argument)
 		 //Debouncing
 		 osDelay(10);
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-		 if(Btn3State == 1 && OldBtn3State == 0){mt_start_stop(&huart1, &htim2, &midi_tempo_data);}
+		 if(Btn3State == 1 && OldBtn3State == 0)
+		 {
+		   list_of_UART_to_send_to(send_channels_midi_tempo, UART_list);
+		   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
+		 }
 	 }
   }
   OldBtn3State = Btn3State;
@@ -646,7 +661,7 @@ void StartOtherTasks(void *argument)
 			old_menu = current_menu;
 	    }
 	  	else if(current_menu == SETTINGS){
-	  	  	settings_saved();
+	  	  	saving_settings();
 	  	  	if(old_menu != current_menu){
 	  	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
@@ -685,7 +700,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2) {
 
-	send_midi_tempo_out(huart1, midi_tempo_data.current_tempo);
+	send_midi_tempo_out(UART_list, midi_tempo_data.current_tempo);
   }
 
 
