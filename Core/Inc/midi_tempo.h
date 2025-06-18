@@ -30,4 +30,6 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer,
 						uint8_t needs_refresh);
 
 
+
+
 #endif /* INC_DEBUG_H_ */
