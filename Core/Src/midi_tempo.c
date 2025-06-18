@@ -27,7 +27,7 @@ const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
 
-void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data){
+void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
 	  //Menu
 	  char message_midi_tempo[30] = "Send Midi Tempo              ";
@@ -73,7 +73,7 @@ void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo){
 //Interrupter method. Do not add delay
 void mt_start_stop(UART_HandleTypeDef * uart,
 		           TIM_HandleTypeDef * timer,
-				   struct midi_tempo_data_struct * midi_tempo_data_ptr){
+				   midi_tempo_data_struct * midi_tempo_data_ptr){
 	if(midi_tempo_data_ptr->currently_sending == 0){
 		//Clock start and starting the timer
 		HAL_UART_Transmit(uart, clock_start, 3, 1000);
@@ -96,7 +96,7 @@ void mt_start_stop(UART_HandleTypeDef * uart,
 
 
 void midi_tempo_counter(TIM_HandleTypeDef * timer,
-		                struct midi_tempo_data_struct * midi_tempo_data,
+		                midi_tempo_data_struct * midi_tempo_data,
 						uint8_t needs_refresh){
 	  //IF pressed, button 2 multiplies the tempo change by 10
 	  uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);

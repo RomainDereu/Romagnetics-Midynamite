@@ -64,7 +64,7 @@ const osThreadAttr_t other_tasks_attributes = {
 /* USER CODE BEGIN PV */
 //Romagnetics code
 //structs containing the informaiton for each mode
-struct midi_tempo_data_struct midi_tempo_data;
+midi_tempo_data_struct midi_tempo_data;
 
 uint8_t current_menu = MIDI_TEMPO;
 uint8_t old_menu = MIDI_TEMPO;
@@ -144,7 +144,7 @@ int main(void)
 
   //Initiation of the memory
   //Will be moved to another function
-  struct save_struct flash_save = read_settings();
+  save_struct flash_save = read_settings();
   //Cheking if the save is valid
   if (flash_save.check_data_validity == 42817){
 	  //Overwrite the default values

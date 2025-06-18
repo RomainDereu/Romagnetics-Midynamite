@@ -19,15 +19,15 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
-struct midi_tempo_data_struct{
+typedef struct {
 	uint32_t current_tempo;
 	uint32_t currently_sending;
-};
+}midi_tempo_data_struct;
 
-struct save_struct{
-	struct midi_tempo_data_struct midi_tempo_data;
+typedef struct {
+	midi_tempo_data_struct midi_tempo_data;
 	uint32_t check_data_validity;
-};
+}save_struct;
 
 
 /* USER CODE END ET */

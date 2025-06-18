@@ -14,19 +14,19 @@
 #include "screen_driver.h"
 
 
-void screen_update_midi_tempo(struct midi_tempo_data_struct * midi_tempo_data);
+void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
 
 void send_midi_tempo_out(UART_HandleTypeDef huart_ptr, uint32_t current_tempo);
 
 
 void mt_start_stop(UART_HandleTypeDef * uart,
 		           TIM_HandleTypeDef * timer,
-				   struct midi_tempo_data_struct * midi_tempo_data);
+				   midi_tempo_data_struct * midi_tempo_data);
 
 int compareArrays(double a[], double b[], int n);
 
 void midi_tempo_counter(TIM_HandleTypeDef * timer,
-						struct midi_tempo_data_struct * midi_tempo_data,
+						midi_tempo_data_struct * midi_tempo_data,
 						uint8_t needs_refresh);
 
 

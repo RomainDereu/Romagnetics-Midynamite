@@ -15,7 +15,7 @@
 
 #include "stm32f4xx_hal.h"
 
-extern struct midi_tempo_data_struct midi_tempo_data;
+extern midi_tempo_data_struct midi_tempo_data;
 
 
 
@@ -27,8 +27,8 @@ screen_driver_UpdateScreen();
 }
 
 
-struct save_struct creating_save(struct midi_tempo_data_struct * midi_tempo_data_to_save){
-	struct save_struct this_save;
+save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
+	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
 	//Random number, just to check that the data works
 	this_save.check_data_validity = 42817;
@@ -54,7 +54,7 @@ void settings_saved(){
 				 screen_driver_WriteString(saving_print, Font_6x8, White);
 				 screen_driver_UpdateScreen();
 
-				 struct save_struct memory_to_be_saved = creating_save(&midi_tempo_data);
+				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data);
 				 store_settings(&memory_to_be_saved);
 
 
@@ -72,14 +72,14 @@ void settings_saved(){
 
 
 
-HAL_StatusTypeDef store_settings(struct save_struct *data){
+HAL_StatusTypeDef store_settings(save_struct *data){
 	HAL_StatusTypeDef status;
 	uint32_t error_status = 0;
 	FLASH_EraseInitTypeDef flash_erase_struct = {0};
 
 	//Regarding the data
     uint32_t* data_ptr = (uint32_t*)data;
-    uint32_t data_length = sizeof(struct save_struct) / 4;
+    uint32_t data_length = sizeof(save_struct) / 4;
 
 	HAL_FLASH_Unlock();
 	//erasing the memory
@@ -116,8 +116,8 @@ HAL_StatusTypeDef store_settings(struct save_struct *data){
 }
 
 
-struct save_struct read_settings(void){
-	    struct save_struct flash_data;
+save_struct read_settings(void){
+	    save_struct flash_data;
 	    memcpy(&flash_data, (void*)FLASH_SECTOR7_ADDR, sizeof(flash_data));
 	    return flash_data;
 }
