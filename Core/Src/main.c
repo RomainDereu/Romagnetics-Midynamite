@@ -366,7 +366,7 @@ static void MX_TIM3_Init(void)
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
-  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC2Filter = 0;
@@ -636,10 +636,12 @@ void StartOtherTasks(void *argument)
 	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
 				uint8_t needs_refresh = 1;
-		  		midi_tempo_counter(&htim4, &midi_tempo_data, needs_refresh);
+		  		midi_tempo_select_counter(&htim3, &midi_tempo_data, needs_refresh);
+		  		midi_tempo_value_counter(&htim4, &midi_tempo_data, needs_refresh);
 	  	    }
 	  	  	else{
-		  	midi_tempo_counter(&htim4, &midi_tempo_data, needs_refresh);
+		  	midi_tempo_select_counter(&htim3, &midi_tempo_data, needs_refresh);
+		  	midi_tempo_value_counter(&htim4, &midi_tempo_data, needs_refresh);
 	  	    }
 			old_menu = current_menu;
 	    }
@@ -692,7 +694,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-
+	//Roro make a freertos Queue and get out of the interupt
 	send_midi_tempo_out(UART_list, midi_tempo_data.current_tempo);
   }
 

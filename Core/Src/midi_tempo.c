@@ -19,8 +19,9 @@
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t old_tempo;
-//Saving a copy of the latest value of the
-uint32_t old_timer = 0;
+//Saving a copy of the latest value of the select and value timers
+uint32_t old_select_timer = 0;
+uint32_t old_value_timer = 0;
 //Midi messages constants
 const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
@@ -71,7 +72,6 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
       else if (midi_tempo_data->currently_sending==1){
     	  screen_driver_WriteString(sending_print, Font_6x8 , White);
       }
-
  	  //Tempo
 	  char tempo_number[3];
 	  itoa(midi_tempo_data->current_tempo ,tempo_number,10);
@@ -102,11 +102,11 @@ void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], uint32_t current_temp
 }
 
 
-//Interrupter method. Do not add delay
+
 void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		           TIM_HandleTypeDef * timer,
-				   midi_tempo_data_struct * midi_tempo_data_ptr){
-	if(midi_tempo_data_ptr->currently_sending == 0){
+				   midi_tempo_data_struct * midi_tempo_data){
+	if(midi_tempo_data->currently_sending == 0){
 		//Clock start and starting the timer
 		if (UART_list[0] != NULL){
 			HAL_UART_Transmit(UART_list[0], clock_start, 3, 1000);
@@ -116,11 +116,11 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		}
 
 		HAL_TIM_Base_Start_IT(timer);
-		midi_tempo_data_ptr->currently_sending = 1;
-		screen_update_midi_tempo(midi_tempo_data_ptr);
+		midi_tempo_data->currently_sending = 1;
+		screen_update_midi_tempo(midi_tempo_data);
 	}
 
-	else if(midi_tempo_data_ptr->currently_sending == 1){
+	else if(midi_tempo_data->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
 		if (UART_list[0] != NULL){
@@ -130,28 +130,61 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 			HAL_UART_Transmit(UART_list[1], clock_stop, 3, 1000);
 		}
 
-		midi_tempo_data_ptr->currently_sending = 0;
-		screen_update_midi_tempo(midi_tempo_data_ptr);
+		midi_tempo_data->currently_sending = 0;
+		screen_update_midi_tempo(midi_tempo_data);
 	}
 }
 
 
 
-void midi_tempo_counter(TIM_HandleTypeDef * timer,
+void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
+                               midi_tempo_data_struct * midi_tempo_data,
+							   uint8_t needs_refresh){
+
+    uint32_t new_select_timer = __HAL_TIM_GET_COUNTER(timer);
+	  if (new_select_timer > old_select_timer && old_select_timer != 0 && needs_refresh == 0){
+		  midi_tempo_data->send_channels+=1;
+		  }
+	  else if(new_select_timer < old_select_timer && needs_refresh == 0){
+		  midi_tempo_data->send_channels-=1;
+	  }
+
+	  //checking if the values are out of bounds
+	  if (midi_tempo_data->send_channels > 60000  || midi_tempo_data->send_channels < MIDI_OUT_1)
+	  {
+		  midi_tempo_data->send_channels = MIDI_OUT_1;
+	  }
+	  if (midi_tempo_data->send_channels > MIDI_OUT_1_2)
+	  {
+		  midi_tempo_data->send_channels = MIDI_OUT_1_2;
+	  }
+
+	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->send_channels);
+
+	  if (old_tempo != midi_tempo_data->send_channels || needs_refresh == 1){
+		  //updating the screen if a new value appears
+		  screen_update_midi_tempo(midi_tempo_data);
+		  old_tempo = midi_tempo_data->current_tempo;
+
+	  old_select_timer = __HAL_TIM_GET_COUNTER(timer);
+   }
+}
+
+void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
 		                midi_tempo_data_struct * midi_tempo_data,
 						uint8_t needs_refresh){
-	  //IF pressed, button 2 multiplies the tempo change by 10
+	  //If pressed, button 2 multiplies the tempo change by 10
 	  uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
 	  uint8_t change_value = 1;
 	  if (Btn2State == 1){
 		  change_value = 10;
 		  }
 	  //Checking if the timer has changed
-      uint32_t new_timer = __HAL_TIM_GET_COUNTER(timer);
-	  if (new_timer > old_timer && old_timer != 0 && needs_refresh == 0){
+      uint32_t new_value_timer = __HAL_TIM_GET_COUNTER(timer);
+	  if (new_value_timer > old_value_timer && old_value_timer != 0 && needs_refresh == 0){
 		  midi_tempo_data->current_tempo+= change_value;
 		  }
-	  else if(new_timer < old_timer && needs_refresh == 0){
+	  else if(new_value_timer < old_value_timer && needs_refresh == 0){
 		  midi_tempo_data->current_tempo-= change_value;
 	  }
 
@@ -172,7 +205,5 @@ void midi_tempo_counter(TIM_HandleTypeDef * timer,
 		  screen_update_midi_tempo(midi_tempo_data);
 		  old_tempo = midi_tempo_data->current_tempo;
 	  }
-	  old_timer = __HAL_TIM_GET_COUNTER(timer);
+	  old_value_timer = __HAL_TIM_GET_COUNTER(timer);
 }
-
-
