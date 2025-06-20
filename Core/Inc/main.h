@@ -65,6 +65,9 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 
+#define ENCODER_CENTER     32768
+#define ENCODER_THRESHOLD  4
+
 
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1

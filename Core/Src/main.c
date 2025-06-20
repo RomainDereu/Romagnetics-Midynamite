@@ -170,6 +170,9 @@ int main(void)
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+
+  //Setting up both encoders
+  __HAL_TIM_SET_COUNTER(&htim3, ENCODER_CENTER);
   __HAL_TIM_SET_COUNTER(&htim4, ENCODER_CENTER);
 
   HAL_UART_Receive_IT(&huart1, midi_rx_buff_ptr, 3);
@@ -646,16 +649,17 @@ void MediumTasks(void *argument)
 		menu_change(&current_menu);
 		//Wiping if menu has changed
 	  	if(current_menu == MIDI_TEMPO){
-	  		uint8_t needs_refresh = 0;
+	  		uint8_t menu_changed = 0;
 	  	  	if(old_menu != current_menu){
 				screen_driver_Fill(Black);
-				uint8_t needs_refresh = 1;
-		  		midi_tempo_select_counter(&htim3, &midi_tempo_data, needs_refresh);
-		  		midi_tempo_value_counter(&htim4, &midi_tempo_data, needs_refresh);
-	  	    }
+				uint8_t menu_changed = 1;
+		  		midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
+		  		midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
+
+	  	  	}
 	  	  	else{
-		  	midi_tempo_select_counter(&htim3, &midi_tempo_data, needs_refresh);
-		  	midi_tempo_value_counter(&htim4, &midi_tempo_data, needs_refresh);
+				midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
+				midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
 	  	    }
 			old_menu = current_menu;
 	    }
@@ -682,7 +686,9 @@ void MediumTasks(void *argument)
 	  	    screen_driver_UpdateScreen();
 			old_menu = current_menu;
 	    }
-		osDelay(10);
+	//Let other tasks update
+	osDelay(10);
+
   }
   /* USER CODE END MediumTasks */
 }
@@ -707,7 +713,8 @@ void DisplayUpdate(void *argument)
   	      screen_update_midi_tempo(&midi_tempo_data);
   	  	}
       }
-	osDelay(10);
+    //Limiting the refresh at 30fps to leave headroom for other functions
+	osDelay(34);
   }
   /* USER CODE END DisplayUpdate */
 }

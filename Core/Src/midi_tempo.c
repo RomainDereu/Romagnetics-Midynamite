@@ -21,16 +21,7 @@
 
 extern osThreadId display_updateHandle;
 
-//All the tempo variables are set for a tempo of 60 but are dynamically changed in code
-uint32_t old_tempo;
-uint32_t old_target;
 
-//Saving a copy of the latest value of the select and value timers
-uint32_t old_select_timer = 0;
-uint32_t old_value_timer = 0;
-
-
-static int32_t tempo_residual = 0;
 
 //Midi messages constants
 const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
@@ -153,11 +144,22 @@ void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
                                midi_tempo_data_struct * midi_tempo_data,
 							   uint8_t menu_changed){
 
-    uint32_t new_select_timer = __HAL_TIM_GET_COUNTER(timer);
-    int32_t steps = (new_select_timer - old_select_timer) / 4;
+	static uint32_t old_target;
 
-    if (steps != 0 && menu_changed == 0) {
-        midi_tempo_data->send_channels += steps;
+    if (menu_changed == 0) {
+
+		int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
+		int32_t delta = timer_count - ENCODER_CENTER;
+
+        if (delta >= ENCODER_THRESHOLD) {
+			midi_tempo_data->send_channels += 1;
+			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+
+		else if (delta <= -ENCODER_THRESHOLD) {
+			midi_tempo_data->send_channels -= 1;
+			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+		}
 
 	  //checking if the values are out of bounds
         if (midi_tempo_data->send_channels > MIDI_OUT_1_2) {
@@ -166,21 +168,24 @@ void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
             midi_tempo_data->send_channels = MIDI_OUT_1_2;
         }
 
-        if (old_target != midi_tempo_data->send_channels || menu_changed == 1) {
-            osThreadFlagsSet(display_updateHandle, 0x01);
+        if (old_target != midi_tempo_data->send_channels) {
             old_target = midi_tempo_data->send_channels;
+            osThreadFlagsSet(display_updateHandle, 0x01);
         }
 
-        __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->send_channels);
-        old_select_timer = __HAL_TIM_GET_COUNTER(timer);
     }
+
+	if (menu_changed == 1) {
+		__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+	}
 }
 
 void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
                                midi_tempo_data_struct * midi_tempo_data,
                                uint8_t menu_changed) {
 
-	//Refresh refers to the changing of menu
+    static uint32_t old_tempo;
+
     if (menu_changed == 0) {
 
         uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
@@ -189,28 +194,28 @@ void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
         int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
         int32_t delta = timer_count - ENCODER_CENTER;
 
-        tempo_residual += delta;
-        int32_t steps = tempo_residual / TICKS_PER_STEP;
-        tempo_residual %= TICKS_PER_STEP;
+        if (delta >= ENCODER_THRESHOLD) {
+            midi_tempo_data->current_tempo += change_value;
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+        else if (delta <= -ENCODER_THRESHOLD) {
+            midi_tempo_data->current_tempo -= change_value;
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
 
-        if (steps != 0) {
-            midi_tempo_data->current_tempo += steps * change_value;
-
-            if (midi_tempo_data->current_tempo < 30) {
-                midi_tempo_data->current_tempo = 30;
-            } else if (midi_tempo_data->current_tempo > 300) {
-                midi_tempo_data->current_tempo = 300;
-            }
+        if (midi_tempo_data->current_tempo < 30) {
+            midi_tempo_data->current_tempo = 30;
+        } else if (midi_tempo_data->current_tempo > 300) {
+            midi_tempo_data->current_tempo = 300;
         }
     }
 
-    // Update the display
     if (old_tempo != midi_tempo_data->current_tempo || menu_changed == 1) {
         osThreadFlagsSet(display_updateHandle, 0x01);
+        old_tempo = midi_tempo_data->current_tempo;
     }
 
-    // Reset timer to match new center
-    old_tempo = midi_tempo_data->current_tempo;
-    __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-
+    if (menu_changed == 1) {
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+    }
 }
