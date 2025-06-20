@@ -16,12 +16,22 @@
 #include "cmsis_os.h"
 #include "menu.h"
 #include "main.h"
+#include <math.h>
+
+
+extern osThreadId display_updateHandle;
 
 //All the tempo variables are set for a tempo of 60 but are dynamically changed in code
 uint32_t old_tempo;
+uint32_t old_target;
+
 //Saving a copy of the latest value of the select and value timers
 uint32_t old_select_timer = 0;
 uint32_t old_value_timer = 0;
+
+
+static int32_t tempo_residual = 0;
+
 //Midi messages constants
 const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
@@ -117,7 +127,8 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 
 		HAL_TIM_Base_Start_IT(timer);
 		midi_tempo_data->currently_sending = 1;
-		screen_update_midi_tempo(midi_tempo_data);
+		//Updating the display in another thread
+		osThreadFlagsSet(display_updateHandle, 0x01);
 	}
 
 	else if(midi_tempo_data->currently_sending == 1){
@@ -131,7 +142,8 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		}
 
 		midi_tempo_data->currently_sending = 0;
-		screen_update_midi_tempo(midi_tempo_data);
+		//Updating the display in another thread
+		osThreadFlagsSet(display_updateHandle, 0x01);
 	}
 }
 
@@ -139,71 +151,66 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 
 void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
                                midi_tempo_data_struct * midi_tempo_data,
-							   uint8_t needs_refresh){
+							   uint8_t menu_changed){
 
     uint32_t new_select_timer = __HAL_TIM_GET_COUNTER(timer);
-	  if (new_select_timer > old_select_timer && old_select_timer != 0 && needs_refresh == 0){
-		  midi_tempo_data->send_channels+=1;
-		  }
-	  else if(new_select_timer < old_select_timer && needs_refresh == 0){
-		  midi_tempo_data->send_channels-=1;
-	  }
+    int32_t steps = (new_select_timer - old_select_timer) / 4;
+
+    if (steps != 0 && menu_changed == 0) {
+        midi_tempo_data->send_channels += steps;
 
 	  //checking if the values are out of bounds
-	  if (midi_tempo_data->send_channels > 60000  || midi_tempo_data->send_channels < MIDI_OUT_1)
-	  {
-		  midi_tempo_data->send_channels = MIDI_OUT_1;
-	  }
-	  if (midi_tempo_data->send_channels > MIDI_OUT_1_2)
-	  {
-		  midi_tempo_data->send_channels = MIDI_OUT_1_2;
-	  }
+        if (midi_tempo_data->send_channels > MIDI_OUT_1_2) {
+            midi_tempo_data->send_channels = MIDI_OUT_1;
+        } else if (midi_tempo_data->send_channels < MIDI_OUT_1) {
+            midi_tempo_data->send_channels = MIDI_OUT_1_2;
+        }
 
-	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->send_channels);
+        if (old_target != midi_tempo_data->send_channels || menu_changed == 1) {
+            osThreadFlagsSet(display_updateHandle, 0x01);
+            old_target = midi_tempo_data->send_channels;
+        }
 
-	  if (old_tempo != midi_tempo_data->send_channels || needs_refresh == 1){
-		  //updating the screen if a new value appears
-		  screen_update_midi_tempo(midi_tempo_data);
-		  old_tempo = midi_tempo_data->current_tempo;
-
-	  old_select_timer = __HAL_TIM_GET_COUNTER(timer);
-   }
+        __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->send_channels);
+        old_select_timer = __HAL_TIM_GET_COUNTER(timer);
+    }
 }
 
 void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
-		                midi_tempo_data_struct * midi_tempo_data,
-						uint8_t needs_refresh){
-	  //If pressed, button 2 multiplies the tempo change by 10
-	  uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-	  uint8_t change_value = 1;
-	  if (Btn2State == 1){
-		  change_value = 10;
-		  }
-	  //Checking if the timer has changed
-      uint32_t new_value_timer = __HAL_TIM_GET_COUNTER(timer);
-	  if (new_value_timer > old_value_timer && old_value_timer != 0 && needs_refresh == 0){
-		  midi_tempo_data->current_tempo+= change_value;
-		  }
-	  else if(new_value_timer < old_value_timer && needs_refresh == 0){
-		  midi_tempo_data->current_tempo-= change_value;
-	  }
+                               midi_tempo_data_struct * midi_tempo_data,
+                               uint8_t menu_changed) {
 
-	  //checking if the values are out of bounds
-	  if (midi_tempo_data->current_tempo > 60000  || midi_tempo_data->current_tempo < 30)
-	  {
-		  midi_tempo_data->current_tempo = 30;
-	  }
-	  if (midi_tempo_data->current_tempo > 300)
-	  {
-		  midi_tempo_data->current_tempo = 300;
-	  }
+	//Refresh refers to the changing of menu
+    if (menu_changed == 0) {
 
-	  __HAL_TIM_SET_COUNTER(timer, midi_tempo_data->current_tempo);
+        uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        uint8_t change_value = (Btn2State == 1) ? 10 : 1;
 
-	  if (old_tempo != midi_tempo_data->current_tempo || needs_refresh == 1){
-		  //updating the screen if a new value appears
-		  screen_update_midi_tempo(midi_tempo_data);
-		  old_tempo = midi_tempo_data->current_tempo;
-	  }
-	  old_value_timer = __HAL_TIM_GET_COUNTER(timer);
+        int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
+        int32_t delta = timer_count - ENCODER_CENTER;
+
+        tempo_residual += delta;
+        int32_t steps = tempo_residual / TICKS_PER_STEP;
+        tempo_residual %= TICKS_PER_STEP;
+
+        if (steps != 0) {
+            midi_tempo_data->current_tempo += steps * change_value;
+
+            if (midi_tempo_data->current_tempo < 30) {
+                midi_tempo_data->current_tempo = 30;
+            } else if (midi_tempo_data->current_tempo > 300) {
+                midi_tempo_data->current_tempo = 300;
+            }
+        }
+    }
+
+    // Update the display
+    if (old_tempo != midi_tempo_data->current_tempo || menu_changed == 1) {
+        osThreadFlagsSet(display_updateHandle, 0x01);
+    }
+
+    // Reset timer to match new center
+    old_tempo = midi_tempo_data->current_tempo;
+    __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+
 }

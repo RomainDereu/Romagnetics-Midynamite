@@ -47,17 +47,24 @@ TIM_HandleTypeDef htim4;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
-/* Definitions for midi_send */
-osThreadId_t midi_sendHandle;
-const osThreadAttr_t midi_send_attributes = {
-  .name = "midi_send",
+/* Definitions for midi_core */
+osThreadId_t midi_coreHandle;
+const osThreadAttr_t midi_core_attributes = {
+  .name = "midi_core",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityRealtime,
 };
-/* Definitions for other_tasks */
-osThreadId_t other_tasksHandle;
-const osThreadAttr_t other_tasks_attributes = {
-  .name = "other_tasks",
+/* Definitions for medium_tasks */
+osThreadId_t medium_tasksHandle;
+const osThreadAttr_t medium_tasks_attributes = {
+  .name = "medium_tasks",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for display_update */
+osThreadId_t display_updateHandle;
+const osThreadAttr_t display_update_attributes = {
+  .name = "display_update",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityBelowNormal,
 };
@@ -88,8 +95,9 @@ static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_USB_OTG_FS_USB_Init(void);
-void StartMidiSend(void *argument);
-void StartOtherTasks(void *argument);
+void MidiCore(void *argument);
+void MediumTasks(void *argument);
+void DisplayUpdate(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -162,6 +170,8 @@ int main(void)
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+  __HAL_TIM_SET_COUNTER(&htim4, ENCODER_CENTER);
+
   HAL_UART_Receive_IT(&huart1, midi_rx_buff_ptr, 3);
 
   /* USER CODE END 2 */
@@ -186,11 +196,14 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of midi_send */
-  midi_sendHandle = osThreadNew(StartMidiSend, NULL, &midi_send_attributes);
+  /* creation of midi_core */
+  midi_coreHandle = osThreadNew(MidiCore, NULL, &midi_core_attributes);
 
-  /* creation of other_tasks */
-  other_tasksHandle = osThreadNew(StartOtherTasks, NULL, &other_tasks_attributes);
+  /* creation of medium_tasks */
+  medium_tasksHandle = osThreadNew(MediumTasks, NULL, &medium_tasks_attributes);
+
+  /* creation of display_update */
+  display_updateHandle = osThreadNew(DisplayUpdate, NULL, &display_update_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -359,17 +372,17 @@ static void MX_TIM3_Init(void)
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
-  sConfig.IC2Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Filter = 10;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 0;
+  sConfig.IC2Filter = 10;
   if (HAL_TIM_Encoder_Init(&htim3, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -408,17 +421,17 @@ static void MX_TIM4_Init(void)
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 65535;
-  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
-  sConfig.IC2Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Filter = 10;
+  sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 0;
+  sConfig.IC2Filter = 10;
   if (HAL_TIM_Encoder_Init(&htim4, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -577,14 +590,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartMidiSend */
+/* USER CODE BEGIN Header_MidiCore */
 /**
-  * @brief  Function implementing the midi_send thread.
+  * @brief  Function implementing the midi_core thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartMidiSend */
-void StartMidiSend(void *argument)
+/* USER CODE END Header_MidiCore */
+void MidiCore(void *argument)
 {
   /* USER CODE BEGIN 5 */
 
@@ -614,19 +627,20 @@ void StartMidiSend(void *argument)
   /* USER CODE END 5 */
 }
 
-/* USER CODE BEGIN Header_StartOtherTasks */
+/* USER CODE BEGIN Header_MediumTasks */
 /**
-* @brief Function implementing the other_tasks thread.
+* @brief Function implementing the medium_tasks thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartOtherTasks */
-void StartOtherTasks(void *argument)
+/* USER CODE END Header_MediumTasks */
+void MediumTasks(void *argument)
 {
-  /* USER CODE BEGIN StartOtherTasks */
+  /* USER CODE BEGIN MediumTasks */
   /* Infinite loop */
   for(;;)
   {
+
 	     //Romagnetics code
 	     //Menu
 		menu_change(&current_menu);
@@ -670,7 +684,32 @@ void StartOtherTasks(void *argument)
 	    }
 		osDelay(10);
   }
-  /* USER CODE END StartOtherTasks */
+  /* USER CODE END MediumTasks */
+}
+
+/* USER CODE BEGIN Header_DisplayUpdate */
+/**
+* @brief Function implementing the display_update thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_DisplayUpdate */
+void DisplayUpdate(void *argument)
+{
+  /* USER CODE BEGIN DisplayUpdate */
+  /* Infinite loop */
+  for(;;)
+  {
+      // Wait for flag 0x01 from MediumTasks
+      uint32_t displayFlag = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
+      if (displayFlag & 0x01) {
+  	  	if(current_menu == MIDI_TEMPO){
+  	      screen_update_midi_tempo(&midi_tempo_data);
+  	  	}
+      }
+	osDelay(10);
+  }
+  /* USER CODE END DisplayUpdate */
 }
 
 /**
