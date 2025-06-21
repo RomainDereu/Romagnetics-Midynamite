@@ -18,6 +18,8 @@ void midi_buffer_push(uint8_t byte);
 
 uint8_t midi_buffer_pop(uint8_t *byte);
 
+void send_midi_out(uint8_t *midi_message);
+
 void display_incoming_midi();
 
 void midi_modify_update_menu(uint8_t * old_menu);

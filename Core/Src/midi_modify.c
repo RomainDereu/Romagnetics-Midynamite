@@ -21,8 +21,11 @@
 char message_midi_modify[30] = "Midi Modify                   ";
 //Roro test purposes only
 
+extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+
 static char byte_print_hex[11];
-static uint8_t midi_msg[3];
+static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
 
 // Circular buffer instance declared externally
@@ -52,19 +55,24 @@ void calculate_incoming_midi() {
     while (midi_buffer_pop(&byte)) {
         if (byte & 0x80) {
             // Status byte: start a new message
-            midi_msg[0] = byte;
+            midi_message[0] = byte;
             byte_count = 1;
         } else if (byte_count > 0 && byte_count < 3) {
-            midi_msg[byte_count++] = byte;
+            midi_message[byte_count++] = byte;
         }
 
         if (byte_count == 3) {
             snprintf(byte_print_hex, sizeof(byte_print_hex), "%02X %02X %02X",
-                     midi_msg[0], midi_msg[1], midi_msg[2]);
+                     midi_message[0], midi_message[1], midi_message[2]);
+            		 send_midi_out(&midi_message);
             byte_count = 0;
             break;  // Only show one message per update call
         }
     }
+}
+
+void send_midi_out(uint8_t *midi_message) {
+	  HAL_UART_Transmit(&huart1, midi_message, 3, 1000);
 }
 
 void display_incoming_midi(){
