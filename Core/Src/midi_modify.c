@@ -31,6 +31,10 @@ void display_incoming_midi(){
 
 	menu_display(&Font_6x8, &message_midi_modify);
 	//screen_driver_WriteString(byte_print_hex, *font , White);
+	//Vertical line
+	screen_driver_Line(64, 10, 64, 64, White);
+
+
 	screen_driver_SetCursor(0, 54);
 	screen_driver_WriteString(byte_print_hex, Font_6x8 , White);
 	screen_driver_UpdateScreen();

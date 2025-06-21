@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
@@ -16,7 +17,7 @@
 #include "cmsis_os.h"
 #include "menu.h"
 #include "main.h"
-#include <math.h>
+#include "utils.h"
 
 extern osThreadId display_updateHandle;
 
@@ -141,50 +142,14 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	if(*old_menu != MIDI_TEMPO){
 		screen_driver_Fill(Black);
 		menu_changed = 1;
-		midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
+		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
 		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 	}
 	else{
-		midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
+		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
 		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 	}
 	*old_menu = MIDI_TEMPO;
-}
-
-void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
-                               midi_tempo_data_struct * midi_tempo_data,
-							   uint8_t menu_changed){
-	static uint32_t old_target;
-    if (menu_changed == 0) {
-
-		int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
-		int32_t delta = timer_count - ENCODER_CENTER;
-
-        if (delta >= ENCODER_THRESHOLD) {
-			midi_tempo_data->send_channels += 1;
-			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
-
-		else if (delta <= -ENCODER_THRESHOLD) {
-			midi_tempo_data->send_channels -= 1;
-			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-		}
-
-	  //checking if the values are out of bounds
-        if (midi_tempo_data->send_channels > MIDI_OUT_1_2) {
-            midi_tempo_data->send_channels = MIDI_OUT_1;
-        } else if (midi_tempo_data->send_channels < MIDI_OUT_1) {
-            midi_tempo_data->send_channels = MIDI_OUT_1_2;
-        }
-
-        if (old_target != midi_tempo_data->send_channels) {
-            old_target = midi_tempo_data->send_channels;
-            osThreadFlagsSet(display_updateHandle, 0x01);
-        }
-    }
-	if (menu_changed == 1) {
-		__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-	}
 }
 
 void midi_tempo_value_counter(TIM_HandleTypeDef * timer,

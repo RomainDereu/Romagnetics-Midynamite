@@ -24,12 +24,20 @@ extern "C" {
 
 typedef struct {
 	uint32_t current_tempo;
-	uint32_t currently_sending;
+	uint8_t currently_sending;
 	uint8_t send_channels;
 }midi_tempo_data_struct;
 
+
+typedef struct {
+	uint32_t send_1;
+	uint32_t send_2;
+	uint8_t send_channels;
+}midi_modify_data_struct;
+
 typedef struct {
 	midi_tempo_data_struct midi_tempo_data;
+	midi_modify_data_struct midi_modify_data;
 	uint32_t check_data_validity;
 }save_struct;
 

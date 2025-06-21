@@ -72,10 +72,11 @@ const osThreadAttr_t display_update_attributes = {
 //Romagnetics code
 //structs containing the informaiton for each mode
 midi_tempo_data_struct midi_tempo_data;
+midi_modify_data_struct midi_modify_data;
 
 //Current menu needs to be addressed from multiple threads
 //Is updated by the function menu_change
-static uint8_t current_menu = MIDI_MODIFY;
+static uint8_t current_menu = MIDI_TEMPO;
 
 
 //Button information
