@@ -631,24 +631,12 @@ void MediumTasks(void *argument)
   {
 
 	 //Romagnetics code
-	  static uint8_t old_menu = MIDI_TEMPO;
-	  static uint8_t menu_changed = 0;
+	static uint8_t old_menu = MIDI_TEMPO;
+	menu_change_check(&current_menu);
 
 
-	 //Menu
-	menu_change(&current_menu);
-	//Wiping if menu has changed
 	if(current_menu == MIDI_TEMPO){
-		menu_changed = 0;
-		if(old_menu != current_menu){
-			screen_driver_Fill(Black);
-			menu_changed = 1;
-			midi_tempo_update_counters(&htim3, &htim4, &midi_tempo_data, menu_changed);
-		}
-		else{
-			midi_tempo_update_counters(&htim3, &htim4, &midi_tempo_data, menu_changed);
-		}
-		old_menu = current_menu;
+		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 	}
 	else if(current_menu == MIDI_MODIFY){
 		if(old_menu != current_menu){

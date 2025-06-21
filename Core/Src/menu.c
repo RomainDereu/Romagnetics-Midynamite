@@ -21,7 +21,7 @@ void menu_display(const screen_driver_Font_t * font, char (* message)[30]){
 
 
 
-void menu_change(uint8_t * current_menu){
+void menu_change_check(uint8_t * current_menu){
 	uint8_t Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
 	  if(Btn4State == 0)
 		 {

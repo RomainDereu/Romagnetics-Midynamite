@@ -138,13 +138,22 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 	}
 }
 
-void midi_tempo_update_counters(TIM_HandleTypeDef * timer3,
-							    TIM_HandleTypeDef * timer4,
-                               midi_tempo_data_struct * midi_tempo_data,
-							   uint8_t menu_changed){
-	midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
-	midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
-
+void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
+							TIM_HandleTypeDef * timer4,
+                            midi_tempo_data_struct * midi_tempo_data,
+							uint8_t * old_menu){
+	uint8_t menu_changed = 0;
+	if(*old_menu != MIDI_TEMPO){
+		screen_driver_Fill(Black);
+		menu_changed = 1;
+		midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
+		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
+	}
+	else{
+		midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
+		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
+	}
+	old_menu = MIDI_TEMPO;
 }
 
 
