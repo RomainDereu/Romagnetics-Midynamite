@@ -108,8 +108,7 @@ void DisplayUpdate(void *argument);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 //Romagnetics code
-uint8_t midi_rx_buff[3];
-uint8_t * midi_rx_buff_ptr = &midi_rx_buff[0];
+static uint8_t midi_rx_buff[3];
 
 /* USER CODE END 0 */
 
@@ -161,7 +160,7 @@ int main(void)
   __HAL_TIM_SET_COUNTER(&htim3, ENCODER_CENTER);
   __HAL_TIM_SET_COUNTER(&htim4, ENCODER_CENTER);
 
-  HAL_UART_Receive_IT(&huart1, midi_rx_buff_ptr, 3);
+  HAL_UART_Receive_IT(&huart1, &midi_rx_buff[3], 3);
 
   /* USER CODE END 2 */
 
@@ -572,7 +571,7 @@ static void MX_GPIO_Init(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
   	if(current_menu == MIDI_MODIFY){
-  		HAL_UART_Receive_IT(&huart1, midi_rx_buff_ptr, 3);
+  		HAL_UART_Receive_IT(&huart1, &midi_rx_buff[3], 3);
   	}
 
 }
@@ -634,19 +633,12 @@ void MediumTasks(void *argument)
 	static uint8_t old_menu = MIDI_TEMPO;
 	menu_change_check(&current_menu);
 
-
 	if(current_menu == MIDI_TEMPO){
 		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 	}
+
 	else if(current_menu == MIDI_MODIFY){
-		if(old_menu != current_menu){
-			screen_driver_Fill(Black);
-			}
-		char message_midi_modify[30] = "Midi Modify                   ";
-		menu_display(&Font_6x8, &message_midi_modify);
-		display_incoming_midi(midi_rx_buff_ptr);
-		screen_driver_UpdateScreen();
-		old_menu = current_menu;
+		screen_update_midi_modify(&midi_rx_buff, &old_menu);
 	}
 	else if(current_menu == SETTINGS){
 		saving_settings_ui();

@@ -18,10 +18,7 @@
 #include "main.h"
 #include <math.h>
 
-
 extern osThreadId display_updateHandle;
-
-
 
 //Midi messages constants
 const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
@@ -102,8 +99,6 @@ void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], uint32_t current_temp
 	  }
 }
 
-
-
 void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		           TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data){
@@ -153,19 +148,13 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 		midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
 		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 	}
-	old_menu = MIDI_TEMPO;
+	*old_menu = MIDI_TEMPO;
 }
-
-
-
-
 
 void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
                                midi_tempo_data_struct * midi_tempo_data,
 							   uint8_t menu_changed){
-
 	static uint32_t old_target;
-
     if (menu_changed == 0) {
 
 		int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
@@ -192,9 +181,7 @@ void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
             old_target = midi_tempo_data->send_channels;
             osThreadFlagsSet(display_updateHandle, 0x01);
         }
-
     }
-
 	if (menu_changed == 1) {
 		__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
 	}

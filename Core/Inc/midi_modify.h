@@ -11,9 +11,12 @@
 #include "main.h"
 #include "screen_driver.h"
 
-void display_incoming_midi(uint8_t * midi_rx_buff_ptr);
 
+void calculate_incoming_midi(uint8_t * midi_rx_buff);
 
+void display_incoming_midi();
+
+void screen_update_midi_modify(uint8_t * midi_rx_buff, uint8_t * old_menu);
 
 
 #endif /* INC_MIDI_MODIFY_H_ */
