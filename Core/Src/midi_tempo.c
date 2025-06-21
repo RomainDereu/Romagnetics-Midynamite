@@ -26,7 +26,7 @@ const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
-//Messaqges
+//Messages
 char message_midi_tempo_print[30] = "Send Midi Tempo              ";
 char target_channel_print[7] = "Target:";
 

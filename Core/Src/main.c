@@ -72,6 +72,7 @@ const osThreadAttr_t display_update_attributes = {
 //Romagnetics code
 //structs containing the informaiton for each mode
 midi_tempo_data_struct midi_tempo_data;
+midi_modify_data_struct midi_modify_data;
 
 //Current menu needs to be addressed from multiple threads
 //Is updated by the function menu_change
@@ -640,7 +641,7 @@ void MediumTasks(void *argument)
 	}
 
 	else if(current_menu == MIDI_MODIFY){
-		midi_modify_update_menu(&old_menu);
+		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
 	else if(current_menu == SETTINGS){
 		saving_settings_ui();

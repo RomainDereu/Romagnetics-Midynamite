@@ -17,7 +17,7 @@
 #include "stm32f4xx_hal.h"
 
 extern midi_tempo_data_struct midi_tempo_data;
-
+extern midi_modify_data_struct midi_modify_data;
 
 void screen_update_settings(){
 char save_settings_message[30] = "Save Settings                 ";

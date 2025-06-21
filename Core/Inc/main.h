@@ -30,7 +30,7 @@ typedef struct {
 
 
 typedef struct {
-	uint32_t send_1;
+	uint32_t sent_to_midi_channel;
 	uint32_t send_2;
 	uint8_t send_channels;
 }midi_modify_data_struct;
