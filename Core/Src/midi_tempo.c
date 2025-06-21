@@ -195,8 +195,8 @@ void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
 
     if (menu_changed == 0) {
 
-        uint8_t Btn2State = !HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        uint8_t change_value = (Btn2State == 1) ? 10 : 1;
+        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        uint8_t change_value = (Btn2State == 0) ? 10 : 1;
 
         int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
         int32_t delta = timer_count - ENCODER_CENTER;

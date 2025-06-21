@@ -595,14 +595,14 @@ void MidiCore(void *argument)
   {
   //Button3 (Start/Stop)
   Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-  if(Btn3State == 1)
+  if(Btn3State == 0)
 	 {
 	 if(current_menu == MIDI_TEMPO)
 	 {
 		 //Debouncing
 		 osDelay(10);
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-		 if(Btn3State == 1 && OldBtn3State == 0)
+		 if(Btn3State == 0 && OldBtn3State == 1)
 		 {
 		   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
 		   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
