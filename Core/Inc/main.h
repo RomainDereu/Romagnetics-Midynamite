@@ -41,6 +41,14 @@ typedef struct {
 	uint32_t check_data_validity;
 }save_struct;
 
+#define MIDI_MODIFY_BUFFER_SIZE 256
+
+typedef struct {
+    uint8_t data[MIDI_MODIFY_BUFFER_SIZE];
+    volatile uint16_t head;
+    volatile uint16_t tail;
+} midi_modify_circular_buffer;
+
 
 /* USER CODE END ET */
 
@@ -90,6 +98,8 @@ void Error_Handler(void);
 #define MIDI_OUT_USB_1 5
 #define MIDI_OUT_USB_2 6
 #define MIDI_OUT_USB_1_2 7
+
+
 
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)

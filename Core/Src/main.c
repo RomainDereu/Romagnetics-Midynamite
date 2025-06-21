@@ -72,12 +72,13 @@ const osThreadAttr_t display_update_attributes = {
 //Romagnetics code
 //structs containing the informaiton for each mode
 midi_tempo_data_struct midi_tempo_data;
-midi_modify_data_struct midi_modify_data;
 
 //Current menu needs to be addressed from multiple threads
 //Is updated by the function menu_change
-static uint8_t current_menu = MIDI_TEMPO;
+static uint8_t current_menu = MIDI_MODIFY;
 
+midi_modify_circular_buffer midi_modify_buff = {0};
+uint8_t midi_uart_rx_byte;
 
 //Button information
 static uint8_t Btn3State;
@@ -108,8 +109,6 @@ void DisplayUpdate(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//Romagnetics code
-static uint8_t midi_rx_buff[3];
 
 /* USER CODE END 0 */
 
@@ -161,7 +160,8 @@ int main(void)
   __HAL_TIM_SET_COUNTER(&htim3, ENCODER_CENTER);
   __HAL_TIM_SET_COUNTER(&htim4, ENCODER_CENTER);
 
-  HAL_UART_Receive_IT(&huart2, midi_rx_buff, 3);
+
+  HAL_UART_Receive_IT(&huart2, &midi_uart_rx_byte, 1);
 
   /* USER CODE END 2 */
 
@@ -571,8 +571,9 @@ static void MX_GPIO_Init(void)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 
-  	if(huart->Instance == USART2 && current_menu == MIDI_MODIFY){
-  		HAL_UART_Receive_IT(&huart2, midi_rx_buff, 3);
+  	if(huart->Instance == USART2){
+  		midi_buffer_push(midi_uart_rx_byte);
+  		HAL_UART_Receive_IT(&huart2, &midi_uart_rx_byte, 1);
   	}
 
 }
@@ -639,7 +640,7 @@ void MediumTasks(void *argument)
 	}
 
 	else if(current_menu == MIDI_MODIFY){
-		midi_modify_update_menu(midi_rx_buff, &old_menu);
+		midi_modify_update_menu(&old_menu);
 	}
 	else if(current_menu == SETTINGS){
 		saving_settings_ui();
