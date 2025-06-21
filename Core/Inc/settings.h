@@ -20,9 +20,15 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 //Declaring the save_struct
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save);
 
-void saving_settings();
+void saving_settings_ui();
+
 HAL_StatusTypeDef  store_settings(save_struct *data);
-save_struct  read_settings(void);
+
+save_struct read_setting_memory(void);
+
+save_struct make_default_settings(void);
+
+void load_settings();
 
 
 

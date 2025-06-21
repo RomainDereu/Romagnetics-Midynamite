@@ -19,7 +19,6 @@
 extern midi_tempo_data_struct midi_tempo_data;
 
 
-
 void screen_update_settings(){
 char save_settings_message[30] = "Save Settings                 ";
 screen_driver_SetCursor(0, 56);
@@ -59,12 +58,12 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
 	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
 	//Random number, just to check that the data works
-	this_save.check_data_validity = 42818;
+	this_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
 	return this_save;
 }
 
 
-void saving_settings(){
+void saving_settings_ui(){
 	uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
 	  if(Btn1State == 0)
 		 {
@@ -142,8 +141,33 @@ HAL_StatusTypeDef store_settings(save_struct *data){
 }
 
 
-save_struct read_settings(void){
+save_struct read_setting_memory(void){
 	    save_struct flash_data;
 	    memcpy(&flash_data, (void*)FLASH_SECTOR7_ADDR, sizeof(flash_data));
 	    return flash_data;
+}
+
+save_struct make_default_settings(void){
+	  midi_tempo_data.current_tempo = 60;
+	  midi_tempo_data.currently_sending = 0;
+	  midi_tempo_data.send_channels = MIDI_OUT_1_2;
+}
+
+
+void load_settings(){
+	  //Initiation of the memory
+	  save_struct flash_save = read_setting_memory();
+	  //Cheking if the save is valid
+	  if (flash_save.check_data_validity == DATA_VALIDITY_CHECKSUM){
+		  //Overwrite the default values
+		  midi_tempo_data = flash_save.midi_tempo_data;
+	  }
+	  //If the save is corrupt, use default values
+	  else {
+
+		  save_struct emergency_save = make_default_settings();
+		  store_settings(&emergency_save);
+	  }
+
+
 }

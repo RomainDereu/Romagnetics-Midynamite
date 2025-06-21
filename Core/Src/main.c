@@ -73,14 +73,16 @@ const osThreadAttr_t display_update_attributes = {
 //structs containing the informaiton for each mode
 midi_tempo_data_struct midi_tempo_data;
 
-uint8_t current_menu = MIDI_TEMPO;
-uint8_t old_menu = MIDI_TEMPO;
+//Current menu needs to be addressed from multiple threads
+//Is updated by the function menu_change
+static uint8_t current_menu = MIDI_TEMPO;
+
 
 //Button information
-uint8_t Btn3State;
-uint8_t OldBtn3State = 0;
+static uint8_t Btn3State;
+static uint8_t OldBtn3State = 0;
 
-UART_HandleTypeDef *UART_list[2];
+static UART_HandleTypeDef *UART_list[2];
 
 
 /* USER CODE END PV */
@@ -150,23 +152,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //Romagnetics code
   screen_driver_Init();
-
-  //Initiation of the memory
-  //Will be moved to another function
-  save_struct flash_save = read_settings();
-  //Cheking if the save is valid
-  if (flash_save.check_data_validity == 42818){
-	  //Overwrite the default values
-	  midi_tempo_data = flash_save.midi_tempo_data;
-  }
-  //If the save is corrupt, use default values
-  else {
-	  midi_tempo_data.current_tempo = 60;
-	  midi_tempo_data.currently_sending = 0;
-	  midi_tempo_data.send_channels = MIDI_OUT_1_2;
-	  save_struct emergency_save = creating_save(&midi_tempo_data);
-	  store_settings(&emergency_save);
-  }
+  load_settings(&htim3, &htim4);
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -644,48 +630,52 @@ void MediumTasks(void *argument)
   for(;;)
   {
 
-	     //Romagnetics code
-	     //Menu
-		menu_change(&current_menu);
-		//Wiping if menu has changed
-	  	if(current_menu == MIDI_TEMPO){
-	  		uint8_t menu_changed = 0;
-	  	  	if(old_menu != current_menu){
-				screen_driver_Fill(Black);
-				uint8_t menu_changed = 1;
-		  		midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
-		  		midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
+	 //Romagnetics code
+	  static uint8_t old_menu = MIDI_TEMPO;
+	  static uint8_t menu_changed = 0;
 
-	  	  	}
-	  	  	else{
-				midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
-				midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
-	  	    }
-			old_menu = current_menu;
-	    }
-	  	else if(current_menu == MIDI_MODIFY){
-	  	  	if(old_menu != current_menu){
-				screen_driver_Fill(Black);
-				}
-	    	char message_midi_modify[30] = "Midi Modify                   ";
-	    	menu_display(&Font_6x8, &message_midi_modify);
-	    	display_incoming_midi(midi_rx_buff_ptr);
-	  	    screen_driver_UpdateScreen();
-			old_menu = current_menu;
-	    }
-	  	else if(current_menu == SETTINGS){
-	  	  	saving_settings();
-	  	  	if(old_menu != current_menu){
-	  	  	  	if(old_menu != current_menu){
-				screen_driver_Fill(Black);
-				screen_update_settings();
-	  	  	    }
+
+	 //Menu
+	menu_change(&current_menu);
+	//Wiping if menu has changed
+	if(current_menu == MIDI_TEMPO){
+		menu_changed = 0;
+		if(old_menu != current_menu){
+			screen_driver_Fill(Black);
+			menu_changed = 1;
+			midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
+			midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
+
+		}
+		else{
+			midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
+			midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
+		}
+		old_menu = current_menu;
+	}
+	else if(current_menu == MIDI_MODIFY){
+		if(old_menu != current_menu){
+			screen_driver_Fill(Black);
 			}
-	    	char message_settings[30] = "Settings                      ";
-	    	menu_display(&Font_6x8, &message_settings);
-	  	    screen_driver_UpdateScreen();
-			old_menu = current_menu;
-	    }
+		char message_midi_modify[30] = "Midi Modify                   ";
+		menu_display(&Font_6x8, &message_midi_modify);
+		display_incoming_midi(midi_rx_buff_ptr);
+		screen_driver_UpdateScreen();
+		old_menu = current_menu;
+	}
+	else if(current_menu == SETTINGS){
+		saving_settings_ui();
+		if(old_menu != current_menu){
+			if(old_menu != current_menu){
+			screen_driver_Fill(Black);
+			screen_update_settings();
+			}
+		}
+		char message_settings[30] = "Settings                      ";
+		menu_display(&Font_6x8, &message_settings);
+		screen_driver_UpdateScreen();
+		old_menu = current_menu;
+	}
 	//Let other tasks update
 	osDelay(10);
 
