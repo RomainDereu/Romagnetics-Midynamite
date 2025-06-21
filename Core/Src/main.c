@@ -643,13 +643,10 @@ void MediumTasks(void *argument)
 		if(old_menu != current_menu){
 			screen_driver_Fill(Black);
 			menu_changed = 1;
-			midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
-			midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
-
+			midi_tempo_update_counters(&htim3, &htim4, &midi_tempo_data, menu_changed);
 		}
 		else{
-			midi_tempo_select_counter(&htim3, &midi_tempo_data, menu_changed);
-			midi_tempo_value_counter(&htim4, &midi_tempo_data, menu_changed);
+			midi_tempo_update_counters(&htim3, &htim4, &midi_tempo_data, menu_changed);
 		}
 		old_menu = current_menu;
 	}

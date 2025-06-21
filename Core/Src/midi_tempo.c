@@ -139,9 +139,11 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 }
 
 void midi_tempo_update_counters(TIM_HandleTypeDef * timer3,
-							    TIM_HandleTypeDef * timer3,
+							    TIM_HandleTypeDef * timer4,
                                midi_tempo_data_struct * midi_tempo_data,
 							   uint8_t menu_changed){
+	midi_tempo_select_counter(timer3, midi_tempo_data, menu_changed);
+	midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 
 }
 
