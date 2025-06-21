@@ -19,22 +19,12 @@
 
 char message_midi_modify[30] = "Midi Modify                   ";
 //Roro test purposes only
-char byte_print_hex[11];
+static char byte_print_hex[11];
 
 
 void calculate_incoming_midi(uint8_t * midi_rx_buff){
-			uint8_t midi_one_byte_uint = * midi_rx_buff;
-			uint8_t midi_two_byte_uint = * (midi_rx_buff + 1);
-			uint8_t midi_three_byte_uint = * (midi_rx_buff + 2);
-
-			char midi_one_byte_hex[3];
-			char midi_two_byte_hex[3];
-			char midi_three_byte_hex[3];
-
-			sprintf(midi_one_byte_hex, "%02X", midi_one_byte_uint);
-			sprintf(midi_two_byte_hex, "%02X", midi_two_byte_uint);
-			sprintf(midi_three_byte_hex, "%02X", midi_three_byte_uint);
-		    snprintf(byte_print_hex, sizeof(byte_print_hex), "%s %s %s", midi_one_byte_hex, midi_two_byte_hex, midi_three_byte_hex);
+    snprintf(byte_print_hex, sizeof(byte_print_hex), "%02X %02X %02X",
+    midi_rx_buff[0], midi_rx_buff[1], midi_rx_buff[2]);
 }
 
 void display_incoming_midi(){
@@ -48,7 +38,7 @@ void display_incoming_midi(){
 }
 
 
-void screen_update_midi_modify(uint8_t * midi_rx_buff, uint8_t * old_menu){
+void midi_modify_update_menu(uint8_t * midi_rx_buff, uint8_t * old_menu){
 	if(*old_menu != MIDI_MODIFY){
 		screen_driver_Fill(Black);
 		}
