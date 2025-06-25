@@ -8,6 +8,8 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "saving.h"
+#include "utils.h"
+#include "settings.h"
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
@@ -41,8 +43,9 @@ void saving_settings_ui(){
 				 char saved_print[6] = "Saved!";
 				 char saved__clear_print[6] = "      ";
 
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saving_print, Font_6x8, White);
+				 screen_driver_underline_WriteString(saving_print, Font_6x8, White,
+						 	 	 	 	 	 	 	 90, 56, 1);
+
 				 screen_driver_UpdateScreen();
 
 				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data, &midi_modify_data);

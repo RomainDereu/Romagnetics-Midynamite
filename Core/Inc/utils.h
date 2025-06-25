@@ -10,6 +10,8 @@
 
 #include "stdio.h"
 #include "main.h"
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
 
 #endif /* SRC_UTILS_H_ */
 
@@ -23,3 +25,9 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 
 
 void screen_update_settings();
+
+void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
+										  screen_driver_COLOR color,
+										  uint8_t x_align,
+										  uint8_t y_align,
+										  uint8_t underlined);

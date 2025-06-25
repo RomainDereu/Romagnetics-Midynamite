@@ -61,3 +61,19 @@ screen_driver_WriteString(save_settings_message, Font_6x8, White);
 screen_driver_UpdateScreen();
 }
 
+
+void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
+										  screen_driver_COLOR color,
+										  uint8_t x_align,
+										  uint8_t y_align,
+										  uint8_t underlined){
+	screen_driver_SetCursor(x_align, y_align);
+	screen_driver_WriteString(str, Font_6x8 , White);
+	if(underlined == 1){
+		screen_driver_SetCursor(x_align, y_align +1);
+		uint8_t line_length = 8*sizeof(str);
+		screen_driver_Line(y_align +1, x_align, y_align +1, x_align +line_length, White);
+	}
+}
+
+
