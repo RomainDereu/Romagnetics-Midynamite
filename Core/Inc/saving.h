@@ -11,7 +11,7 @@
 #include "stdio.h"
 #include "main.h"
 
-void screen_update_settings();
+
 
 //Making an array with the list of uarts that will be used
 void list_of_UART_to_send_to(uint8_t send_channels,

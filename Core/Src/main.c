@@ -643,16 +643,7 @@ void MediumTasks(void *argument)
 		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
 	else if(current_menu == SETTINGS){
-		saving_settings_ui();
-		if(old_menu != current_menu){
-			if(old_menu != current_menu){
-			screen_driver_Fill(Black);
-			screen_update_settings();
-			}
-		}
-		char message_settings[30] = "Settings                      ";
-		menu_display(&Font_6x8, &message_settings);
-		screen_driver_UpdateScreen();
+		settings_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
 
 	old_menu = current_menu;

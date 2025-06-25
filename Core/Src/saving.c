@@ -19,12 +19,6 @@
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
 
-void screen_update_settings(){
-char save_settings_message[30] = "Save Settings                 ";
-screen_driver_SetCursor(0, 56);
-screen_driver_WriteString(save_settings_message, Font_6x8, White);
-screen_driver_UpdateScreen();
-}
 
 void list_of_UART_to_send_to(uint8_t send_channels,
                            	 UART_HandleTypeDef **UART_list){
@@ -65,39 +59,7 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 }
 
 
-void saving_settings_ui(){
-	uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-	  if(Btn1State == 0)
-		 {
-			 //Debouncing
-			 osDelay(10);
-			 Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-			  if(Btn1State == 0)
-				 {
-				 //Saving the current configuration to the memory
-				 char saving_print[6] = "Saving";
-				 char saved_print[6] = "Saved!";
-				 char saved__clear_print[6] = "      ";
 
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saving_print, Font_6x8, White);
-				 screen_driver_UpdateScreen();
-
-				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data, &midi_modify_data);
-				 store_settings(&memory_to_be_saved);
-
-
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saved_print, Font_6x8, White);
-				 screen_driver_UpdateScreen();
-				 osDelay(1000);
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saved__clear_print, Font_6x8, White);
-				 screen_driver_UpdateScreen();
-				  }
-	  }
-
-}
 
 
 
@@ -143,7 +105,7 @@ HAL_StatusTypeDef store_settings(save_struct *data){
 }
 
 
-save_struct read_setting_memory(void){
+save_struct read_setting_memory(void){ 
 	    save_struct flash_data;
 	    memcpy(&flash_data, (void*)FLASH_SECTOR7_ADDR, sizeof(flash_data));
 	    return flash_data;

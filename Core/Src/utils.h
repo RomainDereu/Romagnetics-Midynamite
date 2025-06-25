@@ -20,3 +20,6 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 						   uint8_t bottom_value,
 						   uint8_t max_value,
 						   uint8_t menu_changed);
+
+
+void screen_update_settings();
