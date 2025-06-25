@@ -138,10 +138,10 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu){
-	uint8_t menu_changed = 0;
-	if(*old_menu != MIDI_TEMPO){
+	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
+	if(menu_changed){
 		screen_driver_Fill(Black);
-		menu_changed = 1;
+
 		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
 		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 	}
