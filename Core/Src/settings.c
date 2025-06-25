@@ -23,10 +23,20 @@ char saved__clear_print[6] = "      ";
 char saving_print[6] = "Saving";
 char saved_print[6] = "Saved!";
 
+//The current selected menu part
+
+
 void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu){
+	uint8_t menu_changed = (*old_menu != SETTINGS);
+	if (menu_changed) {
+			screen_driver_Fill(Black);
+		}
+
+
+
 	saving_settings_ui();
 		if(* old_menu != SETTINGS){
 		screen_driver_Fill(Black);
