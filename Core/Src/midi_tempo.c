@@ -40,7 +40,7 @@ char stopped_print[10] = "Stopped   ";
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
-
+   	  screen_driver_Fill(Black);
 	  //Menu
 	  menu_display(&Font_6x8, &message_midi_tempo_print);
 	  //Vertical line
@@ -51,6 +51,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor(0, 20);
       screen_driver_WriteString(target_channel_print, Font_6x8 , White);
+
       screen_driver_SetCursor(0, 32);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
       screen_driver_WriteString(midi_channel_1_print, Font_6x8 , White);
@@ -140,16 +141,9 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
 
 
-	if(menu_changed == 1){
-		screen_driver_Fill(Black);
+	utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
+	midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 
-		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
-		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
-	}
-	else{
-		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
-		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
-	}
 	*old_menu = MIDI_TEMPO;
 
 	//Updating in case of change

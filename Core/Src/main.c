@@ -643,7 +643,7 @@ void MediumTasks(void *argument)
 		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
 	else if(current_menu == SETTINGS){
-		settings_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
+		settings_update_menu(&htim3, &htim4, &old_menu);
 	}
 
 	old_menu = current_menu;

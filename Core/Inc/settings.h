@@ -13,10 +13,11 @@
 #define VOLUME_SETTING 2
 #define SAVE_ORDER_UI 1
 
+void screen_update_settings();
+
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
-						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu);
 
 void saving_settings_ui();
