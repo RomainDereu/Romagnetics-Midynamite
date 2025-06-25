@@ -54,9 +54,11 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 }
 
 
-save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save){
+save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
+		                  midi_modify_data_struct * midi_modify_data_to_save){
 	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
+	this_save.midi_modify_data = * midi_modify_data_to_save;
 	//Random number, just to check that the data works
 	this_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
 	return this_save;
@@ -81,7 +83,7 @@ void saving_settings_ui(){
 				 screen_driver_WriteString(saving_print, Font_6x8, White);
 				 screen_driver_UpdateScreen();
 
-				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data);
+				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data, &midi_modify_data);
 				 store_settings(&memory_to_be_saved);
 
 
@@ -151,6 +153,10 @@ save_struct make_default_settings(void){
 	  midi_tempo_data.current_tempo = 60;
 	  midi_tempo_data.currently_sending = 0;
 	  midi_tempo_data.send_channels = MIDI_OUT_1_2;
+
+	  midi_modify_data.sent_to_midi_channel = 1;
+	  midi_modify_data.send_2 = 0;
+	  midi_modify_data.send_channels = 0;
 }
 
 
@@ -161,6 +167,7 @@ void load_settings(){
 	  if (flash_save.check_data_validity == DATA_VALIDITY_CHECKSUM){
 		  //Overwrite the default values
 		  midi_tempo_data = flash_save.midi_tempo_data;
+		  midi_modify_data = flash_save.midi_modify_data;
 	  }
 	  //If the save is corrupt, use default values
 	  else {
