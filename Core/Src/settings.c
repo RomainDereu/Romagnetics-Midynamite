@@ -5,6 +5,8 @@
  *      Author: Astaa
  */
 
+#define VELOCITY_SELECT 0
+
 #include "cmsis_os2.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
@@ -16,16 +18,16 @@
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
 
-char message_settings[30] = "Settings                      ";
-char velocity_select_message[15] = "Velocity Select";
+char message_settings[30] = "Settings                     ";
+char velocity_select_message[9] = "Velocity";
 
-char velocity_change_message[6] = "Change";
-char velocity_fixed_message[6] = "Fixed ";
-char * velocity_choices[2] = {&velocity_change_message, &velocity_fixed_message};
+char velocity_change_message[7] = "Change";
+char velocity_fixed_message[7] = "Fixed ";
+char * velocity_choices[2] = {velocity_change_message, velocity_fixed_message};
 
-char save_settings_message[29] = "Press Select to save settings";
-char saving_print[29] = "Saving                       ";
-char saved_print[29] = "Saved!                       ";
+char save_settings_message[30] = "Press Select to save settings";
+char saving_print[30] = "Saving                       ";
+char saved_print[30] = "Saved!                       ";
 
 uint8_t current_select = 0;
 uint8_t old_select = 0;
@@ -41,7 +43,11 @@ uint8_t select_states[2] = {0, 0};
 void screen_update_settings(){
 	screen_driver_Fill(Black);
 	menu_display(&Font_6x8, &message_settings);
+	//Velocity
 	screen_driver_underline_WriteString(velocity_select_message, Font_6x8, White, 0, 15, select_states[0]);
+	screen_driver_SetCursor_WriteString(velocity_choices[current_value], Font_6x8, White, 80, 15);
+
+	//Saving
 	screen_driver_underline_WriteString(save_settings_message, Font_6x8, White, 0, 50, select_states[1]);
 
 	screen_driver_UpdateScreen();
@@ -49,17 +55,24 @@ void screen_update_settings(){
 
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-							 uint8_t * old_menu){
+		                  TIM_HandleTypeDef * timer4,
+						  uint8_t * old_menu){
 	uint8_t menu_changed = (*old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, 1, menu_changed);
+
+	if (current_select == VELOCITY_SELECT ){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &current_value, 0, 1, select_changed);
+	}
+
+
 	//Selecting the current_menu
 	if (current_select == 0 ){
-		select_states[0] = 1;
+		select_states[VELOCITY_SELECT] = 1;
 		select_states[1] = 0;
 	}
 	else if (current_select == 1 ){
-		select_states[0] = 0;
+		select_states[VELOCITY_SELECT] = 0;
 		select_states[1] = 1;
 		}
 

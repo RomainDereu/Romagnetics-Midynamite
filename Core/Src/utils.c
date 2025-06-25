@@ -59,21 +59,22 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 		int32_t delta = timer_count - ENCODER_CENTER;
 
         if (delta >= ENCODER_THRESHOLD) {
-        	* data_to_change += 1;
-			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        	if (*data_to_change == max_value)
+        		*data_to_change = bottom_value;
+        	else
+        		(*data_to_change)++;
+        	__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
         }
 
-		else if (delta <= -ENCODER_THRESHOLD) {
-			* data_to_change -= 1;
-			__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-		}
 
-	  //checking if the values are out of bounds
-        if (* data_to_change > max_value) {
-        	* data_to_change = bottom_value;
-        } else if (* data_to_change < bottom_value) {
-        	* data_to_change = max_value;
+        else if (delta <= -ENCODER_THRESHOLD) {
+        	if (*data_to_change == bottom_value)
+        		*data_to_change = max_value;
+        	else
+        		(*data_to_change)--;
+        	__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
         }
+
 
         if (old_value != * data_to_change) {
         	old_value = * data_to_change;
