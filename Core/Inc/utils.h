@@ -24,7 +24,7 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 						   uint8_t menu_changed);
 
 
-void screen_update_settings();
+
 
 void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
 										  screen_driver_COLOR color,

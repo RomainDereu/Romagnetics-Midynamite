@@ -4,6 +4,8 @@
  *  Created on: Jun 21, 2025
  *      Author: Astaa
  */
+#include <stdio.h>
+#include <string.h>
 
 #include "utils.h"
 #include "cmsis_os.h"
@@ -54,12 +56,6 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 }
 
 
-void screen_update_settings(){
-char save_settings_message[30] = "Save Settings                 ";
-screen_driver_SetCursor(0, 56);
-screen_driver_WriteString(save_settings_message, Font_6x8, White);
-screen_driver_UpdateScreen();
-}
 
 
 void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
@@ -67,12 +63,16 @@ void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
 										  uint8_t x_align,
 										  uint8_t y_align,
 										  uint8_t underlined){
+
+	uint8_t line_height = Font.height +1;
 	screen_driver_SetCursor(x_align, y_align);
 	screen_driver_WriteString(str, Font_6x8 , White);
 	if(underlined == 1){
 		screen_driver_SetCursor(x_align, y_align +1);
-		uint8_t line_length = 8*sizeof(str);
-		screen_driver_Line(y_align +1, x_align, y_align +1, x_align +line_length, White);
+		uint8_t line_length = Font.width * strlen(str);
+		screen_driver_Line(x_align, y_align + line_height,
+						   x_align+ line_length, y_align + line_height, White);
+
 	}
 }
 

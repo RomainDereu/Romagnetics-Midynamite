@@ -5,14 +5,23 @@
  *      Author: Astaa
  */
 
+#include "cmsis_os2.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "saving.h"
+#include "menu.h"
 #include "utils.h"
 #include "settings.h"
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
+
+char message_settings[30] = "Settings                      ";
+char save_settings_message[13] = "Save Settings";
+
+char saved__clear_print[6] = "      ";
+char saving_print[6] = "Saving";
+char saved_print[6] = "Saved!";
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
@@ -21,9 +30,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	saving_settings_ui();
 		if(* old_menu != SETTINGS){
 		screen_driver_Fill(Black);
-		screen_update_settings();
+		screen_driver_underline_WriteString(save_settings_message, Font_6x8, White, 0, 54, 1);
+
 		}
-	char message_settings[30] = "Settings                      ";
+
 	menu_display(&Font_6x8, &message_settings);
 	screen_driver_UpdateScreen();
 }
@@ -39,12 +49,11 @@ void saving_settings_ui(){
 			  if(Btn1State == 0)
 				 {
 				 //Saving the current configuration to the memory
-				 char saving_print[6] = "Saving";
-				 char saved_print[6] = "Saved!";
-				 char saved__clear_print[6] = "      ";
 
-				 screen_driver_underline_WriteString(saving_print, Font_6x8, White,
-						 	 	 	 	 	 	 	 90, 56, 1);
+
+				 screen_driver_SetCursor(90, 56);
+				 screen_driver_WriteString(saving_print, Font_6x8, White);
+
 
 				 screen_driver_UpdateScreen();
 
