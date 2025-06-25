@@ -26,7 +26,9 @@ char type_of_action_print[19] = "Change Midi Channel";
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
-static char byte_print_hex[11];
+//Used for debug
+//static char byte_print_hex[11];
+
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
 
@@ -36,9 +38,6 @@ extern midi_modify_circular_buffer midi_modify_buff;
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 
 	menu_display(&Font_6x8, &message_midi_modify_print);
-	//screen_driver_WriteString(byte_print_hex, *font , White);
-
-
     screen_driver_SetCursor(0, 20);
     screen_driver_WriteString(type_of_action_print, Font_6x8 , White);
 
@@ -49,9 +48,10 @@ void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
     screen_driver_WriteString(channel_text, Font_6x8 , White);
 
 
-	screen_driver_SetCursor(0, 54);
-	screen_driver_WriteString(byte_print_hex, Font_6x8 , White);
-	screen_driver_UpdateScreen();
+	//screen_driver_SetCursor(0, 54);
+	//screen_driver_WriteString(byte_print_hex, Font_6x8 , White);
+
+    screen_driver_UpdateScreen();
 
 }
 
@@ -89,8 +89,10 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
         if (byte_count == 3) {
             //Modifying and sending the message
             change_midi_channel(midi_message, sending_to_midi_channel);
-            snprintf(byte_print_hex, sizeof(byte_print_hex), "%02X %02X %02X",
-                     midi_message[0], midi_message[1], midi_message[2]);
+
+            //Used for debug
+            //snprintf(byte_print_hex, sizeof(byte_print_hex), "%02X %02X %02X",
+            //         midi_message[0], midi_message[1], midi_message[2]);
             send_midi_out(midi_message);
 
 
@@ -117,14 +119,18 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu){
-	if(*old_menu != MIDI_MODIFY){
-		screen_driver_Fill(Black);
+	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
+	if (menu_changed) {
+			screen_driver_Fill(Black);
 		}
-	//Romain the menu_change part will need some chleanup
-	uint8_t menu_changed = 0;
+
+	uint8_t old_midi_value = midi_modify_data->sent_to_midi_channel;
 	utils_counter_change(timer3, &(midi_modify_data->sent_to_midi_channel), 0, 12, menu_changed);
 	calculate_incoming_midi(&midi_modify_data->sent_to_midi_channel);
-	screen_update_midi_modify(midi_modify_data);
+
+	if (menu_changed || old_midi_value != midi_modify_data->sent_to_midi_channel) {
+			screen_update_midi_modify(midi_modify_data);
+		}
 	*old_menu = MIDI_MODIFY;
 }
 
