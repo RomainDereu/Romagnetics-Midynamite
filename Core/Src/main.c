@@ -76,7 +76,7 @@ midi_modify_data_struct midi_modify_data;
 
 //Current menu needs to be addressed from multiple threads
 //Is updated by the function menu_change
-static uint8_t current_menu = MIDI_MODIFY;
+static uint8_t current_menu = MIDI_TEMPO;
 
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
@@ -633,7 +633,7 @@ void MediumTasks(void *argument)
   {
 
 	 //Romagnetics code
-	static uint8_t old_menu = MIDI_TEMPO;
+	static uint8_t old_menu;
 	menu_change_check(&current_menu);
 
 	if(current_menu == MIDI_TEMPO){

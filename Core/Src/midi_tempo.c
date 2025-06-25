@@ -114,7 +114,6 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 
 		HAL_TIM_Base_Start_IT(timer);
 		midi_tempo_data->currently_sending = 1;
-		//Updating the display in another thread
 		osThreadFlagsSet(display_updateHandle, 0x01);
 	}
 
@@ -129,7 +128,6 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 		}
 
 		midi_tempo_data->currently_sending = 0;
-		//Updating the display in another thread
 		osThreadFlagsSet(display_updateHandle, 0x01);
 	}
 }
@@ -138,8 +136,11 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu){
-	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
-	if(menu_changed){
+	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
+	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
+
+
+	if(menu_changed == 1){
 		screen_driver_Fill(Black);
 
 		utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
@@ -150,6 +151,15 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 		midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
 	}
 	*old_menu = MIDI_TEMPO;
+
+	//Updating in case of change
+	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||
+	   old_midi_tempo_information.currently_sending != midi_tempo_data->currently_sending ||
+	   old_midi_tempo_information.send_channels != midi_tempo_data->send_channels||
+	   menu_changed == 1){
+	   osThreadFlagsSet(display_updateHandle, 0x01);
+	}
+
 }
 
 void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
@@ -183,7 +193,6 @@ void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
     }
 
     if (old_tempo != midi_tempo_data->current_tempo || menu_changed == 1) {
-        osThreadFlagsSet(display_updateHandle, 0x01);
         old_tempo = midi_tempo_data->current_tempo;
     }
 

@@ -16,7 +16,7 @@
 
 
 void utils_counter_change(TIM_HandleTypeDef * timer,
-		                   uint32_t * data_to_change,
+		                   uint8_t * data_to_change,
 						   uint8_t bottom_value,
 						   uint8_t max_value,
 						   uint8_t menu_changed);
