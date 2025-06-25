@@ -20,34 +20,6 @@ extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
 
 
-void list_of_UART_to_send_to(uint8_t send_channels,
-                           	 UART_HandleTypeDef **UART_list){
-	extern UART_HandleTypeDef huart1;
-	extern UART_HandleTypeDef huart2;
-
-	if (send_channels == MIDI_OUT_1){
-		UART_list[0] = &huart1;
-		UART_list[1] = NULL;
-	}
-
-	else if (send_channels == MIDI_OUT_2){
-		UART_list[0] = &huart2;
-		UART_list[1] = NULL;
-	}
-
-	else if (send_channels == MIDI_OUT_1_2){
-		UART_list[0] = &huart1;
-		UART_list[1] = &huart2;
-	}
-
-	else{
-		UART_list[0] = NULL;
-		UART_list[1] = NULL;
-	}
-
-}
-
-
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 		                  midi_modify_data_struct * midi_modify_data_to_save){
 	save_struct this_save;

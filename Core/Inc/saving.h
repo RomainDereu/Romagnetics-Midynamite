@@ -11,12 +11,6 @@
 #include "stdio.h"
 #include "main.h"
 
-
-
-//Making an array with the list of uarts that will be used
-void list_of_UART_to_send_to(uint8_t send_channels,
-	                       	 UART_HandleTypeDef **UART_list);
-
 //Declaring the save_struct
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 						  midi_modify_data_struct * midi_modify_data_to_save);

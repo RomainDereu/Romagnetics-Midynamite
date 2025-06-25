@@ -17,6 +17,36 @@
 extern osThreadId display_updateHandle;
 
 
+
+void list_of_UART_to_send_to(uint8_t send_channels,
+                           	 UART_HandleTypeDef **UART_list){
+	extern UART_HandleTypeDef huart1;
+	extern UART_HandleTypeDef huart2;
+
+	if (send_channels == MIDI_OUT_1){
+		UART_list[0] = &huart1;
+		UART_list[1] = NULL;
+	}
+
+	else if (send_channels == MIDI_OUT_2){
+		UART_list[0] = &huart2;
+		UART_list[1] = NULL;
+	}
+
+	else if (send_channels == MIDI_OUT_1_2){
+		UART_list[0] = &huart1;
+		UART_list[1] = &huart2;
+	}
+
+	else{
+		UART_list[0] = NULL;
+		UART_list[1] = NULL;
+	}
+
+}
+
+
+
 void utils_counter_change(TIM_HandleTypeDef * timer,
 							   uint8_t * data_to_change,
 							   uint8_t bottom_value,

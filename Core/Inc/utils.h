@@ -15,6 +15,9 @@
 
 #endif /* SRC_UTILS_H_ */
 
+//Making an array with the list of uarts that will be used
+void list_of_UART_to_send_to(uint8_t send_channels,
+	                       	 UART_HandleTypeDef **UART_list);
 
 
 void utils_counter_change(TIM_HandleTypeDef * timer,
