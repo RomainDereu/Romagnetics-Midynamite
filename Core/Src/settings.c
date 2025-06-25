@@ -17,6 +17,7 @@ extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
 
 char message_settings[30] = "Settings                      ";
+char velocity_change_message[13] = "Velocity Change";
 char save_settings_message[13] = "Save Settings";
 
 char saved__clear_print[6] = "      ";
@@ -35,13 +36,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			screen_driver_Fill(Black);
 		}
 
-
-
 	saving_settings_ui();
 		if(* old_menu != SETTINGS){
 		screen_driver_Fill(Black);
 		screen_driver_underline_WriteString(save_settings_message, Font_6x8, White, 0, 54, 1);
-
 		}
 
 	menu_display(&Font_6x8, &message_settings);
@@ -59,24 +57,16 @@ void saving_settings_ui(){
 			  if(Btn1State == 0)
 				 {
 				 //Saving the current configuration to the memory
-
-
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saving_print, Font_6x8, White);
-
-
+				 screen_driver_SetCursor_WriteString(saving_print, Font_6x8, White, 90, 56);
 				 screen_driver_UpdateScreen();
 
 				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data, &midi_modify_data);
 				 store_settings(&memory_to_be_saved);
 
-
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saved_print, Font_6x8, White);
+				 screen_driver_SetCursor_WriteString(saved_print, Font_6x8, White, 90, 56);
 				 screen_driver_UpdateScreen();
 				 osDelay(1000);
-				 screen_driver_SetCursor(90, 56);
-				 screen_driver_WriteString(saved__clear_print, Font_6x8, White);
+				 screen_driver_SetCursor_WriteString(saved__clear_print, Font_6x8, White, 90, 56);
 				 screen_driver_UpdateScreen();
 				  }
 	  }
