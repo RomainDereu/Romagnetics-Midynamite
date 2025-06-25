@@ -654,8 +654,9 @@ void MediumTasks(void *argument)
 		char message_settings[30] = "Settings                      ";
 		menu_display(&Font_6x8, &message_settings);
 		screen_driver_UpdateScreen();
-		old_menu = current_menu;
 	}
+
+	old_menu = current_menu;
 	//Let other tasks update
 	osDelay(10);
 
