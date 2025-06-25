@@ -36,6 +36,7 @@ static uint8_t byte_count = 0;
 extern midi_modify_circular_buffer midi_modify_buff;
 
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
+	screen_driver_Fill(Black);
 
 	menu_display(&Font_6x8, &message_midi_modify_print);
     screen_driver_SetCursor(0, 20);
@@ -43,7 +44,7 @@ void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 
     uint8_t channel = midi_modify_data->sent_to_midi_channel;
     char channel_text[15];
-    sprintf(channel_text, "To channel %d", channel + 1);
+    sprintf(channel_text, "To channel %d", channel);
     screen_driver_SetCursor(0, 30);
     screen_driver_WriteString(channel_text, Font_6x8 , White);
 
@@ -103,9 +104,9 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
 }
 
 void change_midi_channel(uint8_t midi_msg[3], uint8_t * new_channel) {
-	if (*new_channel > 15) return;
+	if (*new_channel < 1 || *new_channel > 16) return;
     uint8_t status_nibble = midi_msg[0] & 0xF0;
-    midi_msg[0] = status_nibble | (* new_channel & 0x0F);
+    midi_msg[0] = status_nibble | ((*new_channel - 1) & 0x0F);
 }
 
 
@@ -125,7 +126,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		}
 
 	uint8_t old_midi_value = midi_modify_data->sent_to_midi_channel;
-	utils_counter_change(timer3, &(midi_modify_data->sent_to_midi_channel), 0, 12, menu_changed);
+	utils_counter_change(timer4, &(midi_modify_data->sent_to_midi_channel), 1, 16, menu_changed);
 	calculate_incoming_midi(&midi_modify_data->sent_to_midi_channel);
 
 	if (menu_changed || old_midi_value != midi_modify_data->sent_to_midi_channel) {
