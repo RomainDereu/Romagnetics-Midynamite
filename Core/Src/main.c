@@ -73,6 +73,7 @@ const osThreadAttr_t display_update_attributes = {
 //structs containing the informaiton for each mode
 midi_tempo_data_struct midi_tempo_data;
 midi_modify_data_struct midi_modify_data;
+settings_data_struct settings_data;
 
 //Current menu needs to be addressed from multiple threads
 //Is updated by the function menu_change

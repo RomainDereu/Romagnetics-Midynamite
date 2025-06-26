@@ -35,9 +35,17 @@ typedef struct {
 	uint8_t send_channels;
 }midi_modify_data_struct;
 
+
+typedef struct {
+	uint8_t midi_channel_mode;
+	uint8_t midi_velocity_mode;
+}settings_data_struct;
+
+
 typedef struct {
 	midi_tempo_data_struct midi_tempo_data;
 	midi_modify_data_struct midi_modify_data;
+	settings_data_struct settings_data;
 	uint32_t check_data_validity;
 }save_struct;
 
@@ -99,7 +107,14 @@ void Error_Handler(void);
 #define MIDI_OUT_USB_2 6
 #define MIDI_OUT_USB_1_2 7
 
+#define SETTINGS_MM_CHANNEL_CHANGE 0
+#define SETTINGS_MM_CHANNEL_SPLIT 1
 
+#define SETTINGS_MM_VELOCITY_CHANGE 0
+#define SETTINGS_MM_VELOCITY_FIXED 1
+
+
+#define VELOCITY_SELECT 1
 
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)

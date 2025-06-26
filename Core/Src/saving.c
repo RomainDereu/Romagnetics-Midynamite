@@ -18,13 +18,16 @@
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
+extern settings_data_struct settings_data;
 
 
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
-		                  midi_modify_data_struct * midi_modify_data_to_save){
+		                  midi_modify_data_struct * midi_modify_data_to_save,
+						  settings_data_struct *settings_data_to_save){
 	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
 	this_save.midi_modify_data = * midi_modify_data_to_save;
+	this_save.settings_data = * settings_data_to_save;
 	//Random number, just to check that the data works
 	this_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
 	return this_save;
@@ -91,6 +94,11 @@ save_struct make_default_settings(void){
 	  midi_modify_data.sent_to_midi_channel = 1;
 	  midi_modify_data.send_2 = 0;
 	  midi_modify_data.send_channels = 0;
+
+	  settings_data.midi_channel_mode = SETTINGS_MM_CHANNEL_CHANGE;
+	  settings_data.midi_velocity_mode = SETTINGS_MM_VELOCITY_CHANGE;
+
+
 }
 
 
@@ -102,6 +110,7 @@ void load_settings(){
 		  //Overwrite the default values
 		  midi_tempo_data = flash_save.midi_tempo_data;
 		  midi_modify_data = flash_save.midi_modify_data;
+		  settings_data = flash_save.settings_data;
 	  }
 	  //If the save is corrupt, use default values
 	  else {
