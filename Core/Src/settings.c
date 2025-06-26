@@ -22,7 +22,7 @@ char message_settings[30] = "Settings                     ";
 char velocity_select_message[9] = "Velocity";
 
 char velocity_change_message[7] = "Change";
-char velocity_fixed_message[7] = "Fixed ";
+char velocity_fixed_message[6] = "Fixed";
 char * velocity_choices[2] = {velocity_change_message, velocity_fixed_message};
 
 char save_settings_message[30] = "Press Select to save settings";
@@ -44,11 +44,11 @@ void screen_update_settings(){
 	screen_driver_Fill(Black);
 	menu_display(&Font_6x8, &message_settings);
 	//Velocity
-	screen_driver_underline_WriteString(velocity_select_message, Font_6x8, White, 0, 15, select_states[0]);
-	screen_driver_SetCursor_WriteString(velocity_choices[current_value], Font_6x8, White, 80, 15);
+	screen_driver_SetCursor_WriteString(velocity_select_message, Font_6x8, White, 0, 15);
+	screen_driver_underline_WriteString(velocity_choices[current_value], Font_6x8, White, 80, 15, select_states[0]);
 
 	//Saving
-	screen_driver_underline_WriteString(save_settings_message, Font_6x8, White, 0, 50, select_states[1]);
+	screen_driver_SetCursor_WriteString(save_settings_message, Font_6x8, White, 0, 50);
 
 	screen_driver_UpdateScreen();
 }
