@@ -676,10 +676,8 @@ void DisplayUpdate(void *argument)
       if (displayFlags & 0x02 && settings_data.current_menu == MIDI_MODIFY) {
         screen_update_midi_modify(&midi_modify_data);
       }
-      if (displayFlags & 0x04) {
-        //Roro implementation
-    	osDelay(10);
-      }
+      //if (displayFlags & 0x04 && settings_data.current_menu == MIDI_TRANSPOSE) {
+      //}
       if (displayFlags & 0x08 && settings_data.current_menu == SETTINGS) {
     	  screen_update_settings();
       }

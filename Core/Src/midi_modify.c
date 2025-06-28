@@ -82,6 +82,22 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
     uint8_t byte;
 
     while (midi_buffer_pop(&byte)) {
+        if (byte >= 0xF8) {
+            // Real-Time messages (1 byte only)
+            uint8_t rt_msg[1] = {byte};
+            send_midi_out(rt_msg, 1);
+            continue;
+        }
+
+        if (byte == 0xF0) {
+            // Start of SysEx – optional: skip or buffer full message
+            // For now, skip SysEx messages
+            while (midi_buffer_pop(&byte) && byte != 0xF7) {
+                // discard or handle sysEx byte
+            }
+            continue;
+        }
+
         if (byte & 0x80) {
             // Status byte: start a new message
             midi_message[0] = byte;
@@ -90,31 +106,34 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
             midi_message[byte_count++] = byte;
         }
 
-        if (byte_count == 3) {
-            //Modifying and sending the message
-            change_midi_channel(midi_message, sending_to_midi_channel);
-
-            //Used for debug
-            //snprintf(byte_print_hex, sizeof(byte_print_hex), "%02X %02X %02X",
-            //         midi_message[0], midi_message[1], midi_message[2]);
-            send_midi_out(midi_message);
-
-
+        if (byte_count == 2 && (midi_message[0] & 0xF0) == 0xC0) {
+            // Program Change or Channel Pressure: only 2 bytes
+            change_midi_channel(midi_message, sending_to_midi_channel, 2);
+            send_midi_out(midi_message, 2);
             byte_count = 0;
-            break;  // Only show one message per update call
+        }
+        else if (byte_count == 3) {
+            change_midi_channel(midi_message, sending_to_midi_channel, 3);
+            send_midi_out(midi_message, 3);
+            byte_count = 0;
         }
     }
 }
 
-void change_midi_channel(uint8_t midi_msg[3], uint8_t * new_channel) {
-	if (*new_channel < 1 || *new_channel > 16) return;
-    uint8_t status_nibble = midi_msg[0] & 0xF0;
-    midi_msg[0] = status_nibble | ((*new_channel - 1) & 0x0F);
+void change_midi_channel(uint8_t *midi_msg, uint8_t *new_channel, uint8_t length) {
+    if (*new_channel < 1 || *new_channel > 16) return;
+
+    // Only change if it's a Channel Voice message (0x80–0xEF)
+    uint8_t status = midi_msg[0];
+    if (status >= 0x80 && status <= 0xEF) {
+        uint8_t status_nibble = status & 0xF0;
+        midi_msg[0] = status_nibble | ((*new_channel - 1) & 0x0F);
+    }
 }
 
 
-void send_midi_out(uint8_t *midi_message) {
-	  HAL_UART_Transmit(&huart1, midi_message, 3, 1000);
+void send_midi_out(uint8_t *midi_message, uint8_t length) {
+    HAL_UART_Transmit(&huart1, midi_message, length, 1000);
 }
 
 

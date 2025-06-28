@@ -10,9 +10,6 @@
 
 #include "main.h"
 
-#define VOLUME_SETTING 2
-#define SAVE_ORDER_UI 1
-
 void screen_update_settings();
 //Different pages of the settings
 void screen_update_settings_midi_modify();
