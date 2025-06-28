@@ -10,8 +10,10 @@
 #define MM_VELOCITY_SELECT 1
 #define MT_TRANSPOSE_MODE 2
 #define MT_MIDI_SEND 3
-#define ABOUT 4
-#define AMOUNT_OF_SETTINGS 5
+#define SETT_BRIGHTNESS 4
+#define SETT_START_MENU 5
+#define ABOUT 6
+#define AMOUNT_OF_SETTINGS 7
 
 #include "cmsis_os.h"
 #include "screen_driver.h"
@@ -30,6 +32,7 @@ extern settings_data_struct settings_data;
 
 char settings_modify_message[30] = "Settings Midi Modify         ";
 char settings_transpose_message[30] = "Settings Transpose           ";
+char settings_global_message[30] = "Global Settings           ";
 char settings_about_message[30] = "About                        ";
 
 //Array with all the possible select values. Is being used to update the UI
@@ -83,6 +86,9 @@ void screen_update_settings(){
 	else if (current_select >= MT_TRANSPOSE_MODE && current_select <= MT_MIDI_SEND){
 		screen_update_settings_midi_transpose();
 	}
+	else if (current_select >= SETT_BRIGHTNESS && current_select <= SETT_START_MENU){
+		screen_update_global_settings();
+	}
 	else if (current_select == ABOUT){
 		screen_update_settings_about();
 	}
@@ -113,6 +119,11 @@ void screen_update_settings_midi_modify(){
 void screen_update_settings_midi_transpose(){
 
 	menu_display(&Font_6x8, &settings_transpose_message);
+}
+
+void screen_update_global_settings(){
+
+	menu_display(&Font_6x8, &settings_global_message);
 }
 
 void screen_update_settings_about(){

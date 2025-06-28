@@ -132,7 +132,7 @@ save_struct make_default_settings(void){
 
 	//settings_data
 	emergency_save.settings_data.current_menu = MIDI_TEMPO;
-	emergency_save.settings_data.brightness = 10;
+	emergency_save.settings_data.brightness = 0xFF;
 
 	//Checksum
 	emergency_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
