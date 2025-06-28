@@ -76,10 +76,6 @@ midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
 settings_data_struct settings_data;
 
-//Current menu needs to be addressed from multiple threads
-//Is updated by the function menu_change
-static uint8_t current_menu = SETTINGS;
-
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
@@ -607,7 +603,7 @@ void MidiCore(void *argument)
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 		 if(Btn3State == 0 && OldBtn3State == 1)
 		 {
-			 if(current_menu == MIDI_TEMPO){
+			 if(settings_data.current_menu == MIDI_TEMPO){
 			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
 			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
 			 }
@@ -635,20 +631,20 @@ void MediumTasks(void *argument)
 
 	 //Romagnetics code
 	static uint8_t old_menu;
-	menu_change_check(&current_menu);
+	menu_change_check(&settings_data.current_menu);
 
-	if(current_menu == MIDI_TEMPO){
+	if(settings_data.current_menu == MIDI_TEMPO){
 		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 	}
 
-	else if(current_menu == MIDI_MODIFY){
+	else if(settings_data.current_menu == MIDI_MODIFY){
 		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
-	else if(current_menu == SETTINGS){
+	else if(settings_data.current_menu == SETTINGS){
 		settings_update_menu(&htim3, &htim4, &old_menu);
 	}
 
-	old_menu = current_menu;
+	old_menu = settings_data.current_menu;
 	//Let other tasks update
 	osDelay(10);
 
@@ -672,7 +668,7 @@ void DisplayUpdate(void *argument)
       // Wait for flag 0x01 from MediumTasks
       uint32_t displayFlag = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
       if (displayFlag & 0x01) {
-  	  	if(current_menu == MIDI_TEMPO){
+  	  	if(settings_data.current_menu == MIDI_TEMPO){
   	      screen_update_midi_tempo(&midi_tempo_data);
   	  	}
       }

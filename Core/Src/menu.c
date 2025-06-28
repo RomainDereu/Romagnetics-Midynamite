@@ -28,7 +28,7 @@ void menu_change_check(uint8_t * current_menu){
 			 osDelay(10);
 			 Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
 			 if(Btn4State == 0){*current_menu+=1;}
-			 if(*current_menu == 3){*current_menu = 0;}
+			 if(*current_menu > AMOUNT_OF_MENUS){*current_menu = MIDI_TEMPO;}
 			 //Delay to allow for continuous pressing of the button
 			 osDelay(300);
 	  }
