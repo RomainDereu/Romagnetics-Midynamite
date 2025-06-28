@@ -13,13 +13,15 @@
 #define ABOUT 4
 #define AMOUNT_OF_SETTINGS 5
 
-#include "cmsis_os2.h"
+#include "cmsis_os.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "saving.h"
 #include "menu.h"
 #include "utils.h"
 #include "settings.h"
+
+extern osThreadId display_updateHandle;
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
@@ -153,7 +155,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	if(menu_changed || current_select!= old_select ||
 			old_modify_data.change_or_split != midi_modify_data.change_or_split ||
 			old_modify_data.velocity_type != midi_modify_data.velocity_type){
-		screen_update_settings();
+		osThreadFlagsSet(display_updateHandle, 0x08);
 	}
 
 	*old_menu = SETTINGS;

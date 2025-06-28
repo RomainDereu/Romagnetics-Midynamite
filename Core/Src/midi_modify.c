@@ -25,6 +25,10 @@ char type_of_action_print[19] = "Change Midi Channel";
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
+extern osThreadId display_updateHandle;
+
+// Circular buffer instance declared externally
+extern midi_modify_circular_buffer midi_modify_buff;
 
 //Used for debug
 //static char byte_print_hex[11];
@@ -32,8 +36,7 @@ extern UART_HandleTypeDef huart2;
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
 
-// Circular buffer instance declared externally
-extern midi_modify_circular_buffer midi_modify_buff;
+
 
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 	screen_driver_Fill(Black);
@@ -121,16 +124,12 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu){
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
-	if (menu_changed) {
-			screen_driver_Fill(Black);
-		}
-
 	uint8_t old_midi_value = midi_modify_data->send_to_midi_channel;
 	utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, menu_changed);
 	calculate_incoming_midi(&midi_modify_data->send_to_midi_channel);
 
-	if (menu_changed || old_midi_value != midi_modify_data->send_to_midi_channel) {
-			screen_update_midi_modify(midi_modify_data);
+	if (menu_changed == 1 || old_midi_value != midi_modify_data->send_to_midi_channel) {
+		osThreadFlagsSet(display_updateHandle, 0x02);
 		}
 	*old_menu = MIDI_MODIFY;
 }

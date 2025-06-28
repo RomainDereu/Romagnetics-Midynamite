@@ -29,6 +29,9 @@
 #include "midi_tempo.h"
 #include "midi_modify.h"
 #include "saving.h"
+#include "settings.h"
+#include "utils.h"
+
 
 /* USER CODE END PD */
 
@@ -610,7 +613,7 @@ void MidiCore(void *argument)
 		 }
   }
   OldBtn3State = Btn3State;
-  osDelay(10);
+  osDelay(5);
   }
   /* USER CODE END 5 */
 }
@@ -666,14 +669,21 @@ void DisplayUpdate(void *argument)
   for(;;)
   {
       // Wait for flag 0x01 from MediumTasks
-      uint32_t displayFlag = osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
-      if (displayFlag & 0x01) {
-  	  	if(settings_data.current_menu == MIDI_TEMPO){
+      uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
+      if (displayFlags & 0x01 && settings_data.current_menu == MIDI_TEMPO) {
   	      screen_update_midi_tempo(&midi_tempo_data);
   	  	}
+      if (displayFlags & 0x02 && settings_data.current_menu == MIDI_MODIFY) {
+        screen_update_midi_modify(&midi_modify_data);
       }
-    //Limiting the refresh at 30fps to leave headroom for other functions
-	osDelay(34);
+      if (displayFlags & 0x04) {
+        //Roro implementation
+    	osDelay(10);
+      }
+      if (displayFlags & 0x08 && settings_data.current_menu == SETTINGS) {
+    	  screen_update_settings();
+      }
+     osDelay(30);
   }
   /* USER CODE END DisplayUpdate */
 }
