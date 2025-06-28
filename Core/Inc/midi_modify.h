@@ -2,7 +2,7 @@
  * midi_modify.h
  *
  *  Created on: Feb 27, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef INC_MIDI_MODIFY_H_

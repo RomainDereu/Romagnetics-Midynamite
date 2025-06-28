@@ -2,7 +2,7 @@
  * settings.h
  *
  *  Created on: Jun 25, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef SETTINGS_H_

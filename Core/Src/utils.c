@@ -2,7 +2,7 @@
  * utils.c
  *
  *  Created on: Jun 21, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 #include <stdio.h>
 #include <string.h>

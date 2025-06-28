@@ -2,7 +2,7 @@
  * settings.c
  *
  *  Created on: Apr 2, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #define SETTINGS_MM_CHANNEL_CHANGE 0

@@ -2,7 +2,7 @@
  * settings.c
  *
  *  Created on: Jun 25, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 //List of current select
