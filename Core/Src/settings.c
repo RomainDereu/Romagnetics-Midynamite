@@ -22,6 +22,7 @@
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
+extern midi_transpose_data_struct midi_transpose_data;
 extern settings_data_struct settings_data;
 
 char settings_modify_message[30] = "Settings Midi Modify         ";
@@ -48,6 +49,8 @@ char velocity_select_message[9] = "Velocity";
 char velocity_change_message[7] = "Change";
 char velocity_fixed_message[6] = "Fixed";
 char * velocity_choices[2] = {velocity_change_message, velocity_fixed_message};
+
+//Roro add Midi Transpose section
 
 
 
@@ -93,12 +96,13 @@ void screen_update_settings_midi_modify(){
 	menu_display(&Font_6x8, &settings_modify_message);
 	//Midi Mode
 	screen_driver_SetCursor_WriteString(midi_modify_select_message, Font_6x8, White, 0, line_1_vert);
-	screen_driver_underline_WriteString(midi_split_choices[settings_data.midi_channel_mode], Font_6x8, White, 80, line_1_vert, select_states[0]);
+	screen_driver_underline_WriteString(midi_split_choices[midi_modify_data.change_or_split],
+										Font_6x8, White, 80, line_1_vert, select_states[0]);
 
 
 	//Velocity
 	screen_driver_SetCursor_WriteString(velocity_select_message, Font_6x8, White, 0, line_2_vert);
-	screen_driver_underline_WriteString(velocity_choices[settings_data.midi_velocity_mode], Font_6x8, White, 80, line_2_vert, select_states[1]);
+	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, line_2_vert, select_states[1]);
 
 
 }
@@ -120,19 +124,19 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                  TIM_HandleTypeDef * timer4,
 						  uint8_t * old_menu){
 
-	//Saving the settings struct to check if the screen must be updated later
-	settings_data_struct old_settings_data = settings_data;
+
+	midi_modify_data_struct old_modify_data = midi_modify_data;
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed);
 
 	if (current_select == MM_CHANNEL_SELECT ){
 	uint8_t select_changed = (old_select != current_select);
-	utils_counter_change(timer4, &settings_data.midi_channel_mode, 0, 1, select_changed);
+	utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed);
 	}
 	else if (current_select == MM_VELOCITY_SELECT ){
 	uint8_t select_changed = (old_select != current_select);
-	utils_counter_change(timer4, &settings_data.midi_velocity_mode, 0, 1, select_changed);
+	utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
 	}
 
 
@@ -146,8 +150,8 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	saving_settings_ui();
 
 	if(menu_changed || current_select!= old_select ||
-			old_settings_data.midi_channel_mode != settings_data.midi_channel_mode ||
-			old_settings_data.midi_velocity_mode != settings_data.midi_velocity_mode){
+			old_modify_data.change_or_split != midi_modify_data.change_or_split ||
+			old_modify_data.velocity_type != midi_modify_data.velocity_type){
 		screen_update_settings();
 	}
 
@@ -170,7 +174,10 @@ void saving_settings_ui(){
 				 screen_driver_SetCursor_WriteString(saving_print, Font_6x8, White, 0, 56);
 				 screen_driver_UpdateScreen();
 
-				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data, &midi_modify_data, &settings_data);
+				 save_struct memory_to_be_saved = creating_save(&midi_tempo_data,
+						 	 	 	 	 	 	 	 	 	 	&midi_modify_data,
+																&midi_transpose_data,
+																&settings_data);
 				 store_settings(&memory_to_be_saved);
 
 				 screen_driver_SetCursor_WriteString(saved_print, Font_6x8, White, 0, 56);

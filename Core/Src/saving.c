@@ -25,15 +25,18 @@
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
+extern midi_transpose_data_struct midi_transpose_data;
 extern settings_data_struct settings_data;
 
 
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 		                  midi_modify_data_struct * midi_modify_data_to_save,
+						  midi_transpose_data_struct * midi_transpose_data_to_save,
 						  settings_data_struct *settings_data_to_save){
 	save_struct this_save;
 	this_save.midi_tempo_data = * midi_tempo_data_to_save;
 	this_save.midi_modify_data = * midi_modify_data_to_save;
+	this_save.midi_transpose_data = * midi_transpose_data_to_save;
 	this_save.settings_data = * settings_data_to_save;
 	//Random number, just to check that the data works
 	this_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
@@ -97,18 +100,38 @@ save_struct make_default_settings(void){
 
 	save_struct emergency_save;
 
-
+	//midi_tempo_data
 	emergency_save.midi_tempo_data.current_tempo = 60;
 	emergency_save.midi_tempo_data.currently_sending = 0;
 	emergency_save.midi_tempo_data.send_channels = MIDI_OUT_1_2;
 
-	emergency_save.midi_modify_data.sent_to_midi_channel = 1;
-	emergency_save.midi_modify_data.send_2 = 0;
-	emergency_save.midi_modify_data.send_channels = 0;
+	//midi_modify_data
+	emergency_save.midi_modify_data.change_or_split = MIDI_MODIFY_CHANGE;
+	emergency_save.midi_modify_data.velocity_type = MIDI_MODIFY_CHANGED_VEL;
 
-	emergency_save.settings_data.midi_channel_mode = SETTINGS_MM_CHANNEL_CHANGE;
-	emergency_save.settings_data.midi_velocity_mode = SETTINGS_MM_VELOCITY_CHANGE;
 
+	emergency_save.midi_modify_data.send_to_midi_channel = 1;
+	emergency_save.midi_modify_data.send_to_midi_out = MIDI_OUT_1;
+
+	emergency_save.midi_modify_data.split_note = 0;
+	emergency_save.midi_modify_data.split_midi_channel_1 = 1;
+	emergency_save.midi_modify_data.split_midi_channel_2 = 2;
+	emergency_save.midi_modify_data.split_midi_out = MIDI_OUT_1_2;
+
+	emergency_save.midi_modify_data.velocity_plus_minus = 12;
+	emergency_save.midi_modify_data.velocity_absolute = 0;
+
+	//midi_transpose_data
+	emergency_save.midi_transpose_data.transpose_type = MIDI_TRANSPOSE_SHIFT;
+
+	emergency_save.midi_transpose_data.midi_shift_value = 12;
+
+	emergency_save.midi_transpose_data.transpose_base_note = 0;
+	emergency_save.midi_transpose_data.transpose_scale = IONIAN;
+	emergency_save.midi_transpose_data.transpose_interval = THIRD_DOWN;
+
+	//settings_data
+	emergency_save.settings_data.brightness = 10;
 	return emergency_save;
 }
 
@@ -121,6 +144,7 @@ void load_settings(){
 		  //Overwrite the default values
 		  midi_tempo_data = flash_save.midi_tempo_data;
 		  midi_modify_data = flash_save.midi_modify_data;
+		  midi_transpose_data = flash_save.midi_transpose_data;
 		  settings_data = flash_save.settings_data;
 	  }
 	  //If the save is corrupt, use default values

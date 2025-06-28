@@ -14,11 +14,12 @@
 //Declaring the save_struct
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 		                  midi_modify_data_struct * midi_modify_data_to_save,
+						  midi_transpose_data_struct * midi_transpose_data_to_save,
 						  settings_data_struct *settings_data_to_save);
 
 
 
-HAL_StatusTypeDef  store_settings(save_struct *data);
+HAL_StatusTypeDef store_settings(save_struct *data);
 
 save_struct read_setting_memory(void);
 

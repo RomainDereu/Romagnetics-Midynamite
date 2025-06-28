@@ -30,21 +30,44 @@ typedef struct {
 
 
 typedef struct {
-	uint8_t sent_to_midi_channel;
-	uint32_t send_2;
-	uint8_t send_channels;
+	uint8_t change_or_split;
+	uint8_t velocity_type;
+
+	uint8_t send_to_midi_channel;
+	uint8_t send_to_midi_out;
+
+	uint8_t split_note;
+	uint8_t split_midi_channel_1;
+	uint8_t split_midi_channel_2;
+	uint8_t split_midi_out;
+
+	uint8_t velocity_plus_minus;
+	uint8_t velocity_absolute;
+
 }midi_modify_data_struct;
+
+typedef struct {
+	uint8_t transpose_type;
+
+	int8_t midi_shift_value;
+
+	uint8_t transpose_base_note;
+	uint8_t transpose_scale;
+	uint8_t transpose_interval;
+
+
+}midi_transpose_data_struct;
 
 
 typedef struct {
-	uint8_t midi_channel_mode;
-	uint8_t midi_velocity_mode;
+	uint8_t brightness;
 }settings_data_struct;
 
 
 typedef struct {
 	midi_tempo_data_struct midi_tempo_data;
 	midi_modify_data_struct midi_modify_data;
+	midi_transpose_data_struct midi_transpose_data;
 	settings_data_struct settings_data;
 	uint32_t check_data_validity;
 }save_struct;
@@ -92,13 +115,14 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 42817
+#define DATA_VALIDITY_CHECKSUM 42816
 
-
+//Menu list
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1
 #define SETTINGS 2
 
+//midi_tempo_data
 #define MIDI_OUT_1 1
 #define MIDI_OUT_2 2
 #define MIDI_OUT_1_2 3
@@ -106,6 +130,34 @@ void Error_Handler(void);
 #define MIDI_OUT_USB_1 5
 #define MIDI_OUT_USB_2 6
 #define MIDI_OUT_USB_1_2 7
+
+//midi_modify_data
+#define MIDI_MODIFY_CHANGE 0
+#define MIDI_MODIFY_SPLIT 1
+
+#define MIDI_MODIFY_CHANGED_VEL 0
+#define MIDI_MODIFY_FIXED_VEL 1
+
+//midi_transpose_data
+#define MIDI_TRANSPOSE_SHIFT 0
+#define MIDI_TRANSPOSE_SCALED 0
+
+#define IONIAN 0
+#define DORIAN 1
+#define PHRYGIAN 2
+#define LYDIAN 3
+#define MIXOLYDIAN 4
+#define AEOLIAN 5
+#define LOCRIAN 6
+
+#define SIXTH_DOWN 0
+#define FIFTH_DOWN 1
+#define FOURTH_DOWN 2
+#define THIRD_DOWN 3
+#define THIRD_UP 4
+#define FOURTH_UP 5
+#define FIFTH_UP 5
+#define SIXTH_UP 5
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 

@@ -42,7 +42,7 @@ void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
     screen_driver_SetCursor(0, 20);
     screen_driver_WriteString(type_of_action_print, Font_6x8 , White);
 
-    uint8_t channel = midi_modify_data->sent_to_midi_channel;
+    uint8_t channel = midi_modify_data->send_to_midi_channel;
     char channel_text[15];
     sprintf(channel_text, "To channel %d", channel);
     screen_driver_SetCursor(0, 30);
@@ -125,11 +125,11 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 			screen_driver_Fill(Black);
 		}
 
-	uint8_t old_midi_value = midi_modify_data->sent_to_midi_channel;
-	utils_counter_change(timer4, &(midi_modify_data->sent_to_midi_channel), 1, 16, menu_changed);
-	calculate_incoming_midi(&midi_modify_data->sent_to_midi_channel);
+	uint8_t old_midi_value = midi_modify_data->send_to_midi_channel;
+	utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, menu_changed);
+	calculate_incoming_midi(&midi_modify_data->send_to_midi_channel);
 
-	if (menu_changed || old_midi_value != midi_modify_data->sent_to_midi_channel) {
+	if (menu_changed || old_midi_value != midi_modify_data->send_to_midi_channel) {
 			screen_update_midi_modify(midi_modify_data);
 		}
 	*old_menu = MIDI_MODIFY;
