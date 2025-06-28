@@ -79,6 +79,9 @@ midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
 settings_data_struct settings_data;
 
+uint8_t current_menu;
+
+
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
@@ -153,7 +156,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   //Romagnetics code
   screen_driver_Init();
-  load_settings(&htim3, &htim4);
+  load_settings();
+  current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -607,7 +611,7 @@ void MidiCore(void *argument)
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 		 if(Btn3State == 0 && OldBtn3State == 1)
 		 {
-			 if(settings_data.current_menu == MIDI_TEMPO){
+			 if(current_menu == MIDI_TEMPO){
 			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
 			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
 			 }
@@ -635,20 +639,20 @@ void MediumTasks(void *argument)
 
 	 //Romagnetics code
 	static uint8_t old_menu;
-	menu_change_check(&settings_data.current_menu);
+	menu_change_check(&current_menu);
 
-	if(settings_data.current_menu == MIDI_TEMPO){
+	if(current_menu == MIDI_TEMPO){
 		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 	}
 
-	else if(settings_data.current_menu == MIDI_MODIFY){
+	else if(current_menu == MIDI_MODIFY){
 		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
-	else if(settings_data.current_menu == SETTINGS){
+	else if(current_menu == SETTINGS){
 		settings_update_menu(&htim3, &htim4, &old_menu);
 	}
 
-	old_menu = settings_data.current_menu;
+	old_menu = current_menu;
 	//Let other tasks update
 	osDelay(10);
 
@@ -671,15 +675,15 @@ void DisplayUpdate(void *argument)
   {
       // Wait for flag 0x01 from MediumTasks
       uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
-      if (displayFlags & 0x01 && settings_data.current_menu == MIDI_TEMPO) {
+      if (displayFlags & 0x01 && current_menu == MIDI_TEMPO) {
   	      screen_update_midi_tempo(&midi_tempo_data);
   	  	}
-      if (displayFlags & 0x02 && settings_data.current_menu == MIDI_MODIFY) {
+      if (displayFlags & 0x02 && current_menu == MIDI_MODIFY) {
         screen_update_midi_modify(&midi_modify_data);
       }
       //if (displayFlags & 0x04 && settings_data.current_menu == MIDI_TRANSPOSE) {
       //}
-      if (displayFlags & 0x08 && settings_data.current_menu == SETTINGS) {
+      if (displayFlags & 0x08 && current_menu == SETTINGS) {
     	  screen_update_settings();
       }
      osDelay(30);

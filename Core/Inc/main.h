@@ -60,7 +60,7 @@ typedef struct {
 
 
 typedef struct {
-	uint8_t current_menu;
+	uint8_t start_menu;
 	uint8_t brightness;
 }settings_data_struct;
 
@@ -116,7 +116,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 29516
+#define DATA_VALIDITY_CHECKSUM 23516
 
 //Menu list
 #define MIDI_TEMPO 0

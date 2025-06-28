@@ -10,8 +10,8 @@
 #define MM_VELOCITY_SELECT 1
 #define MT_TRANSPOSE_MODE 2
 #define MT_MIDI_SEND 3
-#define SETT_BRIGHTNESS 4
-#define SETT_START_MENU 5
+#define SETT_START_MENU 4
+#define SETT_BRIGHTNESS 5
 #define ABOUT 6
 #define AMOUNT_OF_SETTINGS 7
 
@@ -19,6 +19,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "saving.h"
+#include "main.h"
 #include "menu.h"
 #include "utils.h"
 #include "settings.h"
@@ -36,7 +37,7 @@ char settings_global_message[30] = "Global Settings           ";
 char settings_about_message[30] = "About                        ";
 
 //Array with all the possible select values. Is being used to update the UI
-uint8_t select_states[AMOUNT_OF_SETTINGS] = {0, 0, 0, 0, 0};
+uint8_t select_states[AMOUNT_OF_SETTINGS] = {0, 0, 0, 0, 0, 0, 0};
 
 //Lines
 uint8_t line_1_vert = 15;
@@ -44,6 +45,7 @@ uint8_t line_2_vert = 25;
 uint8_t line_3_vert = 35;
 
 //Midi Modify page
+//Channel Modify
 char midi_modify_select_message[11] = "Ch. Modify";
 char midi_change_message[7] = "Change";
 char midi_split_message[6] = "Split";
@@ -56,9 +58,23 @@ char velocity_change_message[7] = "Change";
 char velocity_fixed_message[6] = "Fixed";
 char * velocity_choices[2] = {velocity_change_message, velocity_fixed_message};
 
-//Roro add Midi Transpose section
+//Transpose section
 
 
+
+//Settings Section
+//Starting Menu
+char start_menu_message[11] = "Start Menu";
+char midi_tempo_message[6] = "Tempo";
+char midi_modif_message[7] = "Modify";
+char midi_settings_message[9] = "Settings";
+char * start_menu_choices[3] = {midi_tempo_message, midi_modif_message, midi_settings_message};
+
+//Contrast
+char contrast_message[9] = "Contrast";
+uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
+char * contrast_level_labels[10] = {" 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", "10"};
+uint8_t contrast_index;
 
 //About Section
 char about_pedal_brand_message[12] = "Romagnetics";
@@ -86,7 +102,7 @@ void screen_update_settings(){
 	else if (current_select >= MT_TRANSPOSE_MODE && current_select <= MT_MIDI_SEND){
 		screen_update_settings_midi_transpose();
 	}
-	else if (current_select >= SETT_BRIGHTNESS && current_select <= SETT_START_MENU){
+	else if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
 		screen_update_global_settings();
 	}
 	else if (current_select == ABOUT){
@@ -106,12 +122,13 @@ void screen_update_settings_midi_modify(){
 	//Midi Mode
 	screen_driver_SetCursor_WriteString(midi_modify_select_message, Font_6x8, White, 0, line_1_vert);
 	screen_driver_underline_WriteString(midi_split_choices[midi_modify_data.change_or_split],
-										Font_6x8, White, 80, line_1_vert, select_states[0]);
+										Font_6x8, White, 80, line_1_vert, select_states[MM_CHANNEL_SELECT]);
 
 
 	//Velocity
 	screen_driver_SetCursor_WriteString(velocity_select_message, Font_6x8, White, 0, line_2_vert);
-	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, line_2_vert, select_states[1]);
+	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type],
+										Font_6x8, White, 80, line_2_vert, select_states[MM_VELOCITY_SELECT]);
 
 
 }
@@ -122,8 +139,16 @@ void screen_update_settings_midi_transpose(){
 }
 
 void screen_update_global_settings(){
-
 	menu_display(&Font_6x8, &settings_global_message);
+    //Start Menu
+	screen_driver_SetCursor_WriteString(start_menu_message, Font_6x8, White, 0, line_1_vert);
+	screen_driver_underline_WriteString(start_menu_choices[settings_data.start_menu],
+										Font_6x8, White, 80, line_1_vert, select_states[SETT_START_MENU]);
+	//Contrast
+	screen_driver_SetCursor_WriteString(contrast_message, Font_6x8, White, 0, line_2_vert);
+	screen_driver_underline_WriteString(contrast_level_labels[contrast_index],
+										Font_6x8, White, 80, line_2_vert, select_states[SETT_BRIGHTNESS]);
+
 }
 
 void screen_update_settings_about(){
@@ -138,8 +163,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                  TIM_HandleTypeDef * timer4,
 						  uint8_t * old_menu){
 
+	contrast_index = calculate_contrast_index(settings_data.brightness);
 
 	midi_modify_data_struct old_modify_data = midi_modify_data;
+	midi_transpose_data_struct old_midi_transpose_data = midi_transpose_data;
+	settings_data_struct old_settings_data = settings_data;
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed);
@@ -151,6 +179,27 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	else if (current_select == MM_VELOCITY_SELECT ){
 	uint8_t select_changed = (old_select != current_select);
 	utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
+	}
+
+	//Roro add
+	//MT_TRANSPOSE_MODE
+	//MT_MIDI_SEND
+
+
+	else if (current_select == SETT_START_MENU){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed);
+	}
+
+	else if (current_select == SETT_BRIGHTNESS){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &contrast_index, 0, 9, select_changed);
+	 if (contrast_index < 10) {
+	        settings_data.brightness = contrast_values[contrast_index];
+	        if (old_settings_data.brightness!= settings_data.brightness){
+	        	screen_driver_SetContrast(settings_data.brightness);
+	        }
+	    }
 	}
 
 
@@ -165,7 +214,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 	if(menu_changed || current_select!= old_select ||
 			old_modify_data.change_or_split != midi_modify_data.change_or_split ||
-			old_modify_data.velocity_type != midi_modify_data.velocity_type){
+			old_modify_data.velocity_type != midi_modify_data.velocity_type ||
+			old_midi_transpose_data.transpose_type != midi_transpose_data.transpose_type ||
+			old_midi_transpose_data.transpose_scale != midi_transpose_data.transpose_scale ||
+			old_settings_data.start_menu != settings_data.start_menu ||
+			old_settings_data.brightness != settings_data.brightness){
 		osThreadFlagsSet(display_updateHandle, 0x08);
 	}
 
@@ -202,4 +255,14 @@ void saving_settings_ui(){
 				  }
 	  }
 
+}
+
+uint8_t calculate_contrast_index(uint8_t brightness) {
+    for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
+        if (contrast_values[i] == brightness) {
+            return i;  // Found exact match
+        }
+    }
+    // Default value is full brightness
+    return 9;
 }
