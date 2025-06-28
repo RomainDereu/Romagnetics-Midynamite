@@ -156,8 +156,8 @@ void load_settings(){
 	  else {
 
 		  save_struct emergency_save = make_default_settings();
-
 		  store_settings(&emergency_save);
+		  load_settings();
 	  }
 
 

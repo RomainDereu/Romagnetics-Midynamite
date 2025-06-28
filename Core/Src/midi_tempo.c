@@ -35,8 +35,8 @@ char midi_channel_2_print[9] = "Out 2    ";
 char midi_channel_1_2_print[9] = "Out 1 & 2";
 
 
-char sending_print[10] = "Sending   ";
-char stopped_print[10] = "Stopped   ";
+char on_print[3] = "ON";
+char off_print[4] = "OFF";
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
@@ -46,13 +46,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  //Vertical line
 	  screen_driver_Line(64, 10, 64, 64, White);
 	  //Horizontal line
-	  screen_driver_Line(0, 45, 64, 45, White);
+	  screen_driver_Line(0, 40, 64, 40, White);
 
 	  //Send to Midi Out and / or Out 2
-      screen_driver_SetCursor(0, 20);
+      screen_driver_SetCursor(0, 15);
       screen_driver_WriteString(target_channel_print, Font_6x8 , White);
 
-      screen_driver_SetCursor(0, 32);
+      screen_driver_SetCursor(0, 25);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
       screen_driver_WriteString(midi_channel_1_print, Font_6x8 , White);
       }
@@ -64,13 +64,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
       }
 
       //Stop/Sending status
-      screen_driver_SetCursor(0, 55);
+      screen_driver_SetCursor(15, 46);
 
       if(midi_tempo_data->currently_sending==0){
-    	  screen_driver_WriteString(stopped_print, Font_6x8 , White);
+    	  screen_driver_WriteString(off_print, Font_11x18 , White);
       }
       else if (midi_tempo_data->currently_sending==1){
-    	  screen_driver_WriteString(sending_print, Font_6x8 , White);
+    	  screen_driver_WriteString(on_print, Font_11x18 , White);
       }
  	  //Tempo
 	  char tempo_number[3];
