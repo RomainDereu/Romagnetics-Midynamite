@@ -5,6 +5,13 @@
  *      Author: Astaa
  */
 
+#define SETTINGS_MM_CHANNEL_CHANGE 0
+#define SETTINGS_MM_CHANNEL_SPLIT 1
+
+#define SETTINGS_MM_VELOCITY_CHANGE 0
+#define SETTINGS_MM_VELOCITY_FIXED 1
+
+
 #include <string.h>
 
 #include "cmsis_os.h"
@@ -87,18 +94,22 @@ save_struct read_setting_memory(void){
 }
 
 save_struct make_default_settings(void){
-	  midi_tempo_data.current_tempo = 60;
-	  midi_tempo_data.currently_sending = 0;
-	  midi_tempo_data.send_channels = MIDI_OUT_1_2;
 
-	  midi_modify_data.sent_to_midi_channel = 1;
-	  midi_modify_data.send_2 = 0;
-	  midi_modify_data.send_channels = 0;
-
-	  settings_data.midi_channel_mode = SETTINGS_MM_CHANNEL_CHANGE;
-	  settings_data.midi_velocity_mode = SETTINGS_MM_VELOCITY_CHANGE;
+	save_struct emergency_save;
 
 
+	emergency_save.midi_tempo_data.current_tempo = 60;
+	emergency_save.midi_tempo_data.currently_sending = 0;
+	emergency_save.midi_tempo_data.send_channels = MIDI_OUT_1_2;
+
+	emergency_save.midi_modify_data.sent_to_midi_channel = 1;
+	emergency_save.midi_modify_data.send_2 = 0;
+	emergency_save.midi_modify_data.send_channels = 0;
+
+	emergency_save.settings_data.midi_channel_mode = SETTINGS_MM_CHANNEL_CHANGE;
+	emergency_save.settings_data.midi_velocity_mode = SETTINGS_MM_VELOCITY_CHANGE;
+
+	return emergency_save;
 }
 
 
@@ -116,6 +127,7 @@ void load_settings(){
 	  else {
 
 		  save_struct emergency_save = make_default_settings();
+
 		  store_settings(&emergency_save);
 	  }
 

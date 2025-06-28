@@ -14,6 +14,10 @@
 #define SAVE_ORDER_UI 1
 
 void screen_update_settings();
+//Different pages of the settings
+void screen_update_settings_midi_modify();
+void screen_update_settings_midi_transpose();
+void screen_update_settings_about();
 
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
