@@ -132,6 +132,10 @@ save_struct make_default_settings(void){
 
 	//settings_data
 	emergency_save.settings_data.brightness = 10;
+
+	//Checksum
+	emergency_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
+
 	return emergency_save;
 }
 

@@ -115,7 +115,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 42816
+#define DATA_VALIDITY_CHECKSUM 42416
 
 //Menu list
 #define MIDI_TEMPO 0

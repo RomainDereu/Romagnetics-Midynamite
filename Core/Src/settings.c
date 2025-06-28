@@ -5,6 +5,7 @@
  *      Author: Astaa
  */
 
+//List of current select
 #define MM_CHANNEL_SELECT 0
 #define MM_VELOCITY_SELECT 1
 #define MT_TRANSPOSE_MODE 2
