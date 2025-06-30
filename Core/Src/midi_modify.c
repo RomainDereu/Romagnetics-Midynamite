@@ -16,12 +16,9 @@
 #include "menu.h"
 #include "utils.h"
 #include "main.h"
+#include "text.h"
 
-//Messages
-char message_midi_modify_print[30] = "Midi Modify                   ";
-char type_of_action_print[19] = "Change Midi Channel";
-
-
+extern const Message * message;
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -41,9 +38,9 @@ static uint8_t byte_count = 0;
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 	screen_driver_Fill(Black);
 
-	menu_display(&Font_6x8, &message_midi_modify_print);
+	menu_display(&Font_6x8, message->settings_modify);
     screen_driver_SetCursor(0, 20);
-    screen_driver_WriteString(type_of_action_print, Font_6x8 , White);
+    screen_driver_WriteString(message->change_midi_channel, Font_6x8 , White);
 
     uint8_t channel = midi_modify_data->send_to_midi_channel;
     char channel_text[15];

@@ -87,7 +87,7 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 }
 
 
-void screen_driver_SetCursor_WriteString(char* str, screen_driver_Font_t Font,
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t Font,
 										 screen_driver_COLOR color,
 										 uint8_t x_align,
 										 uint8_t y_align){
@@ -97,7 +97,7 @@ void screen_driver_SetCursor_WriteString(char* str, screen_driver_Font_t Font,
 
 
 
-void screen_driver_underline_WriteString(char* str, screen_driver_Font_t Font,
+void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t Font,
 										  screen_driver_COLOR color,
 										  uint8_t x_align,
 										  uint8_t y_align,

@@ -274,7 +274,7 @@ char screen_driver_WriteChar(char ch, screen_driver_Font_t Font, screen_driver_C
 }
 
 /* Write full string to screenbuffer */
-char screen_driver_WriteString(char* str, screen_driver_Font_t Font, screen_driver_COLOR color) {
+char screen_driver_WriteString(const char* str, screen_driver_Font_t Font, screen_driver_COLOR color) {
     while (*str) {
         if (screen_driver_WriteChar(*str, Font, color) != *str) {
             // Char could not be written

@@ -20,7 +20,7 @@
 #include "utils.h"
 
 #include "text.h"
-extern Message * message;
+extern const Message * message;
 
 extern osThreadId display_updateHandle;
 
@@ -31,13 +31,8 @@ const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
 
 
-extern char midi_channel_1_message[];
-extern char midi_channel_2_message[];
-extern char midi_channel_1_2_message[];
 
 
-char on_print[3] = "ON";
-char off_print[4] = "OFF";
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
@@ -55,23 +50,23 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
       screen_driver_SetCursor(0, 25);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
-      screen_driver_WriteString(midi_channel_1_message, Font_6x8 , White);
+      screen_driver_WriteString(message->midi_channel_1, Font_6x8 , White);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_2){
-      screen_driver_WriteString(midi_channel_2_message, Font_6x8 , White);
+      screen_driver_WriteString(message->midi_channel_2, Font_6x8 , White);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_1_2){
-      screen_driver_WriteString(midi_channel_1_2_message, Font_6x8 , White);
+      screen_driver_WriteString(message->midi_channel_1_2, Font_6x8 , White);
       }
 
       //Stop/Sending status
       screen_driver_SetCursor(15, 46);
 
       if(midi_tempo_data->currently_sending==0){
-    	  screen_driver_WriteString(off_print, Font_11x18 , White);
+    	  screen_driver_WriteString(message->off, Font_11x18 , White);
       }
       else if (midi_tempo_data->currently_sending==1){
-    	  screen_driver_WriteString(on_print, Font_11x18 , White);
+    	  screen_driver_WriteString(message->on, Font_11x18 , White);
       }
  	  //Tempo
 	  char tempo_number[3];
@@ -82,7 +77,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  screen_driver_SetCursor(80, 30);
 	  screen_driver_WriteString(tempo_print, Font_16x24, White);
 	  screen_driver_SetCursor(80, 55);
-	  screen_driver_WriteString("BPM", Font_6x8, White);
+	  screen_driver_WriteString(message->bpm, Font_6x8, White);
 
       screen_driver_UpdateScreen();
 }
