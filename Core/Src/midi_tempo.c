@@ -19,6 +19,9 @@
 #include "main.h"
 #include "utils.h"
 
+#include "text.h"
+extern Message * message;
+
 extern osThreadId display_updateHandle;
 
 //Midi messages constants
@@ -26,9 +29,7 @@ const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
-//Messages
-char message_midi_tempo_print[30] = "Send Midi Tempo              ";
-char target_channel_print[7] = "Target:";
+
 
 extern char midi_channel_1_message[];
 extern char midi_channel_2_message[];
@@ -42,7 +43,7 @@ char off_print[4] = "OFF";
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
    	  screen_driver_Fill(Black);
 	  //Menu
-	  menu_display(&Font_6x8, &message_midi_tempo_print);
+	  menu_display(&Font_6x8, message->send_midi_tempo);
 	  //Vertical line
 	  screen_driver_Line(64, 10, 64, 64, White);
 	  //Horizontal line
@@ -50,7 +51,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor(0, 15);
-      screen_driver_WriteString(target_channel_print, Font_6x8 , White);
+      screen_driver_WriteString(message->target, Font_6x8 , White);
 
       screen_driver_SetCursor(0, 25);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){

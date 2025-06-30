@@ -8,6 +8,9 @@
 #ifndef INC_TEXT_H_
 #define INC_TEXT_H_
 
-
+typedef struct {
+    const char *send_midi_tempo;
+    const char *target;
+} Message;
 
 #endif /* INC_TEXT_H_ */

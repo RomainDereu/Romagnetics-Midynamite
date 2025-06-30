@@ -6,3 +6,11 @@
  */
 
 
+#include "text.h"
+
+static const Message message_data = {
+    .send_midi_tempo = "Send Midi Tempo              ",
+    .target =  "Target:"
+};
+
+const Message *message = &message_data;
