@@ -203,6 +203,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		old_modify_data.velocity_type != midi_modify_data.velocity_type ||
 		old_midi_transpose_data.transpose_type != midi_transpose_data.transpose_type ||
 		old_midi_transpose_data.transpose_scale != midi_transpose_data.transpose_scale ||
+		old_midi_transpose_data.send_channels != midi_transpose_data.send_channels ||
 		old_settings_data.start_menu != settings_data.start_menu ||
 		old_settings_data.brightness != settings_data.brightness){
 		osThreadFlagsSet(display_updateHandle, 0x08);
