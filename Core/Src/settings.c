@@ -9,11 +9,12 @@
 #define MM_CHANNEL_SELECT 0
 #define MM_VELOCITY_SELECT 1
 #define MT_TRANSPOSE_MODE 2
-#define MT_MIDI_SEND 3
-#define SETT_START_MENU 4
-#define SETT_BRIGHTNESS 5
-#define ABOUT 6
-#define AMOUNT_OF_SETTINGS 7
+#define MT_SCALE 3
+#define MT_MIDI_SEND 4
+#define SETT_START_MENU 5
+#define SETT_BRIGHTNESS 6
+#define ABOUT 7
+#define AMOUNT_OF_SETTINGS 8
 
 #include "cmsis_os.h"
 #include "screen_driver.h"
@@ -46,29 +47,57 @@ uint8_t line_3_vert = 35;
 
 //Midi Modify page
 //Channel Modify
-char midi_modify_select_message[11] = "Ch. Modify";
-char midi_change_message[7] = "Change";
-char midi_split_message[6] = "Split";
-char * midi_split_choices[2] = {midi_change_message, midi_split_message};
+char midi_modify_select_message[] = "Ch. Modify";
+char midi_change_message[] = "Change";
+char midi_split_message[] = "Split";
+char * midi_split_choices[] = {midi_change_message, midi_split_message};
 
 
 //Velocity
-char velocity_select_message[9] = "Velocity";
-char velocity_change_message[7] = "Change";
-char velocity_fixed_message[6] = "Fixed";
-char * velocity_choices[2] = {velocity_change_message, velocity_fixed_message};
+char velocity_select_message[] = "Velocity";
+char velocity_change_message[] = "Change";
+char velocity_fixed_message[] = "Fixed";
+char * velocity_choices[] = {velocity_change_message, velocity_fixed_message};
 
 //Transpose section
+char type_message[] = "Type";
+char pitch_shift_message[] = "Pitch Shift";
+char transpose_message[] = "Transpose";
+char * transpose_mode_choices[] = {pitch_shift_message, transpose_message};
 
+char mode_message[] = "Mode";
+char na_message[] = "N/A";
 
+char ionian_message[]     = "Ionian";
+char dorian_message[]     = "Dorian";
+char phrygian_message[]   = "Phrygian";
+char lydian_message[]     = "Lydian";
+char mixolydian_message[] = "Mixolydian";
+char aeolian_message[]    = "Aeolian";
+char locrian_message[]    = "Locrian";
+char *scale_choices[7] = {
+    ionian_message,
+    dorian_message,
+    phrygian_message,
+    lydian_message,
+    mixolydian_message,
+    aeolian_message,
+    locrian_message
+};
+
+char send_to_message[] = "Send to";
+char midi_channel_1_message[] = "Out";
+char midi_channel_2_message[] = "Out 2";
+char midi_channel_1_2_message[] = "Out 1 & 2";
+char  *send_to_midi_choices[] = {midi_channel_1_message, midi_channel_2_message, midi_channel_1_2_message};
 
 //Settings Section
 //Starting Menu
-char start_menu_message[11] = "Start Menu";
-char midi_tempo_message[6] = "Tempo";
-char midi_modif_message[7] = "Modify";
-char midi_settings_message[9] = "Settings";
-char * start_menu_choices[3] = {midi_tempo_message, midi_modif_message, midi_settings_message};
+char start_menu_message[] = "Start Menu";
+char midi_tempo_message[] = "Tempo";
+char midi_modif_message[] = "Modify";
+char midi_settings_message[] = "Settings";
+char * start_menu_choices[] = {midi_tempo_message, midi_modif_message, midi_settings_message};
 
 //Contrast
 char contrast_message[9] = "Contrast";
@@ -136,6 +165,29 @@ void screen_update_settings_midi_modify(){
 void screen_update_settings_midi_transpose(){
 
 	menu_display(&Font_6x8, &settings_transpose_message);
+
+	//Transpose Mode
+	screen_driver_SetCursor_WriteString(type_message, Font_6x8, White, 0, line_1_vert);
+	screen_driver_underline_WriteString(transpose_mode_choices[midi_transpose_data.transpose_type],
+										Font_6x8, White, 60, line_1_vert, select_states[MT_TRANSPOSE_MODE]);
+
+	//If the mode is Transpose, show the scale, otherwise N/A
+	screen_driver_SetCursor_WriteString(mode_message, Font_6x8, White, 0, line_2_vert);
+
+
+	if(midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED){
+		screen_driver_underline_WriteString(scale_choices[midi_transpose_data.transpose_scale],
+											Font_6x8, White, 60, line_2_vert, select_states[MT_SCALE]);
+	}
+	else{
+		screen_driver_underline_WriteString(na_message, Font_6x8, White, 60, line_2_vert, select_states[MT_SCALE]);
+	}
+
+
+	//Send to midi part
+	screen_driver_SetCursor_WriteString(send_to_message, Font_6x8, White, 0, line_3_vert);
+	screen_driver_underline_WriteString(send_to_midi_choices[midi_transpose_data.send_channels], Font_6x8, White, 60, line_3_vert, select_states[MT_MIDI_SEND]);
+
 }
 
 void screen_update_global_settings(){
@@ -172,6 +224,9 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t menu_changed = (*old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed);
 
+
+	//Midi Modify section
+
 	if (current_select == MM_CHANNEL_SELECT ){
 	uint8_t select_changed = (old_select != current_select);
 	utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed);
@@ -181,9 +236,21 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
 	}
 
-	//Roro add
-	//MT_TRANSPOSE_MODE
-	//MT_MIDI_SEND
+	//Transpose section
+	else if (current_select == MT_TRANSPOSE_MODE ){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed);
+	}
+
+	else if (current_select == MT_SCALE ){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed);
+	}
+
+	else if (current_select == MT_MIDI_SEND ){
+	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed);
+	}
 
 
 	else if (current_select == SETT_START_MENU){

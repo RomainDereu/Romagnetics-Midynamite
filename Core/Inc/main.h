@@ -55,6 +55,8 @@ typedef struct {
 	uint8_t transpose_scale;
 	uint8_t transpose_interval;
 
+	uint8_t send_channels;
+
 
 }midi_transpose_data_struct;
 
@@ -116,7 +118,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 23516
+#define DATA_VALIDITY_CHECKSUM 23559
 
 //Menu list
 #define MIDI_TEMPO 0
@@ -144,7 +146,7 @@ void Error_Handler(void);
 
 //midi_transpose_data
 #define MIDI_TRANSPOSE_SHIFT 0
-#define MIDI_TRANSPOSE_SCALED 0
+#define MIDI_TRANSPOSE_SCALED 1
 
 #define IONIAN 0
 #define DORIAN 1
@@ -153,6 +155,7 @@ void Error_Handler(void);
 #define MIXOLYDIAN 4
 #define AEOLIAN 5
 #define LOCRIAN 6
+#define AMOUNT_OF_MODES 7
 
 #define SIXTH_DOWN 0
 #define FIFTH_DOWN 1

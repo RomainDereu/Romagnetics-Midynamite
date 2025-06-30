@@ -30,9 +30,9 @@ const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 char message_midi_tempo_print[30] = "Send Midi Tempo              ";
 char target_channel_print[7] = "Target:";
 
-char midi_channel_1_print[9] = "Out      ";
-char midi_channel_2_print[9] = "Out 2    ";
-char midi_channel_1_2_print[9] = "Out 1 & 2";
+extern char midi_channel_1_message[];
+extern char midi_channel_2_message[];
+extern char midi_channel_1_2_message[];
 
 
 char on_print[3] = "ON";
@@ -54,13 +54,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
       screen_driver_SetCursor(0, 25);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
-      screen_driver_WriteString(midi_channel_1_print, Font_6x8 , White);
+      screen_driver_WriteString(midi_channel_1_message, Font_6x8 , White);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_2){
-      screen_driver_WriteString(midi_channel_2_print, Font_6x8 , White);
+      screen_driver_WriteString(midi_channel_2_message, Font_6x8 , White);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_1_2){
-      screen_driver_WriteString(midi_channel_1_2_print, Font_6x8 , White);
+      screen_driver_WriteString(midi_channel_1_2_message, Font_6x8 , White);
       }
 
       //Stop/Sending status

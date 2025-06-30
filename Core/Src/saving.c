@@ -130,6 +130,8 @@ save_struct make_default_settings(void){
 	emergency_save.midi_transpose_data.transpose_scale = IONIAN;
 	emergency_save.midi_transpose_data.transpose_interval = THIRD_DOWN;
 
+	emergency_save.midi_transpose_data.send_channels = MIDI_OUT_1;
+
 	//settings_data
 	emergency_save.settings_data.start_menu = MIDI_TEMPO;
 	emergency_save.settings_data.brightness = 0xFF;
