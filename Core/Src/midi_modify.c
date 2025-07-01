@@ -57,6 +57,7 @@ void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 }
 
 
+
 void midi_buffer_push(uint8_t byte) {
     uint16_t next = (midi_modify_buff.head + 1) % MIDI_MODIFY_BUFFER_SIZE;
     if (next != midi_modify_buff.tail) { // Not full

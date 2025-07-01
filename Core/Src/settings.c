@@ -41,11 +41,6 @@ uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
 // Contrast value list
 uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
 
-// Line positioning
-uint8_t line_1_vert = 15;
-uint8_t line_2_vert = 25;
-uint8_t line_3_vert = 35;
-
 // Contrast index and current/old selection tracking
 uint8_t contrast_index;
 uint8_t current_select = 0;
@@ -75,14 +70,14 @@ void screen_update_settings_midi_modify(){
 	menu_display(&Font_6x8, message->settings_modify);
 
 	// Channel Modify
-	screen_driver_SetCursor_WriteString(message->midi_modify_select, Font_6x8, White, 0, line_1_vert);
+	screen_driver_SetCursor_WriteString(message->midi_modify_select, Font_6x8, White, 0, LINE_1_VERT);
 	const char *split_choices[] = {message->midi_change, message->midi_split};
-	screen_driver_underline_WriteString(split_choices[midi_modify_data.change_or_split], Font_6x8, White, 80, line_1_vert, select_states[MM_CHANNEL_SELECT]);
+	screen_driver_underline_WriteString(split_choices[midi_modify_data.change_or_split], Font_6x8, White, 80, LINE_1_VERT, select_states[MM_CHANNEL_SELECT]);
 
 	// Velocity
-	screen_driver_SetCursor_WriteString(message->velocity_select, Font_6x8, White, 0, line_2_vert);
+	screen_driver_SetCursor_WriteString(message->velocity_select, Font_6x8, White, 0, LINE_2_VERT);
 	const char *velocity_choices[] = {message->velocity_change, message->velocity_fixed};
-	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, line_2_vert, select_states[MM_VELOCITY_SELECT]);
+	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
 }
 
 // Transpose section
@@ -90,26 +85,26 @@ void screen_update_settings_midi_transpose(){
 	menu_display(&Font_6x8, message->settings_transpose);
 
 	// Transpose Mode
-	screen_driver_SetCursor_WriteString(message->type, Font_6x8, White, 0, line_1_vert);
+	screen_driver_SetCursor_WriteString(message->type, Font_6x8, White, 0, LINE_1_VERT);
 	const char *transpose_modes[] = {message->pitch_shift, message->transpose};
-	screen_driver_underline_WriteString(transpose_modes[midi_transpose_data.transpose_type], Font_6x8, White, 60, line_1_vert, select_states[MT_TRANSPOSE_MODE]);
+	screen_driver_underline_WriteString(transpose_modes[midi_transpose_data.transpose_type], Font_6x8, White, 60, LINE_1_VERT, select_states[MT_TRANSPOSE_MODE]);
 
 	// Scale or N/A
-	screen_driver_SetCursor_WriteString(message->mode, Font_6x8, White, 0, line_2_vert);
+	screen_driver_SetCursor_WriteString(message->mode, Font_6x8, White, 0, LINE_2_VERT);
 	if(midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED){
 		const char *scales[] = {
 			message->ionian, message->dorian, message->phrygian,
 			message->lydian, message->mixolydian, message->aeolian, message->locrian
 		};
-		screen_driver_underline_WriteString(scales[midi_transpose_data.transpose_scale], Font_6x8, White, 60, line_2_vert, select_states[MT_SCALE]);
+		screen_driver_underline_WriteString(scales[midi_transpose_data.transpose_scale], Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	} else {
-		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, line_2_vert, select_states[MT_SCALE]);
+		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	}
 
 	// Send to midi part
-	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, 0, line_3_vert);
+	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, 0, LINE_3_VERT);
 	const char *midi_outs[] = {message->midi_channel_1, message->midi_channel_2, message->midi_channel_1_2};
-	screen_driver_underline_WriteString(midi_outs[midi_transpose_data.send_channels], Font_6x8, White, 60, line_3_vert, select_states[MT_MIDI_SEND]);
+	screen_driver_underline_WriteString(midi_outs[midi_transpose_data.send_channels], Font_6x8, White, 60, LINE_3_VERT, select_states[MT_MIDI_SEND]);
 }
 
 // Settings Section
@@ -117,25 +112,25 @@ void screen_update_global_settings(){
 	menu_display(&Font_6x8, message->global_settings);
 
 	// Start Menu
-	screen_driver_SetCursor_WriteString(message->start_menu, Font_6x8, White, 0, line_1_vert);
+	screen_driver_SetCursor_WriteString(message->start_menu, Font_6x8, White, 0, LINE_1_VERT);
 	const char *start_menu_options[] = {
 		message->start_menu_tempo,
 		message->start_menu_modify,
 		message->start_menu_settings
 	};
-	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 80, line_1_vert, select_states[SETT_START_MENU]);
+	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 80, LINE_1_VERT, select_states[SETT_START_MENU]);
 
 	// Contrast
-	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, 0, line_2_vert);
-	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 80, line_2_vert, select_states[SETT_BRIGHTNESS]);
+	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, 0, LINE_2_VERT);
+	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 80, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
 // About Section
 void screen_update_settings_about(){
 	menu_display(&Font_6x8, message->about);
-	screen_driver_SetCursor_WriteString(message->about_brand, Font_6x8, White, 0, line_1_vert);
-	screen_driver_SetCursor_WriteString(message->about_product, Font_6x8, White, 0, line_2_vert);
-	screen_driver_SetCursor_WriteString(message->about_version, Font_6x8, White, 0, line_3_vert);
+	screen_driver_SetCursor_WriteString(message->about_brand, Font_6x8, White, 0, LINE_1_VERT);
+	screen_driver_SetCursor_WriteString(message->about_product, Font_6x8, White, 0, LINE_2_VERT);
+	screen_driver_SetCursor_WriteString(message->about_version, Font_6x8, White, 0, LINE_3_VERT);
 }
 
 // Settings update logic

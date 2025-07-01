@@ -11,7 +11,7 @@
 #include "main.h"
 #include "screen_driver.h"
 
-void menu_display(const screen_driver_Font_t * font, const char (* message)[30]);
+void menu_display(const screen_driver_Font_t * font, const char * menu_message);
 
 void menu_change_check(uint8_t * current_menu);
 

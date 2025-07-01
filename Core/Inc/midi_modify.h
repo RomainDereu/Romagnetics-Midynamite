@@ -13,6 +13,9 @@
 
 void screen_update_midi_modify();
 
+
+
+
 void calculate_incoming_midi(uint8_t * sending_to_midi_channel);
 
 void change_midi_channel(uint8_t *midi_msg, uint8_t *new_channel, uint8_t length);
