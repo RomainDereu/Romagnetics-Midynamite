@@ -147,44 +147,46 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t menu_changed = (*old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed);
 
-	// Midi Modify section
-	if (current_select == MM_CHANNEL_SELECT ){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed);
-	}
-	else if (current_select == MM_VELOCITY_SELECT ){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
-	}
-	// Transpose section
-	else if (current_select == MT_TRANSPOSE_MODE ){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed);
-	}
-	else if (current_select == MT_SCALE ){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed);
-	}
-	else if (current_select == MT_MIDI_SEND ){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed);
-	}
-	// Global section
-	else if (current_select == SETT_START_MENU){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed);
-	}
-	else if (current_select == SETT_BRIGHTNESS){
-		uint8_t select_changed = (old_select != current_select);
-		utils_counter_change(timer4, &contrast_index, 0, 9, select_changed);
-		if (contrast_index < 10) {
-			settings_data.brightness = contrast_values[contrast_index];
-			if (old_settings_data.brightness != settings_data.brightness) {
-				screen_driver_SetContrast(settings_data.brightness);
-			}
-		}
-	}
+	// Compute whether the selection changed before the switch
+	uint8_t select_changed = (old_select != current_select);
+	switch (current_select) {
+		// Midi Modify section
+		case MM_CHANNEL_SELECT:
+			utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed);
+			break;
 
+		case MM_VELOCITY_SELECT:
+			utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
+			break;
+
+		// Transpose section
+		case MT_TRANSPOSE_MODE:
+			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed);
+			break;
+
+		case MT_SCALE:
+			utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed);
+			break;
+
+		case MT_MIDI_SEND:
+			utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed);
+			break;
+
+		// Global section
+		case SETT_START_MENU:
+			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed);
+			break;
+
+		case SETT_BRIGHTNESS:
+			utils_counter_change(timer4, &contrast_index, 0, 9, select_changed);
+			if (contrast_index < 10) {
+				settings_data.brightness = contrast_values[contrast_index];
+				if (old_settings_data.brightness != settings_data.brightness) {
+					screen_driver_SetContrast(settings_data.brightness);
+				}
+			}
+			break;
+	}
 	// Selecting the current item being selected
 	for (uint8_t x=0; x < AMOUNT_OF_SETTINGS; x++){
 		select_states[x] = 0;
