@@ -16,9 +16,7 @@
 #include "menu.h"
 #include "utils.h"
 #include "main.h"
-#include "text.h"
 
-extern const Message * message;
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -32,30 +30,6 @@ extern midi_modify_circular_buffer midi_modify_buff;
 
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
-
-
-
-void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
-	screen_driver_Fill(Black);
-
-	menu_display(&Font_6x8, message->settings_modify);
-    screen_driver_SetCursor(0, 20);
-    screen_driver_WriteString(message->change_midi_channel, Font_6x8 , White);
-
-    uint8_t channel = midi_modify_data->send_to_midi_channel;
-    char channel_text[15];
-    sprintf(channel_text, "To channel %d", channel);
-    screen_driver_SetCursor(0, 30);
-    screen_driver_WriteString(channel_text, Font_6x8 , White);
-
-
-	//screen_driver_SetCursor(0, 54);
-	//screen_driver_WriteString(byte_print_hex, Font_6x8 , White);
-
-    screen_driver_UpdateScreen();
-
-}
-
 
 
 void midi_buffer_push(uint8_t byte) {
@@ -142,7 +116,11 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 							 uint8_t * old_menu){
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
 	uint8_t old_midi_value = midi_modify_data->send_to_midi_channel;
+
+	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
 	utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, menu_changed);
+		}
+
 	calculate_incoming_midi(&midi_modify_data->send_to_midi_channel);
 
 	if (menu_changed == 1 || old_midi_value != midi_modify_data->send_to_midi_channel) {

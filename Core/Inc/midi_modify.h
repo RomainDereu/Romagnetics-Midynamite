@@ -11,8 +11,10 @@
 #include "main.h"
 #include "screen_driver.h"
 
-void screen_update_midi_modify();
+void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
+void screen_update_channel_change(midi_modify_data_struct * midi_modify_data);
+void screen_update_channel_split(midi_modify_data_struct * midi_modify_data);
 
 
 
