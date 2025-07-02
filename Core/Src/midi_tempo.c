@@ -10,29 +10,23 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "screen_driver.h"
-#include "screen_driver_fonts.h"
-
-#include "midi_tempo.h"
 #include "cmsis_os.h"
+#include "midi_tempo.h"
 #include "menu.h"
 #include "main.h"
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
+#include "text.h"
 #include "utils.h"
 
-#include "text.h"
 extern const Message * message;
 
 extern osThreadId display_updateHandle;
 
 //Midi messages constants
-const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
-const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
-
-
-
-
-
+static const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+static const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
+static const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){

@@ -10,9 +10,6 @@
 #include "midi_modify.h"
 #include "cmsis_os.h"
 
-#include "screen_driver.h"
-#include "screen_driver_fonts.h"
-
 #include "menu.h"
 #include "utils.h"
 #include "main.h"
@@ -25,11 +22,11 @@ extern osThreadId display_updateHandle;
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
 
-//Used for debug
-//static char byte_print_hex[11];
-
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
+
+static uint8_t current_select = 0;
+static uint8_t old_select = 0;
 
 
 void midi_buffer_push(uint8_t byte) {
@@ -62,7 +59,6 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
         }
 
         if (byte == 0xF0) {
-            // Start of SysEx – optional: skip or buffer full message
             // For now, skip SysEx messages
             while (midi_buffer_pop(&byte) && byte != 0xF7) {
                 // discard or handle sysEx byte
@@ -115,15 +111,22 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu){
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
-	uint8_t old_midi_value = midi_modify_data->send_to_midi_channel;
+	midi_modify_data_struct old_modify_data = * midi_modify_data;
 
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
 	utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, menu_changed);
 		}
+	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
+
+
+		utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, menu_changed);
+	}
 
 	calculate_incoming_midi(&midi_modify_data->send_to_midi_channel);
 
-	if (menu_changed == 1 || old_midi_value != midi_modify_data->send_to_midi_channel) {
+	if (menu_changed == 1 || old_select != current_select ||
+		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||
+		old_modify_data.split_note != midi_modify_data->split_note ) {
 		osThreadFlagsSet(display_updateHandle, 0x02);
 		}
 	*old_menu = MIDI_MODIFY;

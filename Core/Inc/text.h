@@ -24,6 +24,7 @@ typedef struct {
     const char *midi_modify_select;
     const char *midi_change;
     const char *midi_split;
+    const char *split_point;
 
     // Velocity
     const char *velocity_select;
@@ -78,6 +79,10 @@ typedef struct {
 
     // MIDI Tempo
     const char *bpm;
+
+	//Midi notes names
+    const char **midi_note_names;
+
 
 } Message;
 

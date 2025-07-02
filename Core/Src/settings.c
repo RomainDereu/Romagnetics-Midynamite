@@ -36,15 +36,15 @@ extern settings_data_struct settings_data;
 extern const Message *message;
 
 // Array with all the possible select values. Is being used to update the UI
-uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
+static uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
 
 // Contrast value list
-uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
+static uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
 
 // Contrast index and current/old selection tracking
-uint8_t contrast_index;
-uint8_t current_select = 0;
-uint8_t old_select = 0;
+static uint8_t contrast_index;
+static uint8_t current_select = 0;
+static uint8_t old_select = 0;
 
 // The current selected menu part
 void screen_update_settings(){

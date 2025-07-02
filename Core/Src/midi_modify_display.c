@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #include "main.h"
+#include "menu.h"
 #include "midi_modify.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
@@ -50,7 +51,11 @@ void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
 
 
 void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
-    screen_driver_SetCursor(0, LINE_2_VERT);
-    screen_driver_WriteString("MIDI SPLIT", Font_6x8 , White);
+    screen_driver_SetCursor(0, LINE_1_VERT);
+    screen_driver_WriteString(message->split_point, Font_6x8, White);
+
+    screen_driver_SetCursor(80, LINE_1_VERT);
+    screen_driver_WriteString(message->midi_note_names[midi_modify_data->split_note], Font_6x8, White);
+
 
 }
