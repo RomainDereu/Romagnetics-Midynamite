@@ -19,6 +19,7 @@
 #define LINE_1_VERT 15
 #define LINE_2_VERT 25
 #define LINE_3_VERT 35
+#define LINE_4_VERT 45
 
 //Making an array with the list of uarts that will be used
 void list_of_UART_to_send_to(uint8_t send_channels,

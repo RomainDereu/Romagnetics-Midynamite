@@ -24,7 +24,6 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
-#include "debug.h"
 #include "menu.h"
 #include "midi_tempo.h"
 #include "midi_modify.h"

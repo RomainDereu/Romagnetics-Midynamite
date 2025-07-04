@@ -116,10 +116,9 @@ save_struct make_default_settings(void){
 	emergency_save.midi_modify_data.split_note = 0;
 	emergency_save.midi_modify_data.split_midi_channel_1 = 1;
 	emergency_save.midi_modify_data.split_midi_channel_2 = 2;
-	emergency_save.midi_modify_data.split_midi_out = MIDI_OUT_1_2;
 
-	emergency_save.midi_modify_data.velocity_plus_minus = 12;
-	emergency_save.midi_modify_data.velocity_absolute = 0;
+	emergency_save.midi_modify_data.velocity_plus_minus = 0;
+	emergency_save.midi_modify_data.velocity_absolute = 127;
 
 	//midi_transpose_data
 	emergency_save.midi_transpose_data.transpose_type = MIDI_TRANSPOSE_SHIFT;

@@ -11,10 +11,17 @@
 #include "main.h"
 #include "screen_driver.h"
 
+extern uint8_t select_states[4];
+
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
+//Channel
 void screen_update_channel_change(midi_modify_data_struct * midi_modify_data);
 void screen_update_channel_split(midi_modify_data_struct * midi_modify_data);
+
+//Velocity
+void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data);
+void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data);
 
 
 

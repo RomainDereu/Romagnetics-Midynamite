@@ -31,18 +31,23 @@ static const Message message_data = {
     .global_settings = "Global Settings",
     .about = "About",
 	.midi_modify = "Midi Modify",
-	.change_midi_channel = "Change Midi Channel",
 
     // Channel Modify
+	.change_midi_channel = "Change Midi Channel",
+	.to_channel = "To channel",
     .midi_modify_select = "Ch. Modify",
     .midi_change = "Change",
     .midi_split = "Split",
     .split_point = "Split point",
+	.send_low_to_ch = "Send low to Ch.",
+	.send_high_to_ch = "Send high to Ch.",
 
     // Velocity
-    .velocity_select = "Velocity",
-    .velocity_change = "Change",
-    .velocity_fixed = "Fixed",
+    .velocity = "Velocity",
+    .change = "Change",
+    .fixed = "Fixed",
+	.change_velocity = "Change velocity",
+	.fixed_velocity = "Fixed velocity",
 
     // Transpose
     .type = "Type",

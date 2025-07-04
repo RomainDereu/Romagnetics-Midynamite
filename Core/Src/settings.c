@@ -75,8 +75,8 @@ void screen_update_settings_midi_modify(){
 	screen_driver_underline_WriteString(split_choices[midi_modify_data.change_or_split], Font_6x8, White, 80, LINE_1_VERT, select_states[MM_CHANNEL_SELECT]);
 
 	// Velocity
-	screen_driver_SetCursor_WriteString(message->velocity_select, Font_6x8, White, 0, LINE_2_VERT);
-	const char *velocity_choices[] = {message->velocity_change, message->velocity_fixed};
+	screen_driver_SetCursor_WriteString(message->velocity, Font_6x8, White, 0, LINE_2_VERT);
+	const char *velocity_choices[] = {message->change, message->fixed};
 	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
 }
 

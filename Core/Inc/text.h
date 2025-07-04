@@ -18,18 +18,24 @@ typedef struct {
     const char *global_settings;
     const char *about;
     const char *midi_modify;
-    const char *change_midi_channel;
+
 
     // Channel Modify
+    const char *change_midi_channel;
+    const char *to_channel;
     const char *midi_modify_select;
     const char *midi_change;
     const char *midi_split;
     const char *split_point;
+    const char *send_low_to_ch;
+    const char *send_high_to_ch;
 
     // Velocity
-    const char *velocity_select;
-    const char *velocity_change;
-    const char *velocity_fixed;
+    const char *velocity;
+    const char *change;
+    const char *fixed;
+    const char *change_velocity;
+    const char *fixed_velocity;
 
     // Transpose
     const char *type;
