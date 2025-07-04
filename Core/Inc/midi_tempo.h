@@ -30,15 +30,5 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu);
 
-void midi_tempo_select_counter(TIM_HandleTypeDef * timer,
-                               midi_tempo_data_struct * midi_tempo_data,
-							   uint8_t menu_changed);
-
-void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
-                              midi_tempo_data_struct * midi_tempo_data,
-						      uint8_t menu_changed);
-
-
-
 
 #endif /* INC_DEBUG_H_ */

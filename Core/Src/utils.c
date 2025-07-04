@@ -14,9 +14,6 @@
 #include "screen_driver_fonts.h"
 #include "saving.h"
 
-extern osThreadId display_updateHandle;
-
-
 
 void list_of_UART_to_send_to(uint8_t send_channels,
                            	 UART_HandleTypeDef **UART_list){
@@ -48,37 +45,38 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 void utils_counter_change(TIM_HandleTypeDef * timer,
-							   uint8_t * data_to_change,
-							   uint8_t bottom_value,
-							   uint8_t max_value,
-							   uint8_t menu_changed){
+		                       int32_t * data_to_change,
+							   int32_t bottom_value,
+							   int32_t max_value,
+							   uint8_t menu_changed,
+							   uint8_t multiplier,
+							   uint8_t wrap_or_not){
 	static uint32_t old_value;
     if (menu_changed == 0) {
 
-		int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
-		int32_t delta = timer_count - ENCODER_CENTER;
+    	uint8_t active_multiplier = 1;
+    	if(multiplier != 1){
+            uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+            active_multiplier = (Btn2State == 0) ? multiplier : 1;
+    	}
 
+
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
         if (delta >= ENCODER_THRESHOLD) {
-        	if (*data_to_change == max_value)
-        		*data_to_change = bottom_value;
-        	else
-        		(*data_to_change)++;
-        	__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+            if (*data_to_change + active_multiplier > max_value) {
+                *data_to_change = (wrap_or_not == WRAP) ? bottom_value : max_value;
+            } else {
+                *data_to_change += active_multiplier;
+            }
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
         }
-
-
         else if (delta <= -ENCODER_THRESHOLD) {
-        	if (*data_to_change == bottom_value)
-        		*data_to_change = max_value;
-        	else
-        		(*data_to_change)--;
-        	__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
-
-
-        if (old_value != * data_to_change) {
-        	old_value = * data_to_change;
-            osThreadFlagsSet(display_updateHandle, 0x01);
+            if (*data_to_change - active_multiplier < bottom_value) {
+                *data_to_change = (wrap_or_not == WRAP) ? max_value : bottom_value;
+            } else {
+                *data_to_change -= active_multiplier;
+            }
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
         }
     }
 	if (menu_changed == 1) {

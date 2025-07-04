@@ -13,13 +13,16 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
-
-//Stored in utils.c
-
 #define LINE_1_VERT 15
 #define LINE_2_VERT 25
 #define LINE_3_VERT 35
 #define LINE_4_VERT 45
+
+#define WRAP 0
+#define NO_WRAP 1
+
+
+
 
 //Making an array with the list of uarts that will be used
 void list_of_UART_to_send_to(uint8_t send_channels,
@@ -27,10 +30,12 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 void utils_counter_change(TIM_HandleTypeDef * timer,
-		                   uint8_t * data_to_change,
-						   uint8_t bottom_value,
-						   uint8_t max_value,
-						   uint8_t menu_changed);
+		                   int32_t * data_to_change,
+						   int32_t bottom_value,
+						   int32_t max_value,
+						   uint8_t menu_changed,
+						   uint8_t multiplier,
+						   uint8_t wrap_or_not);
 
 void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t Font,
 										 screen_driver_COLOR color,

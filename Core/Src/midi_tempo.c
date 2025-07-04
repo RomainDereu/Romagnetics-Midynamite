@@ -130,9 +130,8 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
 
-
-	utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed);
-	midi_tempo_value_counter(timer4, midi_tempo_data, menu_changed);
+	utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed, 1, WRAP);
+	utils_counter_change(timer4, &(midi_tempo_data->current_tempo), 30, 300, menu_changed, 10, NO_WRAP);
 
 	*old_menu = MIDI_TEMPO;
 
@@ -143,44 +142,4 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	   menu_changed == 1){
 	   osThreadFlagsSet(display_updateHandle, 0x01);
 	}
-
-}
-
-void midi_tempo_value_counter(TIM_HandleTypeDef * timer,
-                               midi_tempo_data_struct * midi_tempo_data,
-                               uint8_t menu_changed) {
-
-    static uint32_t old_tempo;
-
-    if (menu_changed == 0) {
-
-        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        uint8_t change_value = (Btn2State == 0) ? 10 : 1;
-
-        int32_t timer_count = __HAL_TIM_GET_COUNTER(timer);
-        int32_t delta = timer_count - ENCODER_CENTER;
-
-        if (delta >= ENCODER_THRESHOLD) {
-            midi_tempo_data->current_tempo += change_value;
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
-        else if (delta <= -ENCODER_THRESHOLD) {
-            midi_tempo_data->current_tempo -= change_value;
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
-
-        if (midi_tempo_data->current_tempo < 30) {
-            midi_tempo_data->current_tempo = 30;
-        } else if (midi_tempo_data->current_tempo > 300) {
-            midi_tempo_data->current_tempo = 300;
-        }
-    }
-
-    if (old_tempo != midi_tempo_data->current_tempo || menu_changed == 1) {
-        old_tempo = midi_tempo_data->current_tempo;
-    }
-
-    if (menu_changed == 1) {
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-    }
 }

@@ -145,40 +145,40 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	settings_data_struct old_settings_data = settings_data;
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
-	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed);
+	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed, 1, NO_WRAP);
 
 	// Compute whether the selection changed before the switch
 	uint8_t select_changed = (old_select != current_select);
 	switch (current_select) {
 		// Midi Modify section
 		case MM_CHANNEL_SELECT:
-			utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed);
+			utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed, 1, NO_WRAP);
 			break;
 
 		case MM_VELOCITY_SELECT:
-			utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed);
+			utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed, 1, NO_WRAP);
 			break;
 
 		// Transpose section
 		case MT_TRANSPOSE_MODE:
-			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed);
+			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed, 1, NO_WRAP);
 			break;
 
 		case MT_SCALE:
-			utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed);
+			utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed, 1, NO_WRAP);
 			break;
 
 		case MT_MIDI_SEND:
-			utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed);
+			utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed, 1, NO_WRAP);
 			break;
 
 		// Global section
 		case SETT_START_MENU:
-			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed);
+			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, NO_WRAP);
 			break;
 
 		case SETT_BRIGHTNESS:
-			utils_counter_change(timer4, &contrast_index, 0, 9, select_changed);
+			utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
 			if (contrast_index < 10) {
 				settings_data.brightness = contrast_values[contrast_index];
 				if (old_settings_data.brightness != settings_data.brightness) {

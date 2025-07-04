@@ -25,8 +25,8 @@ extern midi_modify_circular_buffer midi_modify_buff;
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
 
-static uint8_t current_select = 0;
-static uint8_t old_select = 0;
+static int32_t  current_select = 0;
+static int32_t  old_select = 0;
 
 
 void midi_buffer_push(uint8_t byte) {
@@ -121,7 +121,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	//Updating the selected item and see if it has changed
-	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed);
+	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
 	// Selecting the current item being selected
 	for (uint8_t x=0; x < amount_of_settings; x++){
@@ -132,15 +132,15 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
 		switch (current_select) {
 			case 0:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, select_changed);
+				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, select_changed, 1, NO_WRAP);
 				break;
 			case 1:
 				if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-					utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed);
+					utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 					break;
 				}
 				else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-					utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed);
+					utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed, 1, NO_WRAP);
 					break;
 			}
 		}
@@ -151,21 +151,21 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
 		switch (current_select) {
 		case 0:
-			utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed);
+		utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);
 			break;
 		case 1:
-			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_1), 1, 16, select_changed);
+			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 			break;
 		case 2:
-			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 1, 16, select_changed);
+			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 1, 16, select_changed, 1, NO_WRAP);
 			break;
 		case 3:
 			if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-				utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed);
+				utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 				break;
 			}
 			else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed);
+				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed, 10, NO_WRAP);
 				break;
 			}
 
