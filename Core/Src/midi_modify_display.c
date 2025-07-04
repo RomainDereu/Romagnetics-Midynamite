@@ -64,15 +64,15 @@ void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
     screen_driver_SetCursor_WriteString(message->to_channel, Font_6x8 , White, 0, LINE_2_VERT);
     char channel_text[5];
     sprintf(channel_text, "%d", channel);
-    //Needs more clearance than the other items due to sharps and flats
-    screen_driver_underline_WriteString(channel_text, Font_6x8 , White, 80, LINE_2_VERT, select_states[0]);
+    screen_driver_underline_WriteString(channel_text, Font_6x8 , White, 100, LINE_2_VERT, select_states[0]);
 }
 
 
 void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->split_point, Font_6x8, White, 0, LINE_1_VERT);
     const char * note_to_write = message->midi_note_names[midi_modify_data->split_note];
-    screen_driver_underline_WriteString(note_to_write, Font_6x8, White, 100, LINE_1_VERT, select_states[0]);
+    //Needs more clearance than the other items due to sharps and flats
+    screen_driver_underline_WriteString(note_to_write, Font_6x8, White, 80, LINE_1_VERT, select_states[0]);
 
 
     screen_driver_SetCursor_WriteString(message->send_low_to_ch, Font_6x8 , White, 0, LINE_2_VERT);
