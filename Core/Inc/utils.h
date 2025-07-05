@@ -29,13 +29,23 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
+void utils_counter_change_i32(TIM_HandleTypeDef * timer,
+                              int32_t * data_to_change,
+                              int32_t bottom_value,
+                              int32_t max_value,
+                              uint8_t menu_changed,
+                              uint8_t multiplier,
+                              uint8_t wrap_or_not);
+
 void utils_counter_change(TIM_HandleTypeDef * timer,
-		                   int32_t * data_to_change,
+		                   uint8_t * data_to_change,
 						   int32_t bottom_value,
 						   int32_t max_value,
 						   uint8_t menu_changed,
 						   uint8_t multiplier,
 						   uint8_t wrap_or_not);
+
+
 
 void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t Font,
 										 screen_driver_COLOR color,

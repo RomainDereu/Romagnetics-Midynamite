@@ -44,14 +44,13 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 
-void utils_counter_change(TIM_HandleTypeDef * timer,
+void utils_counter_change_i32(TIM_HandleTypeDef * timer,
 		                       int32_t * data_to_change,
 							   int32_t bottom_value,
 							   int32_t max_value,
 							   uint8_t menu_changed,
 							   uint8_t multiplier,
 							   uint8_t wrap_or_not){
-	static uint32_t old_value;
     if (menu_changed == 0) {
 
     	uint8_t active_multiplier = 1;
@@ -82,6 +81,19 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 	if (menu_changed == 1) {
 		__HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
 	}
+}
+
+void utils_counter_change(TIM_HandleTypeDef * timer,
+                          uint8_t * data_to_change,
+						  int32_t bottom_value,
+						  int32_t max_value,
+                          uint8_t menu_changed,
+                          uint8_t multiplier,
+                          uint8_t wrap_or_not)
+{
+    int32_t temp_data = *data_to_change;
+    utils_counter_change_i32(timer, &temp_data, bottom_value, max_value, menu_changed, multiplier, wrap_or_not);
+    *data_to_change = (uint8_t)temp_data;
 }
 
 

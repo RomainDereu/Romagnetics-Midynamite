@@ -40,7 +40,7 @@ typedef struct {
 	uint8_t split_midi_channel_1;
 	uint8_t split_midi_channel_2;
 
-	int8_t velocity_plus_minus;
+	int32_t velocity_plus_minus;
 	uint8_t velocity_absolute;
 
 }midi_modify_data_struct;
@@ -117,7 +117,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 13456
+#define DATA_VALIDITY_CHECKSUM 13751
 
 //Menu list
 #define MIDI_TEMPO 0

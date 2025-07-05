@@ -127,13 +127,12 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu){
-	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
+
 	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
+	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 
 	utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed, 1, WRAP);
-	utils_counter_change(timer4, &(midi_tempo_data->current_tempo), 30, 300, menu_changed, 10, NO_WRAP);
-
-	*old_menu = MIDI_TEMPO;
+	utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, menu_changed, 10, NO_WRAP);
 
 	//Updating in case of change
 	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||
@@ -142,4 +141,6 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	   menu_changed == 1){
 	   osThreadFlagsSet(display_updateHandle, 0x01);
 	}
+
+	*old_menu = MIDI_TEMPO;
 }

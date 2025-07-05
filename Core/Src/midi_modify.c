@@ -118,8 +118,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	//The amount of values to be changed depends on the MIDI_MODIFY setting
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 2 : 4;
 
-
-
 	//Updating the selected item and see if it has changed
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
@@ -136,7 +134,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 				break;
 			case 1:
 				if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-					utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
+					utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 					break;
 				}
 				else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){

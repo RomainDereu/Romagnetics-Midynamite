@@ -637,7 +637,7 @@ void MediumTasks(void *argument)
   {
 
 	 //Romagnetics code
-	static uint8_t old_menu;
+	static uint8_t old_menu = 99;
 	menu_change_check(&current_menu);
 
 	if(current_menu == MIDI_TEMPO){

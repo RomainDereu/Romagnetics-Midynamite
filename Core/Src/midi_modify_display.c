@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include "main.h"
 #include "menu.h"
@@ -96,8 +97,9 @@ void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->change_velocity, Font_6x8 , White, 0, LINE_4_VERT +3);
 	//Depending on the value of midi modify, this will either be item 1 or 3
 	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 1 : 3;
+	int8_t plus_minus_i8 = midi_modify_data->velocity_plus_minus;
     char modify_value[5];
-    sprintf(modify_value, "%+d", midi_modify_data->velocity_plus_minus);
+    sprintf(modify_value, "%d", plus_minus_i8);
     screen_driver_underline_WriteString(modify_value, Font_6x8, White, 100, LINE_4_VERT+3, select_states[current_line]);
 }
 void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data){
