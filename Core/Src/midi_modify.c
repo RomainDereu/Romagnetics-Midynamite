@@ -25,8 +25,8 @@ extern midi_modify_circular_buffer midi_modify_buff;
 static uint8_t midi_message[3];
 static uint8_t byte_count = 0;
 
-static int32_t  current_select = 0;
-static int32_t  old_select = 0;
+static uint8_t  current_select = 0;
+static uint8_t  old_select = 0;
 
 
 void midi_buffer_push(uint8_t byte) {
@@ -35,7 +35,6 @@ void midi_buffer_push(uint8_t byte) {
     	midi_modify_buff.data[midi_modify_buff.head] = byte;
     	midi_modify_buff.head = next;
     }
-    // else: buffer full, drop byte or flag overflow
 }
 
 uint8_t midi_buffer_pop(uint8_t *byte) {
@@ -47,7 +46,7 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
 }
 
 
-void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
+void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
     uint8_t byte;
 
     while (midi_buffer_pop(&byte)) {
@@ -76,32 +75,38 @@ void calculate_incoming_midi(uint8_t * sending_to_midi_channel) {
 
         if (byte_count == 2 && (midi_message[0] & 0xF0) == 0xC0) {
             // Program Change or Channel Pressure: only 2 bytes
-            change_midi_channel(midi_message, sending_to_midi_channel, 2);
+            change_midi_channel(midi_message, midi_modify_data);
             send_midi_out(midi_message, 2);
             byte_count = 0;
         }
         else if (byte_count == 3) {
-            change_midi_channel(midi_message, sending_to_midi_channel, 3);
+            change_midi_channel(midi_message, midi_modify_data);
             send_midi_out(midi_message, 3);
             byte_count = 0;
         }
     }
 }
 
-void change_midi_channel(uint8_t *midi_msg, uint8_t *new_channel, uint8_t length) {
-    if (*new_channel < 1 || *new_channel > 16) return;
-
-    // Only change if it's a Channel Voice message (0x80–0xEF)
+void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data) {
     uint8_t status = midi_msg[0];
+    uint8_t new_channel;
+
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t status_nibble = status & 0xF0;
-        midi_msg[0] = status_nibble | ((*new_channel - 1) & 0x0F);
+    	if(midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
+    		new_channel = midi_modify_data->send_to_midi_channel;
+    	}
+    	else if(midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
+    		new_channel = (midi_msg[1] >= midi_modify_data->split_note) ?
+    							midi_modify_data->split_midi_channel_2 : midi_modify_data->split_midi_channel_1;
+    	}
+        midi_msg[0] = status_nibble | ((new_channel - 1) & 0x0F);
     }
 }
 
 
 void send_midi_out(uint8_t *midi_message, uint8_t length) {
-    HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+    HAL_UART_Transmit(&huart2, midi_message, length, 1000);
 }
 
 
@@ -159,21 +164,19 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 		case 3:
 			if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-				utils_counter_change(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
+				utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 				break;
 			}
 			else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
 				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed, 10, NO_WRAP);
 				break;
 			}
-
 		}
-
 
 	}
 
 
-	calculate_incoming_midi(&midi_modify_data->send_to_midi_channel);
+	calculate_incoming_midi(midi_modify_data);
 
 	if (menu_changed == 1 || old_select != current_select ||
 		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||

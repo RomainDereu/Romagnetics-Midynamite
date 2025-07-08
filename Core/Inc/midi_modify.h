@@ -13,6 +13,8 @@
 
 extern uint8_t select_states[4];
 
+
+//midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
 //Channel
@@ -25,13 +27,16 @@ void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data);
 
 
 
-void calculate_incoming_midi(uint8_t * sending_to_midi_channel);
-
-void change_midi_channel(uint8_t *midi_msg, uint8_t *new_channel, uint8_t length);
-
+//midi_modify
 void midi_buffer_push(uint8_t byte);
 
 uint8_t midi_buffer_pop(uint8_t *byte);
+
+void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data);
+
+void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
+
+
 
 void send_midi_out(uint8_t *midi_message, uint8_t length);
 
