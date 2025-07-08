@@ -175,9 +175,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
-
-	calculate_incoming_midi(midi_modify_data);
-
 	if (menu_changed == 1 || old_select != current_select ||
 		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||
 		old_modify_data.split_note != midi_modify_data->split_note ||

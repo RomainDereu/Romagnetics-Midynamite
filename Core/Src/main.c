@@ -617,6 +617,10 @@ void MidiCore(void *argument)
 		 }
   }
   OldBtn3State = Btn3State;
+
+  //Reading the incoming midi and giving it back
+  calculate_incoming_midi(&midi_modify_data);
+
   osDelay(5);
   }
   /* USER CODE END 5 */
