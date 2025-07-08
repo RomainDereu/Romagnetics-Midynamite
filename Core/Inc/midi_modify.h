@@ -36,6 +36,7 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data);
 
 void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
+void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
 
 void send_midi_out(uint8_t *midi_message, uint8_t length);

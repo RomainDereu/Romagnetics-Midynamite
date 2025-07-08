@@ -48,6 +48,7 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
 
 void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
     uint8_t byte;
+    uint8_t midi_status;
 
     while (midi_buffer_pop(&byte)) {
         if (byte >= 0xF8) {
@@ -68,6 +69,8 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
         if (byte & 0x80) {
             // Status byte: start a new message
             midi_message[0] = byte;
+            midi_status = midi_message[0] & 0xF0;
+
             byte_count = 1;
         } else if (byte_count > 0 && byte_count < 3) {
             midi_message[byte_count++] = byte;
@@ -80,6 +83,9 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
             byte_count = 0;
         }
         else if (byte_count == 3) {
+        	if(midi_status == 0x80 || midi_status == 0x90){
+        		change_velocity(midi_message, midi_modify_data);
+        	}
             change_midi_channel(midi_message, midi_modify_data);
             send_midi_out(midi_message, 3);
             byte_count = 0;
@@ -102,6 +108,26 @@ void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modif
     	}
         midi_msg[0] = status_nibble | ((new_channel - 1) & 0x0F);
     }
+}
+
+
+void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data){
+	//int16 in case of overflow
+	int16_t  velocity = midi_msg[2];
+	if(midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
+		velocity += midi_modify_data->velocity_plus_minus;
+	}
+
+	else if(midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
+		velocity = midi_modify_data->velocity_absolute;
+	}
+
+    // Clamp to 0-127 range
+    if (velocity < 0) velocity = 0;
+    if (velocity > 127) velocity = 127;
+
+    midi_msg[2] = (uint8_t)velocity;
+
 }
 
 
@@ -168,7 +194,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 				break;
 			}
 			else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed, 10, NO_WRAP);
+				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 0, 127, select_changed, 10, NO_WRAP);
 				break;
 			}
 		}
