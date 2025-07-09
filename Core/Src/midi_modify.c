@@ -156,9 +156,9 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t select_changed = (old_select != current_select);
 	// Selecting the current item being selected
 	for (uint8_t x=0; x < amount_of_settings; x++){
-		select_states[x] = 0;
+		select_states_midi_modify[x] = 0;
 	}
-	select_states[current_select] = 1;
+	select_states_midi_modify[current_select] = 1;
 
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
 		switch (current_select) {
@@ -182,13 +182,13 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
 		switch (current_select) {
 		case 0:
-		utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);
-			break;
-		case 1:
 			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 			break;
-		case 2:
+		case 1:
 			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 1, 16, select_changed, 1, NO_WRAP);
+			break;
+		case 2:
+			utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);
 			break;
 		case 3:
 			if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
@@ -206,7 +206,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	if (menu_changed == 1 || old_select != current_select ||
 		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||
 		old_modify_data.split_note != midi_modify_data->split_note ||
-
 
 		old_modify_data.split_midi_channel_1 != midi_modify_data->split_midi_channel_1 ||
 		old_modify_data.split_midi_channel_2 != midi_modify_data->split_midi_channel_2 ||

@@ -11,8 +11,7 @@
 #include "main.h"
 #include "screen_driver.h"
 
-extern uint8_t select_states[4];
-
+extern uint8_t select_states_midi_modify[4];
 
 //midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
