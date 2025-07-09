@@ -120,6 +120,8 @@ save_struct make_default_settings(void){
 	emergency_save.midi_modify_data.velocity_plus_minus = 0;
 	emergency_save.midi_modify_data.velocity_absolute = 127;
 
+	emergency_save.midi_modify_data.currently_sending = 0;
+
 	//midi_transpose_data
 	emergency_save.midi_transpose_data.transpose_type = MIDI_TRANSPOSE_SHIFT;
 
@@ -130,6 +132,8 @@ save_struct make_default_settings(void){
 	emergency_save.midi_transpose_data.transpose_interval = THIRD_DOWN;
 
 	emergency_save.midi_transpose_data.send_channels = MIDI_OUT_1;
+
+	emergency_save.midi_transpose_data.currently_sending = 0;
 
 	//settings_data
 	emergency_save.settings_data.start_menu = MIDI_TEMPO;

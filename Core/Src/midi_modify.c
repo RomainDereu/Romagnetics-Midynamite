@@ -78,15 +78,17 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
 
         if (byte_count == 2 && (midi_message[0] & 0xF0) == 0xC0) {
             // Program Change or Channel Pressure: only 2 bytes
-            change_midi_channel(midi_message, midi_modify_data);
+        	if(midi_modify_data->currently_sending == 1){
+                change_midi_channel(midi_message, midi_modify_data);
+        	}
             send_midi_out(midi_message, 2);
             byte_count = 0;
         }
         else if (byte_count == 3) {
-        	if(midi_status == 0x80 || midi_status == 0x90){
-        		change_velocity(midi_message, midi_modify_data);
+        	if(midi_modify_data->currently_sending == 1){
+            	change_velocity(midi_message, midi_modify_data);
+                change_midi_channel(midi_message, midi_modify_data);
         	}
-            change_midi_channel(midi_message, midi_modify_data);
             send_midi_out(midi_message, 3);
             byte_count = 0;
         }

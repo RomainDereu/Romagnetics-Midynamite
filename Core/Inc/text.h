@@ -21,14 +21,11 @@ typedef struct {
 
 
     // Channel Modify
-    const char *change_midi_channel;
     const char *to_channel;
     const char *midi_modify_select;
-    const char *midi_change;
-    const char *midi_split;
-    const char *split_point;
-    const char *send_low_to_ch;
-    const char *send_high_to_ch;
+    const char *split;
+    const char *low_to_ch;
+    const char *high_to_ch;
 
     // Velocity
     const char *velocity;

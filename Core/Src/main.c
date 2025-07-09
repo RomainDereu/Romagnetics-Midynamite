@@ -614,6 +614,10 @@ void MidiCore(void *argument)
 			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
 			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
 			 }
+			 else if(current_menu == MIDI_MODIFY){
+				 midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+				 osThreadFlagsSet(display_updateHandle, 0x02);
+			 }
 		 }
   }
   OldBtn3State = Btn3State;

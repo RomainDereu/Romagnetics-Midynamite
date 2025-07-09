@@ -23,6 +23,10 @@ extern const Message * message;
 
 extern osThreadId display_updateHandle;
 
+static uint8_t select_states[1] = {0};
+static uint8_t current_select = 0;
+static uint8_t old_select = 0;
+
 //Midi messages constants
 static const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
 static const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
@@ -39,10 +43,9 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  screen_driver_Line(0, 40, 64, 40, White);
 
 	  //Send to Midi Out and / or Out 2
-      screen_driver_SetCursor(0, 15);
-      screen_driver_WriteString(message->target, Font_6x8 , White);
+      screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
 
-      screen_driver_SetCursor(0, 25);
+      screen_driver_SetCursor(TEXT_LEFT_START, 25);
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
       screen_driver_WriteString(message->midi_channel_1, Font_6x8 , White);
       }
@@ -54,7 +57,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
       }
 
       //Stop/Sending status
-      screen_driver_SetCursor(15, 46);
+      screen_driver_SetCursor(15, 42);
 
       if(midi_tempo_data->currently_sending==0){
     	  screen_driver_WriteString(message->off, Font_11x18 , White);
@@ -68,16 +71,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  //blank spaces are added to delete any remaining numbers on the screen
 	  char tempo_print[7];
 	  sprintf(tempo_print, "%s   ", tempo_number);
-	  screen_driver_SetCursor(80, 30);
-	  screen_driver_WriteString(tempo_print, Font_16x24, White);
-	  screen_driver_SetCursor(80, 55);
-	  screen_driver_WriteString(message->bpm, Font_6x8, White);
-
+	  screen_driver_SetCursor_WriteString(tempo_print, Font_16x24, White, 80, 20);
+	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 45);
       screen_driver_UpdateScreen();
 }
 
 
-void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], uint32_t current_tempo){
+void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], int32_t current_tempo){
 	  uint32_t tempo_click_rate = 6000000/(current_tempo*24);
 	  if (UART_list[0] != NULL){
 		  HAL_UART_Transmit(UART_list[0], clock_send_tempo, 3, 1000);

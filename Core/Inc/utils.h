@@ -18,6 +18,9 @@
 #define LINE_3_VERT 35
 #define LINE_4_VERT 45
 
+#define TEXT_LEFT_START 5
+
+
 #define WRAP 0
 #define NO_WRAP 1
 
@@ -47,13 +50,13 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 
 
 
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t Font,
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
 										 screen_driver_COLOR color,
 										 uint8_t x_align,
 										 uint8_t y_align);
 
 
-void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t Font,
+void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
 										  screen_driver_COLOR color,
 										  uint8_t x_align,
 										  uint8_t y_align,

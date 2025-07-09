@@ -33,14 +33,11 @@ static const Message message_data = {
 	.midi_modify = "Midi Modify",
 
     // Channel Modify
-	.change_midi_channel = "Change Midi Channel",
 	.to_channel = "To channel",
     .midi_modify_select = "Ch. Modify",
-    .midi_change = "Change",
-    .midi_split = "Split",
-    .split_point = "Split point",
-	.send_low_to_ch = "Send low to Ch.",
-	.send_high_to_ch = "Send high to Ch.",
+    .split = "Split",
+	.low_to_ch = "Low to Ch.",
+	.high_to_ch = "High to Ch.",
 
     // Velocity
     .velocity = "Velocity",

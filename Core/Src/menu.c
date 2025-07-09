@@ -10,12 +10,11 @@
 #include "cmsis_os.h"
 #include "menu.h"
 #include "main.h"
-
+#include "utils.h"
 
 void menu_display(const screen_driver_Font_t * font, const char * menu_message){
 	screen_driver_Line(0, 10, 127, 10, White);
-	screen_driver_SetCursor(0, 0);
-	screen_driver_WriteString(menu_message, *font , White);
+	screen_driver_SetCursor_WriteString(menu_message, *font , White, TEXT_LEFT_START, 0);
 }
 
 

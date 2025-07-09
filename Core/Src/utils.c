@@ -97,28 +97,28 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 }
 
 
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t Font,
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
 										 screen_driver_COLOR color,
 										 uint8_t x_align,
 										 uint8_t y_align){
 	screen_driver_SetCursor(x_align, y_align);
-	screen_driver_WriteString(str, Font_6x8 , color);
+	screen_driver_WriteString(str, font , color);
 }
 
 
 
-void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t Font,
+void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
 										  screen_driver_COLOR color,
 										  uint8_t x_align,
 										  uint8_t y_align,
 										  uint8_t underlined){
 
-	uint8_t line_height = Font.height +1;
+	uint8_t line_height = font.height +1;
 	screen_driver_SetCursor(x_align, y_align);
-	screen_driver_WriteString(str, Font_6x8 , color);
+	screen_driver_WriteString(str, font , color);
 	if(underlined == 1){
 		screen_driver_SetCursor(x_align, y_align +1);
-		uint8_t line_length = Font.width * strlen(str);
+		uint8_t line_length = font.width * strlen(str);
 		screen_driver_Line(x_align, y_align + line_height,
 						   x_align+ line_length, y_align + line_height, White);
 

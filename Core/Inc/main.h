@@ -23,7 +23,7 @@ extern "C" {
 
 
 typedef struct {
-	uint32_t current_tempo;
+	int32_t current_tempo;
 	uint8_t currently_sending;
 	uint8_t send_channels;
 }midi_tempo_data_struct;
@@ -43,6 +43,9 @@ typedef struct {
 	int32_t velocity_plus_minus;
 	uint8_t velocity_absolute;
 
+	uint8_t currently_sending;
+
+
 }midi_modify_data_struct;
 
 typedef struct {
@@ -56,6 +59,7 @@ typedef struct {
 
 	uint8_t send_channels;
 
+	uint8_t currently_sending;
 
 }midi_transpose_data_struct;
 
@@ -117,7 +121,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 13751
+#define DATA_VALIDITY_CHECKSUM 13651
 
 //Menu list
 #define MIDI_TEMPO 0
