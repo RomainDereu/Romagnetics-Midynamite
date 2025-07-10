@@ -84,9 +84,6 @@ uint8_t current_menu;
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
-//Button information
-static uint8_t Btn3State;
-static uint8_t OldBtn3State = 0;
 
 static UART_HandleTypeDef *UART_list[2];
 
@@ -601,27 +598,6 @@ void MidiCore(void *argument)
   /* Infinite loop */
   for(;;)
   {
-  //Button3 (Start/Stop)
-  Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-  if(Btn3State == 0)
-	 {
-		 //Debouncing
-		 osDelay(10);
-		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-		 if(Btn3State == 0 && OldBtn3State == 1)
-		 {
-			 if(current_menu == MIDI_TEMPO){
-			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
-			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
-			 }
-			 else if(current_menu == MIDI_MODIFY){
-				 midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
-				 osThreadFlagsSet(display_updateHandle, 0x02);
-			 }
-		 }
-  }
-  OldBtn3State = Btn3State;
-
   //Reading the incoming midi and giving it back
   calculate_incoming_midi(&midi_modify_data);
 
@@ -648,6 +624,7 @@ void MediumTasks(void *argument)
 	static uint8_t old_menu = 99;
 	menu_change_check(&current_menu);
 
+
 	if(current_menu == MIDI_TEMPO){
 		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 	}
@@ -655,11 +632,37 @@ void MediumTasks(void *argument)
 	else if(current_menu == MIDI_MODIFY){
 		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
 	}
+	else if(current_menu == MIDI_TRANSPOSE){
+		midi_transpose_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
+	}
 	else if(current_menu == SETTINGS){
 		settings_update_menu(&htim3, &htim4, &old_menu);
 	}
 
 	old_menu = current_menu;
+
+	//Button3 (Start/Stop)
+	uint8_t OldBtn3State;
+	uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+	if(Btn3State == 0)
+	 {
+		 //Debouncing
+		 osDelay(10);
+		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+		 if(Btn3State == 0 && OldBtn3State == 1)
+		 {
+			 if(current_menu == MIDI_TEMPO){
+			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
+			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
+			 }
+			 else if(current_menu == MIDI_MODIFY){
+				 midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+				 osThreadFlagsSet(display_updateHandle, 0x02);
+			 }
+		 }
+	}
+	OldBtn3State = Btn3State;
+
 	//Let other tasks update
 	osDelay(10);
 
@@ -688,8 +691,9 @@ void DisplayUpdate(void *argument)
       if (displayFlags & 0x02 && current_menu == MIDI_MODIFY) {
         screen_update_midi_modify(&midi_modify_data);
       }
-      //if (displayFlags & 0x04 && settings_data.current_menu == MIDI_TRANSPOSE) {
-      //}
+      if (displayFlags & 0x04 && current_menu == MIDI_TRANSPOSE) {
+    	  screen_update_midi_transpose(&midi_transpose_data);
+      }
       if (displayFlags & 0x08 && current_menu == SETTINGS) {
     	  screen_update_settings();
       }

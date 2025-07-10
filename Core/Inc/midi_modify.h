@@ -46,4 +46,8 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 							 uint8_t * old_menu);
 
 
+//midi transpose display
+void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
+
+
 #endif /* INC_MIDI_MODIFY_H_ */

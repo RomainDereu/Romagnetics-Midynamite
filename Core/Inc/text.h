@@ -18,6 +18,7 @@ typedef struct {
     const char *global_settings;
     const char *about;
     const char *midi_modify;
+    const char *midi_transpose;
 
 
     // Channel Modify

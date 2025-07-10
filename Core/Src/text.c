@@ -31,6 +31,7 @@ static const Message message_data = {
     .global_settings = "Global Settings",
     .about = "About",
 	.midi_modify = "Midi Modify",
+	.midi_transpose = "Midi Transpose",
 
     // Channel Modify
 	.to_channel = "To channel",

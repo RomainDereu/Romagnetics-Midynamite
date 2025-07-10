@@ -126,9 +126,10 @@ void Error_Handler(void);
 //Menu list
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1
-#define SETTINGS 2
+#define MIDI_TRANSPOSE 2
+#define SETTINGS 3
 
-#define AMOUNT_OF_MENUS 3
+#define AMOUNT_OF_MENUS 4
 
 
 //midi_tempo_data
