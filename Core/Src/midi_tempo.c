@@ -23,7 +23,7 @@ extern const Message * message;
 
 extern osThreadId display_updateHandle;
 
-static uint8_t select_states[1] = {0};
+static uint8_t select_states[2] = {0};
 static uint8_t current_select = 0;
 static uint8_t old_select = 0;
 
@@ -42,19 +42,33 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  //Horizontal line
 	  screen_driver_Line(0, 40, 64, 40, White);
 
+
+ 	  //Tempo
+	  char tempo_print[4];
+	  char tempo_number[4];
+	  itoa(midi_tempo_data->current_tempo, tempo_number, 10);
+	  sprintf(tempo_print, tempo_number);
+	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[0]);
+	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 48);
+
+
+
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
+      char message_midi_out[10];
 
-      screen_driver_SetCursor(TEXT_LEFT_START, 25);
+
       if(midi_tempo_data->send_channels == MIDI_OUT_1){
-      screen_driver_WriteString(message->midi_channel_1, Font_6x8 , White);
+    	  strcpy(message_midi_out, message->midi_channel_1);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_2){
-      screen_driver_WriteString(message->midi_channel_2, Font_6x8 , White);
+    	  strcpy(message_midi_out, message->midi_channel_2);
       }
       else if(midi_tempo_data->send_channels == MIDI_OUT_1_2){
-      screen_driver_WriteString(message->midi_channel_1_2, Font_6x8 , White);
+    	  strcpy(message_midi_out, message->midi_channel_1_2);
       }
+
+      screen_driver_underline_WriteString(message_midi_out, Font_6x8 , White, TEXT_LEFT_START, 25, select_states[1]);
 
       //Stop/Sending status
       screen_driver_SetCursor(15, 42);
@@ -65,15 +79,9 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
       else if (midi_tempo_data->currently_sending==1){
     	  screen_driver_WriteString(message->on, Font_11x18 , White);
       }
- 	  //Tempo
-	  char tempo_number[3];
-	  itoa(midi_tempo_data->current_tempo ,tempo_number,10);
-	  //blank spaces are added to delete any remaining numbers on the screen
-	  char tempo_print[7];
-	  sprintf(tempo_print, "%s   ", tempo_number);
-	  screen_driver_SetCursor_WriteString(tempo_print, Font_16x24, White, 80, 20);
-	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 45);
+
       screen_driver_UpdateScreen();
+
 }
 
 
@@ -131,16 +139,34 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
 	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 
-	utils_counter_change(timer3, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, menu_changed, 1, WRAP);
-	utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, menu_changed, 10, NO_WRAP);
+	utils_counter_change(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
+
+	// Compute whether the selection changed before the switch
+	uint8_t select_changed = (old_select != current_select);
+	switch (current_select) {
+		case 0:
+			utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, select_changed, 10, NO_WRAP);
+			break;
+		case 1:
+			utils_counter_change(timer4, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, select_changed, 1, WRAP);
+			break;
+	}
+
+	//Updating the select_states
+	select_states[0] = 0;
+	select_states[1] = 0;
+	select_states[current_select] = 1;
+
+
 
 	//Updating in case of change
 	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||
 	   old_midi_tempo_information.currently_sending != midi_tempo_data->currently_sending ||
 	   old_midi_tempo_information.send_channels != midi_tempo_data->send_channels||
-	   menu_changed == 1){
+	   menu_changed == 1 || current_select != old_select ){
 	   osThreadFlagsSet(display_updateHandle, 0x01);
 	}
 
 	*old_menu = MIDI_TEMPO;
+	old_select = current_select;
 }
