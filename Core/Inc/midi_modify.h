@@ -16,6 +16,9 @@ extern uint8_t select_states_midi_modify[4];
 //midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
+//On Off part
+void midi_modify_on_off(uint8_t data_to_modify, uint8_t bottom_line);
+
 //Channel
 void screen_update_channel_change(midi_modify_data_struct * midi_modify_data);
 void screen_update_channel_split(midi_modify_data_struct * midi_modify_data);

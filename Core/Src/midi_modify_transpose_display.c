@@ -33,6 +33,8 @@ void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_da
 	menu_display(&Font_6x8, message->midi_transpose);
 
 
+	midi_modify_on_off(midi_transpose_data->currently_sending, 63);
+
     screen_driver_UpdateScreen();
 
 }

@@ -625,18 +625,26 @@ void MediumTasks(void *argument)
 	menu_change_check(&current_menu);
 
 
-	if(current_menu == MIDI_TEMPO){
-		midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
-	}
+	switch(current_menu) {
+		case MIDI_TEMPO:
+			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
+			break;
 
-	else if(current_menu == MIDI_MODIFY){
-		midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
-	}
-	else if(current_menu == MIDI_TRANSPOSE){
-		midi_transpose_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
-	}
-	else if(current_menu == SETTINGS){
-		settings_update_menu(&htim3, &htim4, &old_menu);
+		case MIDI_MODIFY:
+			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu);
+			break;
+
+		case MIDI_TRANSPOSE:
+			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, &old_menu);
+			break;
+
+		case SETTINGS:
+			settings_update_menu(&htim3, &htim4, &old_menu);
+			break;
+
+		default:
+			// Optional: handle unknown menu case
+			break;
 	}
 
 	old_menu = current_menu;
@@ -651,13 +659,24 @@ void MediumTasks(void *argument)
 		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 		 if(Btn3State == 0 && OldBtn3State == 1)
 		 {
-			 if(current_menu == MIDI_TEMPO){
-			   list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
-			   mt_start_stop(UART_list, &htim2, &midi_tempo_data);
-			 }
-			 else if(current_menu == MIDI_MODIFY){
-				 midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
-				 osThreadFlagsSet(display_updateHandle, 0x02);
+			 switch (current_menu) {
+			 	case MIDI_TEMPO:
+			 		list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
+			 		mt_start_stop(UART_list, &htim2, &midi_tempo_data);
+			 		break;
+
+			 	case MIDI_MODIFY:
+			 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+			 		osThreadFlagsSet(display_updateHandle, 0x02);
+			 		break;
+
+			 	case MIDI_TRANSPOSE:
+			 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
+			 		osThreadFlagsSet(display_updateHandle, 0x07);
+			 		break;
+
+			 	default:
+			 		break;
 			 }
 		 }
 	}
@@ -683,20 +702,36 @@ void DisplayUpdate(void *argument)
   /* Infinite loop */
   for(;;)
   {
-      // Wait for flag 0x01 from MediumTasks
-      uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
-      if (displayFlags & 0x01 && current_menu == MIDI_TEMPO) {
-  	      screen_update_midi_tempo(&midi_tempo_data);
-  	  	}
-      if (displayFlags & 0x02 && current_menu == MIDI_MODIFY) {
-        screen_update_midi_modify(&midi_modify_data);
-      }
-      if (displayFlags & 0x04 && current_menu == MIDI_TRANSPOSE) {
-    	  screen_update_midi_transpose(&midi_transpose_data);
-      }
-      if (displayFlags & 0x08 && current_menu == SETTINGS) {
-    	  screen_update_settings();
-      }
+	  uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
+
+	  switch (current_menu) {
+	  	case MIDI_TEMPO:
+	  		if (displayFlags & 0x01) {
+	  			screen_update_midi_tempo(&midi_tempo_data);
+	  		}
+	  		break;
+
+	  	case MIDI_MODIFY:
+	  		if (displayFlags & 0x02) {
+	  			screen_update_midi_modify(&midi_modify_data);
+	  		}
+	  		break;
+
+	  	case MIDI_TRANSPOSE:
+	  		if (displayFlags & 0x04) {
+	  			screen_update_midi_transpose(&midi_transpose_data);
+	  		}
+	  		break;
+
+	  	case SETTINGS:
+	  		if (displayFlags & 0x08) {
+	  			screen_update_settings();
+	  		}
+	  		break;
+
+	  	default:
+	  		break;
+	  }
      osDelay(30);
   }
   /* USER CODE END DisplayUpdate */
