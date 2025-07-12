@@ -23,6 +23,7 @@ extern "C" {
 
 
 typedef struct {
+	//Modified in the tempo menu
 	int32_t current_tempo;
 	uint8_t currently_sending;
 	uint8_t send_channels;
@@ -30,11 +31,14 @@ typedef struct {
 
 
 typedef struct {
+	//Modified in the settings
 	uint8_t change_or_split;
 	uint8_t velocity_type;
-
-	uint8_t send_to_midi_channel;
 	uint8_t send_to_midi_out;
+
+	//Modified in the menu
+	uint8_t send_to_midi_channel;
+
 
 	uint8_t split_note;
 	uint8_t split_midi_channel_1;
@@ -49,15 +53,15 @@ typedef struct {
 }midi_modify_data_struct;
 
 typedef struct {
+	//Modified in the settings
 	uint8_t transpose_type;
-
 	int8_t midi_shift_value;
+	uint8_t send_original;
 
+	//Modified in the transpose menu
 	uint8_t transpose_base_note;
 	uint8_t transpose_scale;
 	uint8_t transpose_interval;
-
-	uint8_t send_channels;
 
 	uint8_t currently_sending;
 
@@ -136,10 +140,7 @@ void Error_Handler(void);
 #define MIDI_OUT_1 1
 #define MIDI_OUT_2 2
 #define MIDI_OUT_1_2 3
-#define MIDI_OUT_USB 4
-#define MIDI_OUT_USB_1 5
-#define MIDI_OUT_USB_2 6
-#define MIDI_OUT_USB_1_2 7
+#define MIDI_OUT_SPLIT 4
 
 //midi_modify_data
 #define MIDI_MODIFY_CHANGE 0
@@ -162,14 +163,16 @@ void Error_Handler(void);
 #define LOCRIAN 6
 #define AMOUNT_OF_MODES 7
 
-#define SIXTH_DOWN 0
-#define FIFTH_DOWN 1
-#define FOURTH_DOWN 2
-#define THIRD_DOWN 3
-#define THIRD_UP 4
-#define FOURTH_UP 5
-#define FIFTH_UP 5
-#define SIXTH_UP 5
+#define OCTAVE_DOWN 0
+#define SIXTH_DOWN 1
+#define FIFTH_DOWN 2
+#define FOURTH_DOWN 3
+#define THIRD_DOWN 4
+#define THIRD_UP 5
+#define FOURTH_UP 6
+#define FIFTH_UP 7
+#define SIXTH_UP 8
+#define OCTAVE_UP 9
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 

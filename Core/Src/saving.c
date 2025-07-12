@@ -103,15 +103,14 @@ save_struct make_default_settings(void){
 	//midi_tempo_data
 	emergency_save.midi_tempo_data.current_tempo = 60;
 	emergency_save.midi_tempo_data.currently_sending = 0;
-	emergency_save.midi_tempo_data.send_channels = MIDI_OUT_1_2;
+
 
 	//midi_modify_data
 	emergency_save.midi_modify_data.change_or_split = MIDI_MODIFY_CHANGE;
 	emergency_save.midi_modify_data.velocity_type = MIDI_MODIFY_CHANGED_VEL;
-
+	emergency_save.midi_modify_data.send_to_midi_out = MIDI_OUT_1;
 
 	emergency_save.midi_modify_data.send_to_midi_channel = 1;
-	emergency_save.midi_modify_data.send_to_midi_out = MIDI_OUT_1;
 
 	emergency_save.midi_modify_data.split_note = 0;
 	emergency_save.midi_modify_data.split_midi_channel_1 = 1;
@@ -131,7 +130,7 @@ save_struct make_default_settings(void){
 	emergency_save.midi_transpose_data.transpose_scale = IONIAN;
 	emergency_save.midi_transpose_data.transpose_interval = THIRD_DOWN;
 
-	emergency_save.midi_transpose_data.send_channels = MIDI_OUT_1;
+	emergency_save.midi_transpose_data.send_original = 1;
 
 	emergency_save.midi_transpose_data.currently_sending = 0;
 

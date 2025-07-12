@@ -53,6 +53,7 @@ static const Message message_data = {
     .transpose = "Transpose",
     .mode = "Mode",
     .na = "N/A",
+	.send_base_note = "Send base note",
 
     // Modes
     .ionian = "Ionian",
@@ -68,12 +69,15 @@ static const Message message_data = {
     .midi_channel_1 = "Out",
     .midi_channel_2 = "Out 2",
     .midi_channel_1_2 = "Out 1 & 2",
+    .split_1_2 = "Split 1 2",
 
     // Start menu
     .start_menu = "Start Menu",
-    .start_menu_tempo = "Tempo",
-    .start_menu_modify = "Modify",
-    .start_menu_settings = "Settings",
+    .tempo = "Tempo",
+    .modify = "Modify",
+    .settings = "Settings",
+    //Transpose is defined elsewhere
+
 
     // Contrast
     .contrast = "Contrast",
@@ -94,6 +98,9 @@ static const Message message_data = {
     //On Off
     .on = "ON",
 	.off = "OFF",
+
+	.yes = "Yes",
+	.no = "No",
 
 	//Midi Tempo
 	.bpm = "BPM",

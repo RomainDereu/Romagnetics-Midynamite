@@ -41,6 +41,7 @@ typedef struct {
     const char *transpose;
     const char *mode;
     const char *na;
+    const char *send_base_note;
 
     // Modes
     const char *ionian;
@@ -56,12 +57,15 @@ typedef struct {
     const char *midi_channel_1;
     const char *midi_channel_2;
     const char *midi_channel_1_2;
+    const char *split_1_2;
 
     // Start menu
     const char *start_menu;
-    const char *start_menu_tempo;
-    const char *start_menu_modify;
-    const char *start_menu_settings;
+    const char *tempo;
+    const char *modify;
+    const char *settings;
+    //transpose is defined elsewhere
+
 
     // Contrast
     const char *contrast;
@@ -77,9 +81,12 @@ typedef struct {
     const char *saving;
     const char *saved;
 
-    // On/Off
+    // Booleans
     const char *on;
     const char *off;
+
+    const char *yes;
+    const char *no;
 
     // MIDI Tempo
     const char *bpm;

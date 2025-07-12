@@ -8,9 +8,9 @@
 // List of current select
 #define MM_CHANNEL_SELECT    0
 #define MM_VELOCITY_SELECT   1
-#define MT_TRANSPOSE_MODE    2
-#define MT_SCALE             3
-#define MT_MIDI_SEND         4
+#define MM_MIDI_SELECT       2
+#define MT_TRANSPOSE_MODE    3
+#define MT_SCALE             4
 #define SETT_START_MENU      5
 #define SETT_BRIGHTNESS      6
 #define ABOUT                7
@@ -52,10 +52,10 @@ static uint8_t old_select = 0;
 // The current selected menu part
 void screen_update_settings(){
 	screen_driver_Fill(Black);
-	if(current_select >= MM_CHANNEL_SELECT && current_select <= MM_VELOCITY_SELECT){
+	if(current_select >= MM_CHANNEL_SELECT && current_select <= MM_MIDI_SELECT){
 		screen_update_settings_midi_modify();
 	}
-	else if (current_select >= MT_TRANSPOSE_MODE && current_select <= MT_MIDI_SEND){
+	else if (current_select >= MT_TRANSPOSE_MODE && current_select <= MT_SCALE){
 		screen_update_settings_midi_transpose();
 	}
 	else if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
@@ -82,6 +82,13 @@ void screen_update_settings_midi_modify(){
 	screen_driver_SetCursor_WriteString(message->velocity, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
 	const char *velocity_choices[] = {message->change, message->fixed};
 	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
+
+	// Channel
+	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	const char *midi_out_choices[] = {NULL, message->midi_channel_1, message->midi_channel_2, message->midi_channel_1_2 , message->split_1_2};
+	screen_driver_underline_WriteString(midi_out_choices[midi_modify_data.send_to_midi_out], Font_6x8, White, 60, LINE_3_VERT, select_states[MM_MIDI_SELECT]);
+
+
 }
 
 // Transpose section
@@ -105,10 +112,6 @@ void screen_update_settings_midi_transpose(){
 		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	}
 
-	// Send to midi part
-	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	const char *midi_outs[] = {message->midi_channel_1, message->midi_channel_2, message->midi_channel_1_2};
-	screen_driver_underline_WriteString(midi_outs[midi_transpose_data.send_channels], Font_6x8, White, 60, LINE_3_VERT, select_states[MT_MIDI_SEND]);
 }
 
 // Settings Section
@@ -118,15 +121,16 @@ void screen_update_global_settings(){
 	// Start Menu
 	screen_driver_SetCursor_WriteString(message->start_menu, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 	const char *start_menu_options[] = {
-		message->start_menu_tempo,
-		message->start_menu_modify,
-		message->start_menu_settings
+		message->tempo,
+		message->modify,
+		message->settings,
+		message->transpose,
 	};
-	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 80, LINE_1_VERT, select_states[SETT_START_MENU]);
+	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 70, LINE_1_VERT, select_states[SETT_START_MENU]);
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 80, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
+	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
 // About Section
@@ -163,6 +167,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed, 1, WRAP);
 			break;
 
+		case MM_MIDI_SELECT:
+			utils_counter_change(timer4, &midi_modify_data.send_to_midi_out, MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 1, WRAP);
+			break;
+
 		// Transpose section
 		case MT_TRANSPOSE_MODE:
 			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed, 1, WRAP);
@@ -170,10 +178,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 		case MT_SCALE:
 			utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed, 1, WRAP);
-			break;
-
-		case MT_MIDI_SEND:
-			utils_counter_change(timer4, &midi_transpose_data.send_channels, 0, 2, select_changed, 1, WRAP);
 			break;
 
 		// Global section
@@ -202,9 +206,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	if(menu_changed || current_select != old_select ||
 		old_modify_data.change_or_split != midi_modify_data.change_or_split ||
 		old_modify_data.velocity_type != midi_modify_data.velocity_type ||
+		old_modify_data.send_to_midi_out != midi_modify_data.send_to_midi_out ||
 		old_midi_transpose_data.transpose_type != midi_transpose_data.transpose_type ||
 		old_midi_transpose_data.transpose_scale != midi_transpose_data.transpose_scale ||
-		old_midi_transpose_data.send_channels != midi_transpose_data.send_channels ||
+		old_midi_transpose_data.send_original != midi_transpose_data.send_original ||
 		old_settings_data.start_menu != settings_data.start_menu ||
 		old_settings_data.brightness != settings_data.brightness){
 		osThreadFlagsSet(display_updateHandle, 0x08);
