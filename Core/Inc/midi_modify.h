@@ -27,9 +27,18 @@ void screen_update_channel_split(midi_modify_data_struct * midi_modify_data);
 void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data);
 void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data);
 
+void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
+		                     TIM_HandleTypeDef * timer4,
+						     midi_modify_data_struct * midi_modify_data,
+							 uint8_t * old_menu);
 
 
-//midi_modify
+//midi transpose display
+void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
+
+
+
+//midi_modify_transform
 void midi_buffer_push(uint8_t byte);
 
 uint8_t midi_buffer_pop(uint8_t *byte);
@@ -40,17 +49,8 @@ void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modif
 
 void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
-
 void send_midi_out(uint8_t *midi_message, uint8_t length);
 
-void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-						     midi_modify_data_struct * midi_modify_data,
-							 uint8_t * old_menu);
-
-
-//midi transpose display
-void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
 
 
 #endif /* INC_MIDI_MODIFY_H_ */
