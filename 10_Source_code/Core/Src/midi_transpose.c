@@ -67,7 +67,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 			case 1:
 				utils_counter_change(timer4, &(midi_transpose_data->transpose_interval),
-																					OCTAVE_DOWN, OCTAVE_UP, select_changed, 1, WRAP);
+																					OCTAVE_DOWN, OCTAVE_UP, select_changed, 1, NO_WRAP);
 				break;
 
 			case 2:
