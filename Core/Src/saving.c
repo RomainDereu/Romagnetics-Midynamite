@@ -103,6 +103,8 @@ save_struct make_default_settings(void){
 	//midi_tempo_data
 	emergency_save.midi_tempo_data.current_tempo = 60;
 	emergency_save.midi_tempo_data.currently_sending = 0;
+	emergency_save.midi_tempo_data.send_channels = MIDI_OUT_1;
+
 
 
 	//midi_modify_data

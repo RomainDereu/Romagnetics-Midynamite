@@ -61,9 +61,9 @@ void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 
 //On/ Off Part
 void midi_modify_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	screen_driver_Line(85, 10, 85, bottom_line, White);
+	screen_driver_Line(90, 10, 90, bottom_line, White);
 	uint8_t text_position = bottom_line/2;
-    screen_driver_SetCursor(90, text_position);
+    screen_driver_SetCursor(95, text_position);
 
     if(on_or_off ==0){
   	  screen_driver_WriteString(message->off, Font_11x18 , White);
