@@ -75,18 +75,18 @@ void screen_update_settings_midi_modify(){
 
 	// Channel Modify
 	screen_driver_SetCursor_WriteString(message->midi_modify_select, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	const char *split_choices[] = {message->change, message->split};
-	screen_driver_underline_WriteString(split_choices[midi_modify_data.change_or_split], Font_6x8, White, 80, LINE_1_VERT, select_states[MM_CHANNEL_SELECT]);
+	const char * split_choice = message_choices->change_split[midi_modify_data.change_or_split];
+	screen_driver_underline_WriteString(split_choice, Font_6x8, White, 80, LINE_1_VERT, select_states[MM_CHANNEL_SELECT]);
 
 	// Velocity
 	screen_driver_SetCursor_WriteString(message->velocity, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	const char *velocity_choices[] = {message->change, message->fixed};
-	screen_driver_underline_WriteString(velocity_choices[midi_modify_data.velocity_type], Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
+	const char * velocity_choice = message_choices->change_fixed[midi_modify_data.velocity_type];
+	screen_driver_underline_WriteString(velocity_choice, Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
 
 	// Channel
 	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	const char *midi_out_choices[] = {NULL, message->midi_channel_1, message->midi_channel_2, message->midi_channel_1_2 , message->split_1_2};
-	screen_driver_underline_WriteString(midi_out_choices[midi_modify_data.send_to_midi_out], Font_6x8, White, 60, LINE_3_VERT, select_states[MM_MIDI_SELECT]);
+	const char * midi_out_choice = message_choices->midi_outs[midi_modify_data.send_to_midi_out];
+	screen_driver_underline_WriteString(midi_out_choice, Font_6x8, White, 60, LINE_3_VERT, select_states[MM_MIDI_SELECT]);
 
 
 }
@@ -97,17 +97,14 @@ void screen_update_settings_midi_transpose(){
 
 	// Transpose Mode
 	screen_driver_SetCursor_WriteString(message->type, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	const char *transpose_modes[] = {message->pitch_shift, message->transpose};
-	screen_driver_underline_WriteString(transpose_modes[midi_transpose_data.transpose_type], Font_6x8, White, 60, LINE_1_VERT, select_states[MT_TRANSPOSE_MODE]);
+	const char * transpose_type = message_choices->transpose_modes[midi_transpose_data.transpose_type];
+	screen_driver_underline_WriteString(transpose_type, Font_6x8, White, 60, LINE_1_VERT, select_states[MT_TRANSPOSE_MODE]);
 
 	// Scale or N/A
 	screen_driver_SetCursor_WriteString(message->mode, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
 	if(midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED){
-		const char *scales[] = {
-			message->ionian, message->dorian, message->phrygian,
-			message->lydian, message->mixolydian, message->aeolian, message->locrian
-		};
-		screen_driver_underline_WriteString(scales[midi_transpose_data.transpose_scale], Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
+		char scale_choice = message_choices->scales[midi_transpose_data.transpose_scale];
+		screen_driver_underline_WriteString(scale_choice, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	} else {
 		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	}

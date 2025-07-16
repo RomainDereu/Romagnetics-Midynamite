@@ -60,8 +60,7 @@ void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_da
 
 
 	screen_driver_SetCursor_WriteString(message->send_base, Font_6x8, White, TEXT_LEFT_START, LINE_4_VERT);
-	const char * yes_no_choices[] =  {message->yes, message->no};
-	const char * send_base_note_text = yes_no_choices[midi_transpose_data->send_original];
+	const char * send_base_note_text = message_choices->yes_no[midi_transpose_data->send_original];
 	screen_driver_underline_WriteString(send_base_note_text, Font_6x8, White, 65, LINE_4_VERT, select_states_midi_transpose[1]);
 
 

@@ -103,7 +103,21 @@ typedef struct {
 
 } Message;
 
-// Global pointer to access the centralized text messages
+
+
+// Message structure that centralizes all user-facing UI strings
+typedef struct {
+    const char *change_split[2];
+    const char *change_fixed[2];
+    const char *midi_outs[5];
+    const char *transpose_modes[2];
+    const char *scales[7];
+    const char *yes_no[2];
+} Message_choices;
+
 extern const Message *message;
+extern Message_choices *message_choices;
+
+void init_message_choices(void);
 
 #endif /* TEXT_H_ */

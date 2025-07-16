@@ -118,4 +118,37 @@ static const Message message_data = {
 
 };
 
+
 const Message *message = &message_data;
+
+// Define the actual Message_choices storage
+static Message_choices _message_choices;
+Message_choices *message_choices = &_message_choices;
+
+void init_message_choices(void) {
+    _message_choices.change_split[0] = message->change;
+    _message_choices.change_split[1] = message->split;
+
+    _message_choices.change_fixed[0] = message->change;
+    _message_choices.change_fixed[1] = message->fixed;
+
+    _message_choices.midi_outs[0] = 0;
+    _message_choices.midi_outs[1] = message->midi_channel_1;
+    _message_choices.midi_outs[2] = message->midi_channel_2;
+    _message_choices.midi_outs[3] = message->midi_channel_1_2;
+    _message_choices.midi_outs[4] = message->split_1_2;
+
+    _message_choices.transpose_modes[0] = message->pitch_shift;
+    _message_choices.transpose_modes[1] = message->transpose;
+
+    _message_choices.scales[0] = message->ionian;
+    _message_choices.scales[1] = message->dorian;
+    _message_choices.scales[2] = message->phrygian;
+    _message_choices.scales[3] = message->lydian;
+    _message_choices.scales[4] = message->mixolydian;
+    _message_choices.scales[5] = message->aeolian;
+    _message_choices.scales[6] = message->locrian;
+
+    _message_choices.yes_no[0] = message->yes;
+    _message_choices.yes_no[1] = message->no;
+}

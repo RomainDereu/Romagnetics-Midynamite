@@ -156,6 +156,8 @@ int main(void)
   current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);
 
+  init_message_choices();
+
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
