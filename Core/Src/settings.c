@@ -103,7 +103,7 @@ void screen_update_settings_midi_transpose(){
 	// Scale or N/A
 	screen_driver_SetCursor_WriteString(message->mode, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
 	if(midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED){
-		char scale_choice = message_choices->scales[midi_transpose_data.transpose_scale];
+		const char * scale_choice = message_choices->scales[midi_transpose_data.transpose_scale];
 		screen_driver_underline_WriteString(scale_choice, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
 	} else {
 		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
@@ -120,8 +120,8 @@ void screen_update_global_settings(){
 	const char *start_menu_options[] = {
 		message->tempo,
 		message->modify,
-		message->settings,
 		message->transpose,
+		message->settings,
 	};
 	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 70, LINE_1_VERT, select_states[SETT_START_MENU]);
 

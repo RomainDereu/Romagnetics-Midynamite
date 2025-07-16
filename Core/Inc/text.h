@@ -42,7 +42,8 @@ typedef struct {
     const char *mode;
     const char *na;
     const char *send_base_note;
-
+    const char *interval;
+    const char *root_note;
 
     const char *scale;
     const char *send_base;
@@ -55,8 +56,23 @@ typedef struct {
     const char *phrygian;
     const char *lydian;
     const char *mixolydian;
+    const char *mixo;
     const char *aeolian;
     const char *locrian;
+
+
+    // Intervals
+    const char *octave_dn;
+    const char *sixth_dn;
+    const char *fifth_dn;
+    const char *fourth_dn;
+    const char *third_dn;
+    const char *third_up;
+    const char *fourth_up;
+    const char *fifth_up;
+    const char *sixth_up;
+    const char *octave_up;
+
 
     // MIDI out choices
     const char *send_to;
@@ -100,6 +116,9 @@ typedef struct {
 	//Midi notes names
     const char **midi_note_names;
 
+	//12 notes names
+    const char **twelve_notes_names;
+
 
 } Message;
 
@@ -112,6 +131,7 @@ typedef struct {
     const char *midi_outs[5];
     const char *transpose_modes[2];
     const char *scales[7];
+    const char *intervals[10];
     const char *yes_no[2];
 } Message_choices;
 

@@ -58,10 +58,9 @@ typedef struct {
 	int32_t midi_shift_value;
 	uint8_t send_original;
 
-	//Modified in the transpose menu
 	uint8_t transpose_base_note;
-	uint8_t transpose_scale;
 	uint8_t transpose_interval;
+	uint8_t transpose_scale;
 
 	uint8_t currently_sending;
 

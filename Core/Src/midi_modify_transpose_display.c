@@ -71,5 +71,30 @@ void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_da
 void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data){
 
 
+	//Base Note
+	screen_driver_SetCursor_WriteString(message->root_note, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+	const char * base_note_text = message->twelve_notes_names[midi_transpose_data->transpose_base_note];
+	screen_driver_underline_WriteString(base_note_text, Font_6x8, White, 62, LINE_1_VERT, select_states_midi_transpose[0]);
+
+
+	//Transpose_interval
+	screen_driver_SetCursor_WriteString(message->interval, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
+	const char * interval_text = message_choices->intervals[midi_transpose_data->transpose_interval];
+	screen_driver_underline_WriteString(interval_text, Font_6x8, White, 55, LINE_2_VERT, select_states_midi_transpose[1]);
+
+
+	//Transpose_scale
+	screen_driver_SetCursor_WriteString(message->scale, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	const char * scale_text = message_choices->scales[midi_transpose_data->transpose_scale];
+	screen_driver_underline_WriteString(scale_text, Font_6x8, White, 40, LINE_3_VERT, select_states_midi_transpose[2]);
+
+	//Send base
+	screen_driver_SetCursor_WriteString(message->send_base, Font_6x8, White, TEXT_LEFT_START, LINE_4_VERT);
+	const char * send_base_note_text = message_choices->yes_no[midi_transpose_data->send_original];
+	screen_driver_underline_WriteString(send_base_note_text, Font_6x8, White, 65, LINE_4_VERT, select_states_midi_transpose[3]);
+
+
+
+
 }
 

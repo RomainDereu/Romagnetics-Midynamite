@@ -62,7 +62,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		switch (current_select) {
 			case 0:
 				utils_counter_change(timer4, &(midi_transpose_data->transpose_base_note),
-																					0, 12, select_changed, 12, NO_WRAP);
+																					0, 11, select_changed, 12, NO_WRAP);
 				break;
 
 			case 1:
@@ -72,7 +72,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 			case 2:
 				utils_counter_change(timer4, &(midi_transpose_data->transpose_scale),
-																					IONIAN, LOCRIAN, select_changed, 1, NO_WRAP);
+																					IONIAN, LOCRIAN, select_changed, 1, WRAP);
 				break;
 
 			case 3:

@@ -22,6 +22,12 @@ static const char *midi_notes_array[128] = {
     "C9",   "C#/Db9",  "D9",   "D#/Eb9",  "E9",   "F9",   "F#/Gb9",  "G9"
 };
 
+
+static const char *twelve_notes_array[12] = {
+    "C",  "C#/Db", "D",  "D#/Eb", "E",  "F",  "F#/Gb", "G",  "G#/Ab", "A",  "A#/Bb", "B"
+};
+
+
 static const Message message_data = {
 	//Menu text
     .send_midi_tempo = "Send Midi Tempo",
@@ -54,6 +60,8 @@ static const Message message_data = {
     .mode = "Mode",
     .na = "N/A",
 	.send_base_note = "Send base note",
+	.interval = "Interval",
+	.root_note = "Root note",
 
 	.scale = "Scale",
 	//mode is already defined
@@ -67,8 +75,21 @@ static const Message message_data = {
     .phrygian = "Phrygian",
     .lydian = "Lydian",
     .mixolydian = "Mixolydian",
+    .mixo = "Mixo.",
     .aeolian = "Aeolian",
     .locrian = "Locrian",
+
+	//Intervals
+    .octave_dn = "Oct Dn",
+    .sixth_dn = "6th Dn",
+    .fifth_dn = "5th Dn",
+    .fourth_dn = "4th Dn",
+    .third_dn = "3rd Dn",
+    .third_up = "3rd Up",
+    .fourth_up = "4th Up",
+    .fifth_up = "5th Up",
+    .sixth_up = "6th Up",
+    .octave_up = "Oct Up",
 
     // MIDI out choices
     .send_to = "Send to",
@@ -113,7 +134,10 @@ static const Message message_data = {
 	.bpm = "BPM",
 
 	//Midi notes names
-    .midi_note_names = midi_notes_array
+    .midi_note_names = midi_notes_array,
+
+	//One octave note names
+    .twelve_notes_names = twelve_notes_array
 
 
 };
@@ -145,9 +169,20 @@ void init_message_choices(void) {
     _message_choices.scales[1] = message->dorian;
     _message_choices.scales[2] = message->phrygian;
     _message_choices.scales[3] = message->lydian;
-    _message_choices.scales[4] = message->mixolydian;
+    _message_choices.scales[4] = message->mixo;
     _message_choices.scales[5] = message->aeolian;
     _message_choices.scales[6] = message->locrian;
+
+    _message_choices.intervals[0] = message->octave_dn;
+    _message_choices.intervals[1] = message->sixth_dn;
+    _message_choices.intervals[2] = message->fifth_dn;
+    _message_choices.intervals[3] = message->fourth_dn;
+    _message_choices.intervals[4] = message->third_dn;
+    _message_choices.intervals[5] = message->third_up;
+    _message_choices.intervals[6] = message->fourth_up;
+    _message_choices.intervals[7] = message->fifth_up;
+    _message_choices.intervals[8] = message->sixth_up;
+    _message_choices.intervals[9] = message->octave_up;
 
     _message_choices.yes_no[0] = message->yes;
     _message_choices.yes_no[1] = message->no;
