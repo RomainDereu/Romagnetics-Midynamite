@@ -55,6 +55,12 @@ static const Message message_data = {
     .na = "N/A",
 	.send_base_note = "Send base note",
 
+	.scale = "Scale",
+	//mode is already defined
+	.send_base = "Send Base",
+	.shift_by = "Shift by",
+	.semitones = "Semitones",
+
     // Modes
     .ionian = "Ionian",
     .dorian = "Dorian",
@@ -101,6 +107,7 @@ static const Message message_data = {
 
 	.yes = "Yes",
 	.no = "No",
+
 
 	//Midi Tempo
 	.bpm = "BPM",

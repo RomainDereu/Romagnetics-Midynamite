@@ -43,6 +43,12 @@ typedef struct {
     const char *na;
     const char *send_base_note;
 
+
+    const char *scale;
+    const char *send_base;
+    const char *shift_by;
+    const char *semitones;
+
     // Modes
     const char *ionian;
     const char *dorian;

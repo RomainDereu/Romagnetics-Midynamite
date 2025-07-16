@@ -38,7 +38,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	//Updating the selected item and see if it has changed
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
-	// Selecting the current item being selected
+	// Finding urrent item being selected
 	for (uint8_t x=0; x < amount_of_settings; x++){
 		select_states_midi_modify[x] = 0;
 	}

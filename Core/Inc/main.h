@@ -53,9 +53,9 @@ typedef struct {
 }midi_modify_data_struct;
 
 typedef struct {
-	//Modified in the settings
 	uint8_t transpose_type;
-	int8_t midi_shift_value;
+
+	int32_t midi_shift_value;
 	uint8_t send_original;
 
 	//Modified in the transpose menu

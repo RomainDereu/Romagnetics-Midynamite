@@ -12,6 +12,7 @@
 #include "screen_driver.h"
 
 extern uint8_t select_states_midi_modify[4];
+extern uint8_t select_states_midi_transpose[3];
 
 //midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
@@ -36,6 +37,9 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 //midi transpose display
 void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
 
+
+void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data);
+void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data);
 
 
 //midi_modify_transform
