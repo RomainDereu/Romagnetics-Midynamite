@@ -104,20 +104,6 @@ void send_midi_tempo_out(int32_t current_tempo){
 void mt_start_stop(TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data){
 	if(midi_tempo_data->currently_sending == 0){
-		//Clock start and starting the timer
-		if (UART_list_tempo[0] != NULL){
-			HAL_UART_Transmit(UART_list_tempo[0], clock_start, 3, 1000);
-		}
-		if (UART_list_tempo[1] != NULL){
-			HAL_UART_Transmit(UART_list_tempo[1], clock_start, 3, 1000);
-		}
-
-		HAL_TIM_Base_Start_IT(timer);
-		midi_tempo_data->currently_sending = 1;
-		osThreadFlagsSet(display_updateHandle, 0x01);
-	}
-
-	else if(midi_tempo_data->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
 		if (UART_list_tempo[0] != NULL){
@@ -126,9 +112,18 @@ void mt_start_stop(TIM_HandleTypeDef * timer,
 		if (UART_list_tempo[1] != NULL){
 			HAL_UART_Transmit(UART_list_tempo[1], clock_stop, 3, 1000);
 		}
+	}
 
-		midi_tempo_data->currently_sending = 0;
-		osThreadFlagsSet(display_updateHandle, 0x01);
+	else if(midi_tempo_data->currently_sending == 1){
+		//Clock start and starting the timer
+		if (UART_list_tempo[0] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[0], clock_start, 3, 1000);
+		}
+		if (UART_list_tempo[1] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[1], clock_start, 3, 1000);
+		}
+		HAL_TIM_Base_Start_IT(timer);
+		list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
 	}
 }
 

@@ -154,6 +154,10 @@ int main(void)
 
   init_message_choices();
 
+  if(midi_tempo_data.currently_sending == 1){
+	  mt_start_stop(&htim2, &midi_tempo_data);
+  }
+
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 
@@ -659,7 +663,9 @@ void MediumTasks(void *argument)
 		 {
 			 switch (current_menu) {
 			 	case MIDI_TEMPO:
+			 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
 			 		mt_start_stop(&htim2, &midi_tempo_data);
+			 		osThreadFlagsSet(display_updateHandle, 0x01);
 			 		break;
 
 			 	case MIDI_MODIFY:
@@ -669,7 +675,7 @@ void MediumTasks(void *argument)
 
 			 	case MIDI_TRANSPOSE:
 			 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
-			 		osThreadFlagsSet(display_updateHandle, 0x07);
+			 		osThreadFlagsSet(display_updateHandle, 0x08);
 			 		break;
 
 			 	default:
