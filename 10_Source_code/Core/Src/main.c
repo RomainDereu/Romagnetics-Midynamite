@@ -84,10 +84,6 @@ uint8_t current_menu;
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
-
-static UART_HandleTypeDef *UART_list[2];
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -663,8 +659,7 @@ void MediumTasks(void *argument)
 		 {
 			 switch (current_menu) {
 			 	case MIDI_TEMPO:
-			 		list_of_UART_to_send_to(midi_tempo_data.send_channels, UART_list);
-			 		mt_start_stop(UART_list, &htim2, &midi_tempo_data);
+			 		mt_start_stop(&htim2, &midi_tempo_data);
 			 		break;
 
 			 	case MIDI_MODIFY:
@@ -761,7 +756,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   if (htim->Instance == TIM2) {
 	//Roro make a freertos Queue and get out of the interupt
-	send_midi_tempo_out(UART_list, midi_tempo_data.current_tempo);
+	send_midi_tempo_out(midi_tempo_data.current_tempo);
   }
 
 

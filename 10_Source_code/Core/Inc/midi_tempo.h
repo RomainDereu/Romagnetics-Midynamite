@@ -16,11 +16,10 @@
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
 
-void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], int32_t current_tempo);
+void send_midi_tempo_out(int32_t current_tempo);
 
 
-void mt_start_stop(UART_HandleTypeDef *UART_list[2],
-		           TIM_HandleTypeDef * timer,
+void mt_start_stop(TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data);
 
 int compareArrays(double a[], double b[], int n);

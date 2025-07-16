@@ -30,7 +30,7 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 		UART_list[1] = NULL;
 	}
 
-	else if (send_channels == MIDI_OUT_1_2){
+	else if (send_channels == MIDI_OUT_1_2 || send_channels == MIDI_OUT_SPLIT){
 		UART_list[0] = &huart1;
 		UART_list[1] = &huart2;
 	}

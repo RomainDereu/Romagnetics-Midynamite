@@ -26,7 +26,7 @@ typedef struct {
 	//Modified in the tempo menu
 	int32_t current_tempo;
 	uint8_t currently_sending;
-	uint8_t send_channels;
+	uint8_t send_to_midi_out;
 }midi_tempo_data_struct;
 
 

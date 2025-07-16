@@ -23,6 +23,8 @@ extern const Message * message;
 
 extern osThreadId display_updateHandle;
 
+static UART_HandleTypeDef *UART_list_tempo[2];
+
 static uint8_t select_states[2] = {0};
 static uint8_t current_select = 0;
 static uint8_t old_select = 0;
@@ -58,13 +60,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
       char message_midi_out[10];
 
 
-      if(midi_tempo_data->send_channels == MIDI_OUT_1){
+      if(midi_tempo_data->send_to_midi_out == MIDI_OUT_1){
     	  strcpy(message_midi_out, message->midi_channel_1);
       }
-      else if(midi_tempo_data->send_channels == MIDI_OUT_2){
+      else if(midi_tempo_data->send_to_midi_out == MIDI_OUT_2){
     	  strcpy(message_midi_out, message->midi_channel_2);
       }
-      else if(midi_tempo_data->send_channels == MIDI_OUT_1_2){
+      else if(midi_tempo_data->send_to_midi_out == MIDI_OUT_1_2){
     	  strcpy(message_midi_out, message->midi_channel_1_2);
       }
 
@@ -85,13 +87,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 }
 
 
-void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], int32_t current_tempo){
+void send_midi_tempo_out(int32_t current_tempo){
 	  uint32_t tempo_click_rate = 6000000/(current_tempo*24);
-	  if (UART_list[0] != NULL){
-		  HAL_UART_Transmit(UART_list[0], clock_send_tempo, 3, 1000);
+	  if (UART_list_tempo[0] != NULL){
+		  HAL_UART_Transmit(UART_list_tempo[0], clock_send_tempo, 3, 1000);
 	  }
-	  if (UART_list[1] != NULL){
-		  HAL_UART_Transmit(UART_list[1], clock_send_tempo, 3, 1000);
+	  if (UART_list_tempo[1] != NULL){
+		  HAL_UART_Transmit(UART_list_tempo[1], clock_send_tempo, 3, 1000);
 	  }
 	  //Adjusting the tempo if needed
 	  if (TIM2->ARR != tempo_click_rate){
@@ -99,16 +101,15 @@ void send_midi_tempo_out(UART_HandleTypeDef *UART_list[2], int32_t current_tempo
 	  }
 }
 
-void mt_start_stop(UART_HandleTypeDef *UART_list[2],
-		           TIM_HandleTypeDef * timer,
+void mt_start_stop(TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data){
 	if(midi_tempo_data->currently_sending == 0){
 		//Clock start and starting the timer
-		if (UART_list[0] != NULL){
-			HAL_UART_Transmit(UART_list[0], clock_start, 3, 1000);
+		if (UART_list_tempo[0] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[0], clock_start, 3, 1000);
 		}
-		if (UART_list[1] != NULL){
-			HAL_UART_Transmit(UART_list[1], clock_start, 3, 1000);
+		if (UART_list_tempo[1] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[1], clock_start, 3, 1000);
 		}
 
 		HAL_TIM_Base_Start_IT(timer);
@@ -119,11 +120,11 @@ void mt_start_stop(UART_HandleTypeDef *UART_list[2],
 	else if(midi_tempo_data->currently_sending == 1){
 		//Stopping the timer and sending stop message
 		HAL_TIM_Base_Stop_IT(timer);
-		if (UART_list[0] != NULL){
-			HAL_UART_Transmit(UART_list[0], clock_stop, 3, 1000);
+		if (UART_list_tempo[0] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[0], clock_stop, 3, 1000);
 		}
-		if (UART_list[1] != NULL){
-			HAL_UART_Transmit(UART_list[1], clock_stop, 3, 1000);
+		if (UART_list_tempo[1] != NULL){
+			HAL_UART_Transmit(UART_list_tempo[1], clock_stop, 3, 1000);
 		}
 
 		midi_tempo_data->currently_sending = 0;
@@ -148,7 +149,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, select_changed, 10, NO_WRAP);
 			break;
 		case 1:
-			utils_counter_change(timer4, &(midi_tempo_data->send_channels), MIDI_OUT_1, MIDI_OUT_1_2, select_changed, 1, WRAP);
+			utils_counter_change(timer4, &(midi_tempo_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_1_2, select_changed, 1, WRAP);
 			break;
 	}
 
@@ -158,11 +159,14 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	select_states[current_select] = 1;
 
 
+	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
+
+
 
 	//Updating in case of change
 	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||
 	   old_midi_tempo_information.currently_sending != midi_tempo_data->currently_sending ||
-	   old_midi_tempo_information.send_channels != midi_tempo_data->send_channels||
+	   old_midi_tempo_information.send_to_midi_out != midi_tempo_data->send_to_midi_out||
 	   menu_changed == 1 || current_select != old_select ){
 	   osThreadFlagsSet(display_updateHandle, 0x01);
 	}
