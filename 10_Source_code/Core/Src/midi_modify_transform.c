@@ -50,45 +50,51 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
         if (byte >= 0xF8) {
             // Real-Time messages (1 byte only)
             uint8_t rt_msg[1] = {byte};
-            send_midi_out(rt_msg, 1,midi_modify_data);
+            send_midi_out(rt_msg, 1, midi_modify_data);
             continue;
         }
 
         if (byte == 0xF0) {
-            // For now, skip SysEx messages
+            // Skip SysEx messages
             while (midi_buffer_pop(&byte) && byte != 0xF7) {
-                // discard or handle sysEx byte
+                // Discard SysEx bytes
             }
             continue;
         }
 
         if (byte & 0x80) {
-            // Status byte: start a new message
+            // Status byte - start a new message
             midi_message[0] = byte;
-            midi_status = midi_message[0] & 0xF0;
-
+            midi_status = byte & 0xF0;
             byte_count = 1;
         } else if (byte_count > 0 && byte_count < 3) {
+            // Data byte
             midi_message[byte_count++] = byte;
         }
 
-        if (byte_count == 2 && (midi_message[0] & 0xF0) == 0xC0) {
-            // Program Change or Channel Pressure: only 2 bytes
-        	if(midi_modify_data->currently_sending == 1){
-                change_midi_channel(midi_message, midi_modify_data);
-        	}
-            send_midi_out(midi_message, 2, midi_modify_data);
+        // Check for complete message length:
+        // Program Change (0xC0) and Channel Pressure (0xD0) are 2 bytes
+        if ((byte_count == 2) && (midi_status == 0xC0 || midi_status == 0xD0)) {
+            process_complete_midi_message(midi_message, 2, midi_modify_data);
             byte_count = 0;
         }
+        // Other channel messages (Note On/Off, Control Change, etc.) 3 bytes
         else if (byte_count == 3) {
-        	if(midi_modify_data->currently_sending == 1){
-            	change_velocity(midi_message, midi_modify_data);
-                change_midi_channel(midi_message, midi_modify_data);
-        	}
-            send_midi_out(midi_message, 3, midi_modify_data);
+            process_complete_midi_message(midi_message, 3, midi_modify_data);
             byte_count = 0;
         }
     }
+}
+
+void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
+                                   midi_modify_data_struct *midi_modify_data) {
+    if (midi_modify_data->currently_sending == 1) {
+        if (length == 3) {
+            change_velocity(midi_msg, midi_modify_data);
+        }
+        change_midi_channel(midi_msg, midi_modify_data);
+    }
+    send_midi_out(midi_msg, length, midi_modify_data);
 }
 
 void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data) {

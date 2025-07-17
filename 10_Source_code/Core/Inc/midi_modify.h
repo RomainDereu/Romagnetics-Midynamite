@@ -53,6 +53,9 @@ void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modif
 
 void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
+void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
+                                   midi_modify_data_struct *midi_modify_data);
+
 void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data);
 
 
