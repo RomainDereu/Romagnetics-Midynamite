@@ -675,7 +675,7 @@ void MediumTasks(void *argument)
 
 			 	case MIDI_TRANSPOSE:
 			 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
-			 		osThreadFlagsSet(display_updateHandle, 0x08);
+			 		osThreadFlagsSet(display_updateHandle, 0x04);
 			 		break;
 
 			 	default:
