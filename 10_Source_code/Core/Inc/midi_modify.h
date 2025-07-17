@@ -11,6 +11,9 @@
 #include "main.h"
 #include "screen_driver.h"
 
+#define MIDI_NOTE_ORIGINAL 0
+#define MIDI_NOTE_SHIFTED  1
+
 extern uint8_t select_states_midi_modify[4];
 extern uint8_t select_states_midi_transpose[3];
 
@@ -44,23 +47,25 @@ void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_d
 
 //midi_modify_transform
 void midi_buffer_push(uint8_t byte);
-
 uint8_t midi_buffer_pop(uint8_t *byte);
 
 void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data,
 							midi_transpose_data_struct *midi_transpose_data);
 
 void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
-
 void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
+
+
+void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data);
+//Transpose functions
+void get_mode_scale(uint8_t mode, uint8_t *scale_out);
+int find_scale_degree(uint8_t note_in_scale, uint8_t *scale);
+int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_data);
 
 void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
                                    midi_modify_data_struct *midi_modify_data,
                                    midi_transpose_data_struct *transpose_data) ;
 
-void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data);
-
-void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data);
-
+void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data, uint8_t note_type);
 
 #endif /* INC_MIDI_MODIFY_H_ */
