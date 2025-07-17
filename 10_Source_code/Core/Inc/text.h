@@ -132,7 +132,7 @@ typedef struct {
     const char *transpose_modes[2];
     const char *scales[7];
     const char *intervals[10];
-    const char *yes_no[2];
+    const char *no_yes[2];
 } Message_choices;
 
 extern const Message *message;

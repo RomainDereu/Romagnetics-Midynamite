@@ -184,6 +184,6 @@ void init_message_choices(void) {
     _message_choices.intervals[8] = message->sixth_up;
     _message_choices.intervals[9] = message->octave_up;
 
-    _message_choices.yes_no[0] = message->yes;
-    _message_choices.yes_no[1] = message->no;
+    _message_choices.no_yes[0] = message->no;
+    _message_choices.no_yes[1] = message->yes;
 }
