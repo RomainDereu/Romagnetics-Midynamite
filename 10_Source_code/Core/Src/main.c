@@ -601,7 +601,7 @@ void MidiCore(void *argument)
   for(;;)
   {
   //Reading the incoming midi and giving it back
-  calculate_incoming_midi(&midi_modify_data);
+  calculate_incoming_midi(&midi_modify_data, &midi_transpose_data);
 
   osDelay(5);
   }

@@ -42,7 +42,8 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
 }
 
 
-void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
+void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data,
+							midi_transpose_data_struct *midi_transpose_data) {
     uint8_t byte;
     uint8_t midi_status;
 
@@ -75,27 +76,17 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
         // Check for complete message length:
         // Program Change (0xC0) and Channel Pressure (0xD0) are 2 bytes
         if ((byte_count == 2) && (midi_status == 0xC0 || midi_status == 0xD0)) {
-            process_complete_midi_message(midi_message, 2, midi_modify_data);
+            process_complete_midi_message(midi_message, 2, midi_modify_data, midi_transpose_data);
             byte_count = 0;
         }
         // Other channel messages (Note On/Off, Control Change, etc.) 3 bytes
         else if (byte_count == 3) {
-            process_complete_midi_message(midi_message, 3, midi_modify_data);
+            process_complete_midi_message(midi_message, 3, midi_modify_data, midi_transpose_data);
             byte_count = 0;
         }
     }
 }
 
-void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
-                                   midi_modify_data_struct *midi_modify_data) {
-    if (midi_modify_data->currently_sending == 1) {
-        if (length == 3) {
-            change_velocity(midi_msg, midi_modify_data);
-        }
-        change_midi_channel(midi_msg, midi_modify_data);
-    }
-    send_midi_out(midi_msg, length, midi_modify_data);
-}
 
 void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data) {
     uint8_t status = midi_msg[0];
@@ -133,6 +124,83 @@ void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_da
     midi_msg[2] = (uint8_t)velocity;
 
 }
+
+void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data) {
+    uint8_t status = midi_msg[0] & 0xF0;
+
+    // Only shift Note On (0x90) and Note Off (0x80) messages
+    if (status == 0x90 || status == 0x80) {
+        int16_t note = midi_msg[1];
+        note += transpose_data->midi_shift_value;
+
+        if (note < 0) note = 0;
+        if (note > 127) note = 127;
+
+        midi_msg[1] = (uint8_t)note;
+    }
+}
+
+void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
+                                   midi_modify_data_struct *midi_modify_data,
+                                   midi_transpose_data_struct *transpose_data) {
+    if (midi_modify_data->currently_sending == 1) {
+        if (length == 3) {
+            change_velocity(midi_msg, midi_modify_data);
+        }
+        change_midi_channel(midi_msg, midi_modify_data);
+    }
+
+    uint8_t status_nibble = midi_msg[0] & 0xF0;
+
+    // Check if pitch shifting is enabled and currently sending, for Note On/Off
+    if (transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT && transpose_data->currently_sending == 1 &&
+        (status_nibble == 0x90 || status_nibble == 0x80)) {
+
+        if (transpose_data->send_original == 1) {
+            // Send original note first
+            if (midi_modify_data->send_to_midi_out == MIDI_OUT_SPLIT) {
+                HAL_UART_Transmit(&huart1, midi_msg, length, 1000);
+            } else {
+                send_midi_out(midi_msg, length, midi_modify_data);
+            }
+
+            // Create a copy for shifted message
+            uint8_t modified_msg[3];
+            for (int i = 0; i < length; ++i) {
+                modified_msg[i] = midi_msg[i];
+            }
+
+            // Apply pitch shift on copy
+            midi_pitch_shift(modified_msg, transpose_data);
+
+            // Send shifted note off if this is a Note Off message (or Note On velocity=0)
+            if (status_nibble == 0x80 || (status_nibble == 0x90 && modified_msg[2] == 0)) {
+                // Send shifted Note Off separately to correct UART(s)
+                if (midi_modify_data->send_to_midi_out == MIDI_OUT_SPLIT) {
+                    HAL_UART_Transmit(&huart2, modified_msg, length, 1000);
+                } else {
+                    send_midi_out(modified_msg, length, midi_modify_data);
+                }
+            }
+            else {
+                // For Note On messages, send shifted normally
+                if (midi_modify_data->send_to_midi_out == MIDI_OUT_SPLIT) {
+                    HAL_UART_Transmit(&huart2, modified_msg, length, 1000);
+                } else {
+                    send_midi_out(modified_msg, length, midi_modify_data);
+                }
+            }
+        } else {
+            // Only send shifted note (modify original before sending)
+            midi_pitch_shift(midi_msg, transpose_data);
+            send_midi_out(midi_msg, length, midi_modify_data);
+        }
+    } else {
+        // Normal send (no pitch shift)
+        send_midi_out(midi_msg, length, midi_modify_data);
+    }
+}
+
 
 
 void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data) {

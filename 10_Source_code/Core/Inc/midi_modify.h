@@ -47,14 +47,18 @@ void midi_buffer_push(uint8_t byte);
 
 uint8_t midi_buffer_pop(uint8_t *byte);
 
-void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data);
+void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data,
+							midi_transpose_data_struct *midi_transpose_data);
 
 void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
 void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
 void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
-                                   midi_modify_data_struct *midi_modify_data);
+                                   midi_modify_data_struct *midi_modify_data,
+                                   midi_transpose_data_struct *transpose_data) ;
+
+void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data);
 
 void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data);
 
