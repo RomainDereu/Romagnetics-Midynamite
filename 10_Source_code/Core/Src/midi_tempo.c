@@ -30,7 +30,7 @@ static uint8_t current_select = 0;
 static uint8_t old_select = 0;
 
 //Midi messages constants
-static const uint8_t clock_send_tempo[3]  = {0xf8, 0x00, 0x00};
+static const uint8_t clock_tick = 0xF8;
 static const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
 static const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
 
@@ -88,17 +88,17 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
 
 void send_midi_tempo_out(int32_t current_tempo){
-	  uint32_t tempo_click_rate = 6000000/(current_tempo*24);
-	  if (UART_list_tempo[0] != NULL){
-		  HAL_UART_Transmit(UART_list_tempo[0], clock_send_tempo, 3, 1000);
-	  }
-	  if (UART_list_tempo[1] != NULL){
-		  HAL_UART_Transmit(UART_list_tempo[1], clock_send_tempo, 3, 1000);
-	  }
-	  //Adjusting the tempo if needed
-	  if (TIM2->ARR != tempo_click_rate){
-		  TIM2->ARR = tempo_click_rate;
-	  }
+    uint32_t tempo_click_rate = 6000000 / (current_tempo * 24);
+
+    for (int i = 0; i < 2; i++) {
+        if (UART_list_tempo[i] != NULL) {
+            HAL_UART_Transmit(UART_list_tempo[i], &clock_tick, 1, 1000);
+        }
+    }
+
+    if (TIM2->ARR != tempo_click_rate) {
+        TIM2->ARR = tempo_click_rate;
+    }
 }
 
 void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_data) {

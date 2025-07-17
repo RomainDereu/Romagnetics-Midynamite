@@ -50,7 +50,7 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
         if (byte >= 0xF8) {
             // Real-Time messages (1 byte only)
             uint8_t rt_msg[1] = {byte};
-            send_midi_out(rt_msg, 1);
+            send_midi_out(rt_msg, 1,midi_modify_data);
             continue;
         }
 
@@ -77,7 +77,7 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
         	if(midi_modify_data->currently_sending == 1){
                 change_midi_channel(midi_message, midi_modify_data);
         	}
-            send_midi_out(midi_message, 2);
+            send_midi_out(midi_message, 2, midi_modify_data);
             byte_count = 0;
         }
         else if (byte_count == 3) {
@@ -85,7 +85,7 @@ void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data) {
             	change_velocity(midi_message, midi_modify_data);
                 change_midi_channel(midi_message, midi_modify_data);
         	}
-            send_midi_out(midi_message, 3);
+            send_midi_out(midi_message, 3, midi_modify_data);
             byte_count = 0;
         }
     }
@@ -129,6 +129,42 @@ void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_da
 }
 
 
-void send_midi_out(uint8_t *midi_message, uint8_t length) {
-    HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data) {
+	uint8_t status = midi_message[0];
+	if (status >= 0x80 && status <= 0xEF) {
+		uint8_t note = (length > 1) ? midi_message[1] : 0;
+
+		switch (midi_modify_data->send_to_midi_out) {
+			case MIDI_OUT_1:
+				HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+				break;
+
+			case MIDI_OUT_2:
+				HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+				break;
+
+			case MIDI_OUT_1_2:
+				HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+				HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+				break;
+
+			case MIDI_OUT_SPLIT:
+
+				if(midi_modify_data->change_or_split ==MIDI_MODIFY_SPLIT){
+					if (note < midi_modify_data->split_note) {
+						HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+					} else {
+						HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+					}
+				}
+				else{
+					HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+					HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+				}
+				break;
+
+			default:
+				break;
+		}
+	}
 }
