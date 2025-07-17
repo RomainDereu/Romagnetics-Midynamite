@@ -62,4 +62,8 @@ void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t f
 										  uint8_t y_align,
 										  uint8_t underlined);
 
+
+void panic_midi_all_notes_off(UART_HandleTypeDef *huart);
+void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2);
+
 #endif /* SRC_UTILS_H_ */

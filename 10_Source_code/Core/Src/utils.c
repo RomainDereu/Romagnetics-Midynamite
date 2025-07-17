@@ -127,6 +127,34 @@ void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t f
 
 
 
+// Panic on a single UART
+void panic_midi_all_notes_off(UART_HandleTypeDef *huart) {
+    uint8_t all_notes_off_msg[3];
+    uint8_t reset_ctrl_msg[3];
+
+    for (uint8_t channel = 0; channel < 16; channel++) {
+        uint8_t status = 0xB0 | channel;
+
+        // All Notes Off
+        all_notes_off_msg[0] = status;
+        all_notes_off_msg[1] = 123;  // Controller number for All Notes Off
+        all_notes_off_msg[2] = 0;
+
+        // Reset All Controllers
+        reset_ctrl_msg[0] = status;
+        reset_ctrl_msg[1] = 121;     // Controller number for Reset All Controllers
+        reset_ctrl_msg[2] = 0;
+
+        HAL_UART_Transmit(huart, all_notes_off_msg, 3, 1000);
+        HAL_UART_Transmit(huart, reset_ctrl_msg, 3, 1000);
+    }
+}
+
+// Panic on both UART1 and UART2
+void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2) {
+    panic_midi_all_notes_off(huart1);
+    panic_midi_all_notes_off(huart2);
+}
 
 
 

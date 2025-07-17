@@ -651,7 +651,8 @@ void MediumTasks(void *argument)
 
 	old_menu = current_menu;
 
-	//Button3 (Start/Stop)
+	uint8_t OldBtn1State;
+	uint8_t OldBtn2State;
 	uint8_t OldBtn3State;
 	uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
 	if(Btn3State == 0)
@@ -684,6 +685,20 @@ void MediumTasks(void *argument)
 		 }
 	}
 	OldBtn3State = Btn3State;
+
+
+	//Checking for panic button
+	uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+	uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+	if(Btn1State == 0 && Btn2State == 0){
+		 osDelay(300);
+		 Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+		 Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+		if(Btn1State == 0 && Btn2State == 0){
+			panic_midi_all_notes_off_both(&huart1, &huart2);
+		}
+
+	}
 
 	//Let other tasks update
 	osDelay(10);

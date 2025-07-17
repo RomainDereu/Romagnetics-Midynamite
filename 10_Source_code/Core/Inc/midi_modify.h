@@ -44,6 +44,11 @@ void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_da
 void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data);
 void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data);
 
+void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
+		                     TIM_HandleTypeDef * timer4,
+						     midi_transpose_data_struct * midi_transpose_data,
+							 uint8_t * old_menu);
+
 
 //midi_modify_transform
 void midi_buffer_push(uint8_t byte);
