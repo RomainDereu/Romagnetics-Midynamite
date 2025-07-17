@@ -60,6 +60,9 @@ void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_d
 //Transpose functions
 void get_mode_scale(uint8_t mode, uint8_t *scale_out);
 int find_scale_degree(uint8_t note_in_scale, uint8_t *scale);
+int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
+uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
+
 int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_data);
 
 void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,

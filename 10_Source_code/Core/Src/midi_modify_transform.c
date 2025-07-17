@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
+#include <stdlib.h>  // for abs()
 #include <string.h>
 
 #include "midi_modify.h"
@@ -133,25 +133,44 @@ void get_mode_scale(uint8_t mode, uint8_t *scale) {
     memcpy(scale, mode_intervals[mode], 7);
 }
 
-// Helper: find the scale degree (0-6) for a note in the scale (closest degree <= note)
-int find_scale_degree(uint8_t rel_note, uint8_t *scale) {
+// Helper: check if note is in scale
+int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
+    int semitone_from_root = ((note - base_note) + 120) % 12;
     for (int i = 0; i < 7; i++) {
-        if (scale[i] == rel_note) return i;
+        if (scale[i] == semitone_from_root) return 1;
     }
-    return -1;
+    return 0;
+}
+
+// Snap note up/down by semitones until in scale (max 12 semitones search)
+uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
+    uint8_t up_note = note;
+    uint8_t down_note = note;
+
+    for (int i = 0; i < 12; i++) {
+        if (note_in_scale(down_note, scale, base_note)) return down_note;
+        if (note_in_scale(up_note, scale, base_note)) return up_note;
+
+        if (down_note > 0) down_note--;
+        if (up_note < 127) up_note++;
+    }
+    return note;  // fallback (should not happen)
 }
 
 int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_data) {
     uint8_t mode = transpose_data->transpose_scale % AMOUNT_OF_MODES;
 
     uint8_t scale_intervals[7];
-    get_mode_scale(mode, scale_intervals);  // mode degrees in semitones from root
+    get_mode_scale(mode, scale_intervals);
 
-    // Calculate input note's semitone distance from root
+    // Snap note to scale if not in scale
+    if (!note_in_scale(note, scale_intervals, transpose_data->transpose_base_note)) {
+        note = snap_note_to_scale(note, scale_intervals, transpose_data->transpose_base_note);
+    }
+
     int16_t semitone_from_root = ((note - transpose_data->transpose_base_note) + 120) % 12;
     int16_t base_octave_offset = (note - transpose_data->transpose_base_note) / 12;
 
-    // Find degree in scale
     int degree = -1;
     for (int i = 0; i < 7; i++) {
         if (scale_intervals[i] == semitone_from_root) {
@@ -160,21 +179,11 @@ int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_dat
         }
     }
 
+    // Safety fallback
     if (degree == -1) {
-        // Not in scale — find nearest degree
-        int closest_degree = 0;
-        int min_diff = 12;
-        for (int i = 0; i < 7; i++) {
-            int diff = abs(scale_intervals[i] - semitone_from_root);
-            if (diff < min_diff) {
-                min_diff = diff;
-                closest_degree = i;
-            }
-        }
-        degree = closest_degree;
+        return note;
     }
 
-    // Degree shift based on interval enum
     const int degree_shifts[10] = {
         -7, -5, -4, -3, -2, 2, 3, 4, 5, 7
     };
@@ -205,11 +214,9 @@ int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_dat
 void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data) {
     uint8_t status = midi_msg[0] & 0xF0;
 
-    // Only shift Note On (0x90) and Note Off (0x80) messages
     if (status == 0x90 || status == 0x80) {
         int16_t note = midi_msg[1];
 
-        // Use midi_transpose_notes for scale-based transposition
         if (transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED) {
             note = midi_transpose_notes(note, transpose_data);
         }
@@ -236,13 +243,19 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
 
     uint8_t status_nibble = midi_msg[0] & 0xF0;
 
-    // Check if pitch shifting is enabled and currently sending, for Note On/Off
     if ((transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT || transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED)
         && transpose_data->currently_sending == 1 &&
         (status_nibble == 0x90 || status_nibble == 0x80)) {
 
         if (transpose_data->send_original == 1) {
-            // Send original note first
+            // Snap the original note to scale but don't apply interval shift
+            if (transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED) {
+                uint8_t mode = transpose_data->transpose_scale % AMOUNT_OF_MODES;
+                uint8_t scale_intervals[7];
+                get_mode_scale(mode, scale_intervals);
+                midi_msg[1] = snap_note_to_scale(midi_msg[1], scale_intervals, transpose_data->transpose_base_note);
+            }
+
             send_midi_out(midi_msg, length, midi_modify_data, MIDI_NOTE_ORIGINAL);
 
             // Create a copy for shifted message
@@ -251,15 +264,10 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
                 modified_msg[i] = midi_msg[i];
             }
 
-            // Apply pitch shift on copy
+            // Apply full pitch shift (snap + interval) on copy
             midi_pitch_shift(modified_msg, transpose_data);
 
-            // Send shifted Note Off separately if applicable
-            if (status_nibble == 0x80 || (status_nibble == 0x90 && modified_msg[2] == 0)) {
-                send_midi_out(modified_msg, length, midi_modify_data, MIDI_NOTE_SHIFTED);
-            } else {
-                send_midi_out(modified_msg, length, midi_modify_data, MIDI_NOTE_SHIFTED);
-            }
+            send_midi_out(modified_msg, length, midi_modify_data, MIDI_NOTE_SHIFTED);
         } else {
             // Only send shifted note (modify original before sending)
             midi_pitch_shift(midi_msg, transpose_data);
@@ -271,12 +279,13 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
     }
 }
 
+
+
 void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data, uint8_t note_type) {
     uint8_t status = midi_message[0];
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t note = (length > 1) ? midi_message[1] : 0;
 
-        // Select UART based on send_to_midi_out and note_type
         switch (midi_modify_data->send_to_midi_out) {
             case MIDI_OUT_1:
                 HAL_UART_Transmit(&huart1, midi_message, length, 1000);
@@ -293,14 +302,12 @@ void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struc
 
             case MIDI_OUT_SPLIT:
                 if(midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-                    // For split mode: route notes < split_note to huart1, else huart2
                     if (note < midi_modify_data->split_note) {
                         HAL_UART_Transmit(&huart1, midi_message, length, 1000);
                     } else {
                         HAL_UART_Transmit(&huart2, midi_message, length, 1000);
                     }
                 } else {
-                    // If not split, send both
                     HAL_UART_Transmit(&huart1, midi_message, length, 1000);
                     HAL_UART_Transmit(&huart2, midi_message, length, 1000);
                 }
