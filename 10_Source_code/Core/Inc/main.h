@@ -69,6 +69,7 @@ typedef struct {
 
 typedef struct {
 	uint8_t start_menu;
+	uint8_t send_to_usb;
 	uint8_t brightness;
 }settings_data_struct;
 

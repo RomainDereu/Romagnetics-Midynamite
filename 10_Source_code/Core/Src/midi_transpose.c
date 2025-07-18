@@ -2,7 +2,7 @@
  * midi_modify_transpose.c
  *
  *  Created on: Jul 10, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 

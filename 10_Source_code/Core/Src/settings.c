@@ -12,9 +12,10 @@
 #define MT_TRANSPOSE_MODE    3
 #define MT_SCALE             4
 #define SETT_START_MENU      5
-#define SETT_BRIGHTNESS      6
-#define ABOUT                7
-#define AMOUNT_OF_SETTINGS   8
+#define SEND_USB             6
+#define SETT_BRIGHTNESS      7
+#define ABOUT                8
+#define AMOUNT_OF_SETTINGS   9
 
 
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3

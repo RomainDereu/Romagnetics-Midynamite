@@ -11,11 +11,11 @@
 
 #include "midi_modify.h"
 #include "main.h"
-#include "usbd_midi.h"
+#include "midi_usb.h"
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
-extern USBD_HandleTypeDef hUsbDeviceFS;
+
 
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
@@ -319,31 +319,7 @@ void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struc
                 break;
         }
 
-        if (USBD_MIDI_GetState(&hUsbDeviceFS) == MIDI_IDLE) {
-            uint8_t cin;
-            uint8_t status_nibble = midi_message[0] & 0xF0;
-
-            switch (status_nibble) {
-                case 0x80: case 0x90: case 0xA0:
-                case 0xB0: case 0xE0:
-                    cin = 0x08; break;  // 3-byte
-                case 0xC0: case 0xD0:
-                    cin = 0x0C; break;  // 2-byte
-                case 0xF0:
-                    cin = 0x05; break;  // SysEx start/continue
-                default:
-                    cin = 0x0F; break;  // Single byte (e.g. real-time)
-            }
-
-            uint8_t packetsBuffer[4] = {
-                (0x00 << 4) | cin,
-                midi_message[0],
-                (length > 1) ? midi_message[1] : 0,
-                (length > 2) ? midi_message[2] : 0
-            };
-
-            USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
-        }
+        send_usb_midi_message(midi_message, length);
 
     }
 }

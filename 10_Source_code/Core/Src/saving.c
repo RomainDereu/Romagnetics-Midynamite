@@ -138,6 +138,7 @@ save_struct make_default_settings(void){
 
 	//settings_data
 	emergency_save.settings_data.start_menu = MIDI_TEMPO;
+	emergency_save.settings_data.send_to_usb = 0;
 	emergency_save.settings_data.brightness = 0xFF;
 
 	//Checksum
