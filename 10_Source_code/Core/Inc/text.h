@@ -8,7 +8,7 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 
-// Message structure that centralizes all user-facing UI strings
+// Central struct for all UI strings and selectable options
 typedef struct {
     // Menu Titles
     const char *send_midi_tempo;
@@ -19,7 +19,6 @@ typedef struct {
     const char *about;
     const char *midi_modify;
     const char *midi_transpose;
-
 
     // Channel Modify
     const char *to_channel;
@@ -60,7 +59,6 @@ typedef struct {
     const char *aeolian;
     const char *locrian;
 
-
     // Intervals
     const char *octave_dn;
     const char *sixth_dn;
@@ -73,7 +71,6 @@ typedef struct {
     const char *sixth_up;
     const char *octave_up;
 
-
     // MIDI out choices
     const char *send_to;
     const char *midi_channel_1;
@@ -81,13 +78,11 @@ typedef struct {
     const char *midi_channel_1_2;
     const char *split_1_2;
 
-    // Start menu
+    // Start Menu
     const char *start_menu;
     const char *tempo;
     const char *modify;
     const char *settings;
-    //transpose is defined elsewhere
-
 
     // Contrast
     const char *contrast;
@@ -98,7 +93,7 @@ typedef struct {
     const char *about_product;
     const char *about_version;
 
-    // Saving messages
+    // Saving
     const char *save_instruction;
     const char *saving;
     const char *saved;
@@ -106,38 +101,30 @@ typedef struct {
     // Booleans
     const char *on;
     const char *off;
-
     const char *yes;
     const char *no;
 
     // MIDI Tempo
     const char *bpm;
 
-	//Midi notes names
-    const char **midi_note_names;
+    // Note names
+    const char *midi_note_names[128];
+    const char *twelve_notes_names[12];
 
-	//12 notes names
-    const char **twelve_notes_names;
-
+    // All selectable dropdowns and grouped options
+    struct {
+        const char *change_split[2];
+        const char *change_fixed[2];
+        const char *midi_outs[5];
+        const char *transpose_modes[2];
+        const char *scales[7];
+        const char *intervals[10];
+        const char *no_yes[2];
+    } choices;
 
 } Message;
 
-
-
-// Message structure that centralizes all user-facing UI strings
-typedef struct {
-    const char *change_split[2];
-    const char *change_fixed[2];
-    const char *midi_outs[5];
-    const char *transpose_modes[2];
-    const char *scales[7];
-    const char *intervals[10];
-    const char *no_yes[2];
-} Message_choices;
-
+// Global access to UI strings and options
 extern const Message *message;
-extern Message_choices *message_choices;
-
-void init_message_choices(void);
 
 #endif /* TEXT_H_ */

@@ -5,53 +5,32 @@
  *      Author: Romain Dereu
  */
 
-
 #include "text.h"
 
-static const char *midi_notes_array[128] = {
-    "C-1",  "C#/Db-1", "D-1",  "D#/Eb-1", "E-1",  "F-1",  "F#/Gb-1", "G-1",  "G#/Ab-1", "A-1",  "A#/Bb-1", "B-1",
-    "C0",   "C#/Db0",  "D0",   "D#/Eb0",  "E0",   "F0",   "F#/Gb0",  "G0",   "G#/Ab0",  "A0",   "A#/Bb0",  "B0",
-    "C1",   "C#/Db1",  "D1",   "D#/Eb1",  "E1",   "F1",   "F#/Gb1",  "G1",   "G#/Ab1",  "A1",   "A#/Bb1",  "B1",
-    "C2",   "C#/Db2",  "D2",   "D#/Eb2",  "E2",   "F2",   "F#/Gb2",  "G2",   "G#/Ab2",  "A2",   "A#/Bb2",  "B2",
-    "C3",   "C#/Db3",  "D3",   "D#/Eb3",  "E3",   "F3",   "F#/Gb3",  "G3",   "G#/Ab3",  "A3",   "A#/Bb3",  "B3",
-    "C4",   "C#/Db4",  "D4",   "D#/Eb4",  "E4",   "F4",   "F#/Gb4",  "G4",   "G#/Ab4",  "A4",   "A#/Bb4",  "B4",
-    "C5",   "C#/Db5",  "D5",   "D#/Eb5",  "E5",   "F5",   "F#/Gb5",  "G5",   "G#/Ab5",  "A5",   "A#/Bb5",  "B5",
-    "C6",   "C#/Db6",  "D6",   "D#/Eb6",  "E6",   "F6",   "F#/Gb6",  "G6",   "G#/Ab6",  "A6",   "A#/Bb6",  "B6",
-    "C7",   "C#/Db7",  "D7",   "D#/Eb7",  "E7",   "F7",   "F#/Gb7",  "G7",   "G#/Ab7",  "A7",   "A#/Bb7",  "B7",
-    "C8",   "C#/Db8",  "D8",   "D#/Eb8",  "E8",   "F8",   "F#/Gb8",  "G8",   "G#/Ab8",  "A8",   "A#/Bb8",  "B8",
-    "C9",   "C#/Db9",  "D9",   "D#/Eb9",  "E9",   "F9",   "F#/Gb9",  "G9"
-};
-
-
-static const char *twelve_notes_array[12] = {
-    "C",  "C#/Db", "D",  "D#/Eb", "E",  "F",  "F#/Gb", "G",  "G#/Ab", "A",  "A#/Bb", "B"
-};
-
-
-static const Message message_data = {
-	//Menu text
-    .send_midi_tempo = "Send Midi Tempo",
-    .target = "Target:",
-    .settings_modify = "Settings Midi Modify",
-    .settings_transpose = "Settings Transpose",
+static const Message _message = {
+    // Menu Titles
+    .send_midi_tempo = "Send MIDI Tempo",
+    .target = "Target",
+    .settings_modify = "Modify Settings",
+    .settings_transpose = "Transpose Settings",
     .global_settings = "Global Settings",
     .about = "About",
-	.midi_modify = "Midi Modify",
-	.midi_transpose = "Midi Transpose",
+    .midi_modify = "MIDI Modify",
+    .midi_transpose = "MIDI Transpose",
 
     // Channel Modify
-	.to_channel = "To channel",
-    .midi_modify_select = "Ch. Modify",
+    .to_channel = "To Channel",
+    .midi_modify_select = "Modify Select",
     .split = "Split",
-	.low_to_ch = "Low to Ch.",
-	.high_to_ch = "High to Ch.",
+    .low_to_ch = "Low to CH",
+    .high_to_ch = "High to CH",
 
     // Velocity
     .velocity = "Velocity",
     .change = "Change",
     .fixed = "Fixed",
-	.change_velocity = "Change velocity",
-	.fixed_velocity = "Fixed velocity",
+    .change_velocity = "Change Velocity",
+    .fixed_velocity = "Fixed Velocity",
 
     // Transpose
     .type = "Type",
@@ -59,15 +38,13 @@ static const Message message_data = {
     .transpose = "Transpose",
     .mode = "Mode",
     .na = "N/A",
-	.send_base_note = "Send base note",
-	.interval = "Interval",
-	.root_note = "Root note",
-
-	.scale = "Scale",
-	//mode is already defined
-	.send_base = "Send Base",
-	.shift_by = "Shift by",
-	.semitones = "Semitones",
+    .send_base_note = "Send Base Note",
+    .interval = "Interval",
+    .root_note = "Root Note",
+    .scale = "Scale",
+    .send_base = "Send Base",
+    .shift_by = "Shift By",
+    .semitones = "Semitones",
 
     // Modes
     .ionian = "Ionian",
@@ -75,115 +52,94 @@ static const Message message_data = {
     .phrygian = "Phrygian",
     .lydian = "Lydian",
     .mixolydian = "Mixolydian",
-    .mixo = "Mixo.",
+    .mixo = "Mixo",
     .aeolian = "Aeolian",
     .locrian = "Locrian",
 
-	//Intervals
-    .octave_dn = "Oct Dn",
-    .sixth_dn = "6th Dn",
-    .fifth_dn = "5th Dn",
-    .fourth_dn = "4th Dn",
-    .third_dn = "3rd Dn",
-    .third_up = "3rd Up",
-    .fourth_up = "4th Up",
-    .fifth_up = "5th Up",
-    .sixth_up = "6th Up",
-    .octave_up = "Oct Up",
+    // Intervals
+    .octave_dn = "Octave Down",
+    .sixth_dn = "Sixth Down",
+    .fifth_dn = "Fifth Down",
+    .fourth_dn = "Fourth Down",
+    .third_dn = "Third Down",
+    .third_up = "Third Up",
+    .fourth_up = "Fourth Up",
+    .fifth_up = "Fifth Up",
+    .sixth_up = "Sixth Up",
+    .octave_up = "Octave Up",
 
-    // MIDI out choices
-    .send_to = "Send to",
-    .midi_channel_1 = "Out",
-    .midi_channel_2 = "Out 2",
-    .midi_channel_1_2 = "Out 1 & 2",
-    .split_1_2 = "Split 1 2",
+    // MIDI Out
+    .send_to = "Send To",
+    .midi_channel_1 = "MIDI OUT 1",
+    .midi_channel_2 = "MIDI OUT 2",
+    .midi_channel_1_2 = "OUT 1+2",
+    .split_1_2 = "Split 1/2",
 
-    // Start menu
+    // Start Menu
     .start_menu = "Start Menu",
     .tempo = "Tempo",
     .modify = "Modify",
     .settings = "Settings",
-    //Transpose is defined elsewhere
-
 
     // Contrast
     .contrast = "Contrast",
     .contrast_levels = {
-        " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", "10"
+        "10%", "20%", "30%", "40%", "50%",
+        "60%", "70%", "80%", "90%", "100%"
     },
 
     // About
-    .about_brand = "Romagnetics",
-    .about_product = "Midynamite",
-    .about_version = "Version 1.0",
+    .about_brand = "Midynamite",
+    .about_product = "MIDIFX Unit",
+    .about_version = "v1.0.0",
 
     // Saving
-    .save_instruction = "Press Select to save settings",
-    .saving = "Saving                       ",
-    .saved = "Saved!                       ",
+    .save_instruction = "Hold to Save",
+    .saving = "Saving...",
+    .saved = "Saved!",
 
-    //On Off
-    .on = "ON",
-	.off = "OFF",
+    // Booleans
+    .on = "On",
+    .off = "Off",
+    .yes = "Yes",
+    .no = "No",
 
-	.yes = "Yes",
-	.no = "No",
+    // MIDI Tempo
+    .bpm = "BPM",
 
+    // MIDI Note Names (C-1 to G9)
+    .midi_note_names = {
+        "C-1", "C#-1", "D-1", "D#-1", "E-1", "F-1", "F#-1", "G-1", "G#-1", "A-1", "A#-1", "B-1",
+        "C0", "C#0", "D0", "D#0", "E0", "F0", "F#0", "G0", "G#0", "A0", "A#0", "B0",
+        "C1", "C#1", "D1", "D#1", "E1", "F1", "F#1", "G1", "G#1", "A1", "A#1", "B1",
+        "C2", "C#2", "D2", "D#2", "E2", "F2", "F#2", "G2", "G#2", "A2", "A#2", "B2",
+        "C3", "C#3", "D3", "D#3", "E3", "F3", "F#3", "G3", "G#3", "A3", "A#3", "B3",
+        "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4",
+        "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5",
+        "C6", "C#6", "D6", "D#6", "E6", "F6", "F#6", "G6", "G#6", "A6", "A#6", "B6",
+        "C7", "C#7", "D7", "D#7", "E7", "F7", "F#7", "G7", "G#7", "A7", "A#7", "B7",
+        "C8", "C#8", "D8", "D#8", "E8", "F8", "F#8", "G8", "G#8", "A8", "A#8", "B8",
+        "C9", "C#9", "D9", "D#9", "E9", "F9", "F#9", "G9"
+    },
 
-	//Midi Tempo
-	.bpm = "BPM",
+    // 12 Notes (for scales, transposition etc.)
+    .twelve_notes_names = {
+        "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+    },
 
-	//Midi notes names
-    .midi_note_names = midi_notes_array,
-
-	//One octave note names
-    .twelve_notes_names = twelve_notes_array
-
-
+    // Dropdowns and grouped choices
+    .choices = {
+        .change_split = { "No", "Yes" },
+        .change_fixed = { "No", "Yes" },
+        .midi_outs = { "OUT 1", "OUT 2", "OUT 1+2", "Split", "Off" },
+        .transpose_modes = { "Pitch Shift", "Scale" },
+        .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" },
+        .intervals = {
+            "Octave Down", "Sixth Down", "Fifth Down", "Fourth Down", "Third Down",
+            "Third Up", "Fourth Up", "Fifth Up", "Sixth Up", "Octave Up"
+        },
+        .no_yes = { "No", "Yes" }
+    }
 };
 
-
-const Message *message = &message_data;
-
-// Define the actual Message_choices storage
-static Message_choices _message_choices;
-Message_choices *message_choices = &_message_choices;
-
-void init_message_choices(void) {
-    _message_choices.change_split[0] = message->change;
-    _message_choices.change_split[1] = message->split;
-
-    _message_choices.change_fixed[0] = message->change;
-    _message_choices.change_fixed[1] = message->fixed;
-
-    _message_choices.midi_outs[0] = 0;
-    _message_choices.midi_outs[1] = message->midi_channel_1;
-    _message_choices.midi_outs[2] = message->midi_channel_2;
-    _message_choices.midi_outs[3] = message->midi_channel_1_2;
-    _message_choices.midi_outs[4] = message->split_1_2;
-
-    _message_choices.transpose_modes[0] = message->pitch_shift;
-    _message_choices.transpose_modes[1] = message->transpose;
-
-    _message_choices.scales[0] = message->ionian;
-    _message_choices.scales[1] = message->dorian;
-    _message_choices.scales[2] = message->phrygian;
-    _message_choices.scales[3] = message->lydian;
-    _message_choices.scales[4] = message->mixo;
-    _message_choices.scales[5] = message->aeolian;
-    _message_choices.scales[6] = message->locrian;
-
-    _message_choices.intervals[0] = message->octave_dn;
-    _message_choices.intervals[1] = message->sixth_dn;
-    _message_choices.intervals[2] = message->fifth_dn;
-    _message_choices.intervals[3] = message->fourth_dn;
-    _message_choices.intervals[4] = message->third_dn;
-    _message_choices.intervals[5] = message->third_up;
-    _message_choices.intervals[6] = message->fourth_up;
-    _message_choices.intervals[7] = message->fifth_up;
-    _message_choices.intervals[8] = message->sixth_up;
-    _message_choices.intervals[9] = message->octave_up;
-
-    _message_choices.no_yes[0] = message->no;
-    _message_choices.no_yes[1] = message->yes;
-}
+const Message *message = &_message;

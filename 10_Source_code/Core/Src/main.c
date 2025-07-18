@@ -151,8 +151,6 @@ int main(void)
   current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);
 
-  init_message_choices();
-
   if(midi_tempo_data.currently_sending == 1){
 	  mt_start_stop(&htim2, &midi_tempo_data);
   }
