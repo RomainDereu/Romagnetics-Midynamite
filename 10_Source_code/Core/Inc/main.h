@@ -126,14 +126,13 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 13651
+#define DATA_VALIDITY_CHECKSUM 13551
 
 //Menu list
 #define MIDI_TEMPO 0
 #define MIDI_MODIFY 1
 #define MIDI_TRANSPOSE 2
 #define SETTINGS 3
-
 #define AMOUNT_OF_MENUS 4
 
 
@@ -174,6 +173,15 @@ void Error_Handler(void);
 #define FIFTH_UP 7
 #define SIXTH_UP 8
 #define OCTAVE_UP 9
+
+
+//USB
+typedef enum {
+    USB_MIDI_OFF,
+    USB_MIDI_RECEIVE,
+	USB_MIDI_SEND,
+	USB_MIDI_ALL
+} midi_mode_t;
 
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 

@@ -12,7 +12,7 @@
 #define MT_TRANSPOSE_MODE    3
 #define MT_SCALE             4
 #define SETT_START_MENU      5
-#define SEND_USB             6
+#define SEND_TO_USB          6
 #define SETT_BRIGHTNESS      7
 #define ABOUT                8
 #define AMOUNT_OF_SETTINGS   9
@@ -126,9 +126,13 @@ void screen_update_global_settings(){
 	};
 	screen_driver_underline_WriteString(start_menu_options[settings_data.start_menu], Font_6x8, White, 70, LINE_1_VERT, select_states[SETT_START_MENU]);
 
+	// Send to USB
+	screen_driver_SetCursor_WriteString(message->usb_midi, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
+	screen_driver_underline_WriteString(message->choices.usb_receive_send[settings_data.send_to_usb], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
+
 	// Contrast
-	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
+	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
 // About Section
@@ -183,6 +187,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
 			break;
 
+		case SEND_TO_USB:
+			utils_counter_change(timer4, &settings_data.send_to_usb, 0, 3, select_changed, 1, WRAP);
+			break;
+
 		case SETT_BRIGHTNESS:
 			utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
 			if (contrast_index < 10) {
@@ -209,6 +217,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		old_midi_transpose_data.transpose_scale != midi_transpose_data.transpose_scale ||
 		old_midi_transpose_data.send_original != midi_transpose_data.send_original ||
 		old_settings_data.start_menu != settings_data.start_menu ||
+		old_settings_data.send_to_usb != settings_data.send_to_usb ||
 		old_settings_data.brightness != settings_data.brightness){
 		osThreadFlagsSet(display_updateHandle, 0x08);
 	}

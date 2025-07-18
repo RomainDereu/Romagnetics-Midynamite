@@ -11,8 +11,8 @@ static const Message _message = {
     // Menu Titles
     .send_midi_tempo = "Send MIDI Tempo",
     .target = "Target",
-    .settings_modify = "Modify Settings",
-    .settings_transpose = "Transpose Settings",
+    .settings_modify = "Settings Midi Modify",
+    .settings_transpose = "Settings Transpose",
     .global_settings = "Global Settings",
     .about = "About",
     .midi_modify = "MIDI Modify",
@@ -20,7 +20,7 @@ static const Message _message = {
 
     // Channel Modify
     .to_channel = "To Channel",
-    .midi_modify_select = "Modify Select",
+    .midi_modify_select = "Ch. Modify",
     .split = "Split",
     .low_to_ch = "Low to CH",
     .high_to_ch = "High to CH",
@@ -57,21 +57,21 @@ static const Message _message = {
     .locrian = "Locrian",
 
     // Intervals
-    .octave_dn = "Octave Down",
-    .sixth_dn = "Sixth Down",
-    .fifth_dn = "Fifth Down",
-    .fourth_dn = "Fourth Down",
-    .third_dn = "Third Down",
-    .third_up = "Third Up",
-    .fourth_up = "Fourth Up",
-    .fifth_up = "Fifth Up",
-    .sixth_up = "Sixth Up",
-    .octave_up = "Octave Up",
+    .octave_dn = "Oct Dn",
+    .sixth_dn = "6th Dn",
+    .fifth_dn = "5th Dn",
+    .fourth_dn = "4th Dn",
+    .third_dn = "3rd Dn",
+    .third_up = "3rd Up",
+    .fourth_up = "4th Up",
+    .fifth_up = "5th Up",
+    .sixth_up = "6th Up",
+    .octave_up = "Oct Up",
 
     // MIDI Out
     .send_to = "Send To",
-    .midi_channel_1 = "MIDI OUT 1",
-    .midi_channel_2 = "MIDI OUT 2",
+    .midi_channel_1 = "Out",
+    .midi_channel_2 = "Out 2",
     .midi_channel_1_2 = "OUT 1+2",
     .split_1_2 = "Split 1/2",
 
@@ -89,12 +89,12 @@ static const Message _message = {
     },
 
     // About
-    .about_brand = "Midynamite",
-    .about_product = "MIDIFX Unit",
+    .about_brand = "Romagnetics",
+    .about_product = "Midynamite",
     .about_version = "v1.0.0",
 
     // Saving
-    .save_instruction = "Hold to Save",
+    .save_instruction = "Press select to Save",
     .saving = "Saving...",
     .saved = "Saved!",
 
@@ -106,6 +106,9 @@ static const Message _message = {
 
     // MIDI Tempo
     .bpm = "BPM",
+
+    //USB Midi
+	.usb_midi = "USB Midi",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
@@ -129,16 +132,17 @@ static const Message _message = {
 
     // Dropdowns and grouped choices
     .choices = {
-        .change_split = { "No", "Yes" },
-        .change_fixed = { "No", "Yes" },
-        .midi_outs = { "OUT 1", "OUT 2", "OUT 1+2", "Split", "Off" },
+        .change_split = { "Change", "Split" },
+        .change_fixed = { "Change", "Split" },
+        .midi_outs = { "Out 1", "Out 2", "Out 1+2", "Split"},
         .transpose_modes = { "Pitch Shift", "Scale" },
         .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" },
         .intervals = {
-            "Octave Down", "Sixth Down", "Fifth Down", "Fourth Down", "Third Down",
-            "Third Up", "Fourth Up", "Fifth Up", "Sixth Up", "Octave Up"
+            "Oct Dn", "6th Dn", "5th Dn", "4th Dn", "3rd Dn",
+            "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"
         },
-        .no_yes = { "No", "Yes" }
+        .no_yes = { "No", "Yes" },
+        .usb_receive_send = { "No USB", "Receive", "Send", "Both" }
     }
 };
 

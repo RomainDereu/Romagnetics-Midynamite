@@ -107,6 +107,9 @@ typedef struct {
     // MIDI Tempo
     const char *bpm;
 
+    //USB Midi
+    const char *usb_midi;
+
     // Note names
     const char *midi_note_names[128];
     const char *twelve_notes_names[12];
@@ -115,11 +118,12 @@ typedef struct {
     struct {
         const char *change_split[2];
         const char *change_fixed[2];
-        const char *midi_outs[5];
+        const char *midi_outs[4];
         const char *transpose_modes[2];
         const char *scales[7];
         const char *intervals[10];
         const char *no_yes[2];
+        const char *usb_receive_send[4];
     } choices;
 
 } Message;
