@@ -21,6 +21,7 @@ extern UART_HandleTypeDef huart2;
 extern midi_modify_circular_buffer midi_modify_buff;
 
 static uint8_t midi_message[3];
+static uint8_t original_midi_message[3];
 static uint8_t byte_count = 0;
 
 // Logic functions
@@ -236,6 +237,12 @@ void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_d
 void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
                                    midi_modify_data_struct *midi_modify_data,
                                    midi_transpose_data_struct *transpose_data) {
+
+    for (int i = 0; i < length; ++i) {
+    	original_midi_message[i] = midi_msg[i];
+    }
+
+
     if (midi_modify_data->currently_sending == 1) {
         if (length == 3) {
             change_velocity(midi_msg, midi_modify_data);
@@ -319,6 +326,7 @@ void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struc
                 break;
         }
 
+        send_usb_midi_message(original_midi_message, length);
         send_usb_midi_message(midi_message, length);
 
     }

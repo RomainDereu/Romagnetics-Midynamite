@@ -14,6 +14,7 @@
 #include "midi_tempo.h"
 #include "menu.h"
 #include "main.h"
+#include "midi_usb.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
@@ -30,9 +31,9 @@ static uint8_t current_select = 0;
 static uint8_t old_select = 0;
 
 //Midi messages constants
-static const uint8_t clock_tick = 0xF8;
-static const uint8_t clock_start[3] = {0xfa, 0x00, 0x00};
-static const uint8_t clock_stop[3]  = {0xfc, 0x00, 0x00};
+static uint8_t clock_tick = 0xF8;
+static uint8_t clock_start = 0xFA;
+static uint8_t clock_stop  = 0xfC;
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
@@ -90,12 +91,17 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 void send_midi_tempo_out(int32_t current_tempo){
     uint32_t tempo_click_rate = 6000000 / (current_tempo * 24);
 
+    send_usb_midi_message(&clock_tick, 1);
+
     for (int i = 0; i < 2; i++) {
         if (UART_list_tempo[i] != NULL) {
             HAL_UART_Transmit(UART_list_tempo[i], &clock_tick, 1, 1000);
         }
     }
 
+
+
+    //Roro this should be refactored. Calculations have nothing to do in an interupt.
     if (TIM2->ARR != tempo_click_rate) {
         TIM2->ARR = tempo_click_rate;
     }
@@ -108,17 +114,19 @@ void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_
 
         for (int i = 0; i < 2; i++) {
             if (UART_list_tempo[i] != NULL) {
-                HAL_UART_Transmit(UART_list_tempo[i], clock_stop, 3, 1000);
+                HAL_UART_Transmit(UART_list_tempo[i], &clock_stop, 1, 1000);
             }
         }
+        send_usb_midi_message(&clock_stop, 1);
     }
     // Start clock
     else if (midi_tempo_data->currently_sending == 1) {
         for (int i = 0; i < 2; i++) {
             if (UART_list_tempo[i] != NULL) {
-                HAL_UART_Transmit(UART_list_tempo[i], clock_start, 3, 1000);
+                HAL_UART_Transmit(UART_list_tempo[i], &clock_start, 1, 1000);
             }
         }
+        send_usb_midi_message(&clock_start, 1);
 
         HAL_TIM_Base_Start_IT(timer);
         list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);

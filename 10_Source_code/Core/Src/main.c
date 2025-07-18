@@ -81,9 +81,12 @@ settings_data_struct settings_data;
 
 uint8_t current_menu;
 
-
+//midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
+
+//midi_clock tick
+volatile uint8_t midi_clock_tick_flag = 0;
 
 /* USER CODE END PV */
 
@@ -573,6 +576,11 @@ void MidiCore(void *argument)
   //Reading the incoming midi and giving it back
   calculate_incoming_midi(&midi_modify_data, &midi_transpose_data);
 
+  if (midi_clock_tick_flag) {
+      midi_clock_tick_flag = 0;
+  send_midi_tempo_out(midi_tempo_data.current_tempo);
+  }
+
   osDelay(5);
   }
   /* USER CODE END 5 */
@@ -744,8 +752,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-	//Roro make a freertos Queue and get out of the interupt
-	send_midi_tempo_out(midi_tempo_data.current_tempo);
+     midi_clock_tick_flag = 1;
   }
 
 
