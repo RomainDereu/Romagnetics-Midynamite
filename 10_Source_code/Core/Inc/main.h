@@ -136,11 +136,13 @@ void Error_Handler(void);
 #define AMOUNT_OF_MENUS 4
 
 
-//midi_tempo_data
-#define MIDI_OUT_1 1
-#define MIDI_OUT_2 2
-#define MIDI_OUT_1_2 3
-#define MIDI_OUT_SPLIT 4
+
+typedef enum {
+	MIDI_OUT_1,
+	MIDI_OUT_2,
+	MIDI_OUT_1_2,
+	MIDI_OUT_SPLIT
+} midi_outs_t;
 
 //midi_modify_data
 #define MIDI_MODIFY_CHANGE 0

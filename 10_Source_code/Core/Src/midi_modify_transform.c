@@ -253,8 +253,7 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
     uint8_t status_nibble = midi_msg[0] & 0xF0;
 
     if ((transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT || transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED)
-        && transpose_data->currently_sending == 1 &&
-        (status_nibble == 0x90 || status_nibble == 0x80)) {
+        && transpose_data->currently_sending == 1 && (status_nibble == 0x90 || status_nibble == 0x80)) {
 
         if (transpose_data->send_original == 1) {
             // Snap the original note to scale but don't apply interval shift
@@ -275,7 +274,6 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
 
             // Apply full pitch shift (snap + interval) on copy
             midi_pitch_shift(modified_msg, transpose_data);
-
             send_midi_out(modified_msg, length, midi_modify_data, MIDI_NOTE_SHIFTED);
         } else {
             // Only send shifted note (modify original before sending)

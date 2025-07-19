@@ -95,8 +95,8 @@ static const Message _message = {
 
     // Saving
     .save_instruction = "Press select to Save",
-    .saving = "Saving...",
-    .saved = "Saved!",
+    .saving = "Saving...           ",
+    .saved = "Saved!              ",
 
     // Booleans
     .on = "On",
@@ -134,7 +134,7 @@ static const Message _message = {
     .choices = {
         .change_split = { "Change", "Split" },
         .change_fixed = { "Change", "Split" },
-        .midi_outs = { "Out 1", "Out 2", "Out 1+2", "Split"},
+        .midi_outs = {"Out 1", "Out 2", "Out 1+2", "Split"},
         .transpose_modes = { "Pitch Shift", "Scale" },
         .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" },
         .intervals = {
