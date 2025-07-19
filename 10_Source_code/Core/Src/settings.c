@@ -176,7 +176,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 
 		case SEND_TO_USB:
-			utils_counter_change(timer4, &settings_data.send_to_usb, 0, 3, select_changed, 1, WRAP);
+			utils_counter_change(timer4, &settings_data.send_to_usb, USB_MIDI_OFF, USB_MIDI_SEND, select_changed, 1, WRAP);
 			break;
 
 		case SETT_BRIGHTNESS:

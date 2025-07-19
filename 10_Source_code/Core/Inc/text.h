@@ -123,7 +123,7 @@ typedef struct {
         const char *scales[7];
         const char *intervals[10];
         const char *no_yes[2];
-        const char *usb_receive_send[4];
+        const char *usb_receive_send[2];
     } choices;
 
 } Message;

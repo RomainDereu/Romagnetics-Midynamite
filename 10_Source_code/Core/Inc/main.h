@@ -126,7 +126,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 13551
+#define DATA_VALIDITY_CHECKSUM 13571
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 //Menu list
@@ -192,9 +192,7 @@ typedef enum {
 //USB
 typedef enum {
     USB_MIDI_OFF,
-    USB_MIDI_RECEIVE,
 	USB_MIDI_SEND,
-	USB_MIDI_ALL
 } midi_mode_t;
 
 /* USER CODE END Private defines */

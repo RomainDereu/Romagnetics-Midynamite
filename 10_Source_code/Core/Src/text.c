@@ -133,7 +133,7 @@ static const Message _message = {
     // Dropdowns and grouped choices
     .choices = {
         .change_split = { "Change", "Split" },
-        .change_fixed = { "Change", "Split" },
+        .change_fixed = { "Change", "Fixed" },
         .midi_outs = {"Out 1", "Out 2", "Out 1+2", "Split"},
         .transpose_modes = { "Pitch Shift", "Scale" },
         .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" },
@@ -142,7 +142,7 @@ static const Message _message = {
             "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"
         },
         .no_yes = { "No", "Yes" },
-        .usb_receive_send = { "No USB", "Receive", "Send", "Both" }
+        .usb_receive_send = { "No USB", "Send USB"}
     }
 };
 
