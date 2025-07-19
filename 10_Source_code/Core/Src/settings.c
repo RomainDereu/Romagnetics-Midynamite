@@ -11,7 +11,6 @@ typedef enum {
     MM_VELOCITY_SELECT,
     MM_MIDI_SELECT,
     MT_TRANSPOSE_MODE,
-    MT_SCALE,
     SETT_START_MENU,
     SEND_TO_USB,
     SETT_BRIGHTNESS,
@@ -58,7 +57,7 @@ void screen_update_settings(){
 	if(current_select >= MM_CHANNEL_SELECT && current_select <= MM_MIDI_SELECT){
 		screen_update_settings_midi_modify();
 	}
-	else if (current_select >= MT_TRANSPOSE_MODE && current_select <= MT_SCALE){
+	else if (current_select == MT_TRANSPOSE_MODE){
 		screen_update_settings_midi_transpose();
 	}
 	else if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
@@ -102,15 +101,6 @@ void screen_update_settings_midi_transpose(){
 	screen_driver_SetCursor_WriteString(message->type, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 	const char * transpose_type = message->choices.transpose_modes[midi_transpose_data.transpose_type];
 	screen_driver_underline_WriteString(transpose_type, Font_6x8, White, 60, LINE_1_VERT, select_states[MT_TRANSPOSE_MODE]);
-
-	// Scale or N/A
-	screen_driver_SetCursor_WriteString(message->mode, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	if(midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED){
-		const char * scale_choice = message->choices.scales[midi_transpose_data.transpose_scale];
-		screen_driver_underline_WriteString(scale_choice, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
-	} else {
-		screen_driver_underline_WriteString(message->na, Font_6x8, White, 60, LINE_2_VERT, select_states[MT_SCALE]);
-	}
 
 }
 
@@ -178,10 +168,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		// Transpose section
 		case MT_TRANSPOSE_MODE:
 			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed, 1, WRAP);
-			break;
-
-		case MT_SCALE:
-			utils_counter_change(timer4, &midi_transpose_data.transpose_scale, 0, AMOUNT_OF_MODES-1, select_changed, 1, WRAP);
 			break;
 
 		// Global section
