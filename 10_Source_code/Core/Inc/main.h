@@ -127,14 +127,16 @@ void Error_Handler(void);
 #define ENCODER_THRESHOLD  4
 
 #define DATA_VALIDITY_CHECKSUM 13551
+#define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 //Menu list
-#define MIDI_TEMPO 0
-#define MIDI_MODIFY 1
-#define MIDI_TRANSPOSE 2
-#define SETTINGS 3
-#define AMOUNT_OF_MENUS 4
-
+typedef enum {
+    MIDI_TEMPO = 0,
+    MIDI_MODIFY,
+    MIDI_TRANSPOSE,
+    SETTINGS,
+    AMOUNT_OF_MENUS
+} menu_list_t;
 
 
 typedef enum {
@@ -145,36 +147,46 @@ typedef enum {
 } midi_outs_t;
 
 //midi_modify_data
-#define MIDI_MODIFY_CHANGE 0
-#define MIDI_MODIFY_SPLIT 1
+typedef enum {
+    MIDI_MODIFY_CHANGE = 0,
+    MIDI_MODIFY_SPLIT
+} midi_modify_change_split_t;
 
 //velocity_type
-#define MIDI_MODIFY_CHANGED_VEL 0
-#define MIDI_MODIFY_FIXED_VEL 1
+typedef enum {
+    MIDI_MODIFY_CHANGED_VEL = 0,
+    MIDI_MODIFY_FIXED_VEL
+} midi_modify_velocity_t;
 
 //midi_transpose_data
-#define MIDI_TRANSPOSE_SHIFT 0
-#define MIDI_TRANSPOSE_SCALED 1
+typedef enum {
+    MIDI_TRANSPOSE_SHIFT = 0,
+    MIDI_TRANSPOSE_SCALED
+} midi_transpose_types_t;
 
-#define IONIAN 0
-#define DORIAN 1
-#define PHRYGIAN 2
-#define LYDIAN 3
-#define MIXOLYDIAN 4
-#define AEOLIAN 5
-#define LOCRIAN 6
-#define AMOUNT_OF_MODES 7
+typedef enum {
+    IONIAN = 0,
+    DORIAN,
+    PHRYGIAN,
+    LYDIAN,
+    MIXOLYDIAN,
+    AEOLIAN,
+    LOCRIAN,
+    AMOUNT_OF_MODES
+} modes_t;
 
-#define OCTAVE_DOWN 0
-#define SIXTH_DOWN 1
-#define FIFTH_DOWN 2
-#define FOURTH_DOWN 3
-#define THIRD_DOWN 4
-#define THIRD_UP 5
-#define FOURTH_UP 6
-#define FIFTH_UP 7
-#define SIXTH_UP 8
-#define OCTAVE_UP 9
+typedef enum {
+    OCTAVE_DOWN = 0,
+    SIXTH_DOWN,
+    FIFTH_DOWN,
+    FOURTH_DOWN,
+    THIRD_DOWN,
+    THIRD_UP,
+    FOURTH_UP,
+    FIFTH_UP,
+    SIXTH_UP,
+    OCTAVE_UP
+} intervals_t;
 
 
 //USB
@@ -184,8 +196,6 @@ typedef enum {
 	USB_MIDI_SEND,
 	USB_MIDI_ALL
 } midi_mode_t;
-
-#define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 /* USER CODE END Private defines */
 

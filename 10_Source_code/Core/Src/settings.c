@@ -6,16 +6,18 @@
  */
 
 // List of current select
-#define MM_CHANNEL_SELECT    0
-#define MM_VELOCITY_SELECT   1
-#define MM_MIDI_SELECT       2
-#define MT_TRANSPOSE_MODE    3
-#define MT_SCALE             4
-#define SETT_START_MENU      5
-#define SEND_TO_USB          6
-#define SETT_BRIGHTNESS      7
-#define ABOUT                8
-#define AMOUNT_OF_SETTINGS   9
+typedef enum {
+    MM_CHANNEL_SELECT = 0,
+    MM_VELOCITY_SELECT,
+    MM_MIDI_SELECT,
+    MT_TRANSPOSE_MODE,
+    MT_SCALE,
+    SETT_START_MENU,
+    SEND_TO_USB,
+    SETT_BRIGHTNESS,
+    ABOUT,
+    AMOUNT_OF_SETTINGS
+} current_select_list_t;
 
 
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3
@@ -128,7 +130,7 @@ void screen_update_global_settings(){
 
 	// Send to USB
 	screen_driver_SetCursor_WriteString(message->usb_midi, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.usb_receive_send[settings_data.send_to_usb], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_BRIGHTNESS]);
+	screen_driver_underline_WriteString(message->choices.usb_receive_send[settings_data.send_to_usb], Font_6x8, White, 70, LINE_2_VERT, select_states[SEND_TO_USB]);
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
