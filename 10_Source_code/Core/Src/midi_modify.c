@@ -67,7 +67,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 					break;
 				}
 				else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-					utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 1, 16, select_changed, 1, NO_WRAP);
+					utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 0, 127, select_changed, 10, NO_WRAP);
 					break;
 			}
 		}
