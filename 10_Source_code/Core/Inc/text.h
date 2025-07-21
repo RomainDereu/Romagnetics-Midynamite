@@ -15,10 +15,20 @@ typedef struct {
     const char *target;
     const char *settings_modify;
     const char *settings_transpose;
-    const char *global_settings;
+    const char *global_settings_1;
+    const char *global_settings_2;
+
     const char *about;
     const char *midi_modify;
     const char *midi_transpose;
+
+    // Settings
+    const char *MIDI_Thru;
+    const char *USB_Thru;
+    const char *MIDI_Filter;
+
+    const char *X_equals_ignore_channel;
+
 
     // Channel Modify
     const char *to_channel;
@@ -123,6 +133,7 @@ typedef struct {
         const char *scales[7];
         const char *intervals[10];
         const char *no_yes[2];
+        const char *off_on[2];
         const char *usb_receive_send[2];
     } choices;
 

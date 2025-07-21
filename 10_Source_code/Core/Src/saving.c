@@ -141,6 +141,12 @@ save_struct make_default_settings(void){
 	emergency_save.settings_data.send_to_usb = 0;
 	emergency_save.settings_data.brightness = 0xFF;
 
+	emergency_save.settings_data.midi_thru = 0;
+	emergency_save.settings_data.usb_thru = 0;
+	emergency_save.settings_data.channel_filter = 0;
+
+	emergency_save.settings_data.filtered_channels = 0b0000000000000000;
+
 	//Checksum
 	emergency_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
 

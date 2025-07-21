@@ -71,6 +71,12 @@ typedef struct {
 	uint8_t start_menu;
 	uint8_t send_to_usb;
 	uint8_t brightness;
+	uint8_t channel_filter;
+
+	uint8_t midi_thru;
+	uint8_t usb_thru;
+	uint16_t filtered_channels;
+
 }settings_data_struct;
 
 
@@ -126,7 +132,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 13571
+#define DATA_VALIDITY_CHECKSUM 12891
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 //Menu list

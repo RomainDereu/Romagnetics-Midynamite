@@ -13,10 +13,17 @@ static const Message _message = {
     .target = "Target",
     .settings_modify = "Settings Midi Modify",
     .settings_transpose = "Settings Transpose",
-    .global_settings = "Global Settings",
+    .global_settings_1 = "Global Settings 1",
+    .global_settings_2 = "Global Settings 2",
     .about = "About",
     .midi_modify = "MIDI Modify",
     .midi_transpose = "MIDI Transpose",
+
+	.MIDI_Thru = "MIDI Thru",
+	.USB_Thru = "USB Thru",
+	.MIDI_Filter = "MIDI Filter",
+
+	.X_equals_ignore_channel = "X = Ignore Channel",
 
     // Channel Modify
     .to_channel = "To Channel",
@@ -142,6 +149,7 @@ static const Message _message = {
             "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"
         },
         .no_yes = { "No", "Yes" },
+        .off_on = { "Off", "On" },
         .usb_receive_send = { "No USB", "Send USB"}
     }
 };

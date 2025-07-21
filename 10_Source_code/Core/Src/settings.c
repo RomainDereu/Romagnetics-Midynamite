@@ -10,10 +10,21 @@ typedef enum {
     MM_CHANNEL_SELECT = 0,
     MM_VELOCITY_SELECT,
     MM_MIDI_SELECT,
+
     MT_TRANSPOSE_MODE,
-    SETT_START_MENU,
-    SEND_TO_USB,
+
+	SETT_START_MENU,
+    SETT_SEND_TO_USB,
     SETT_BRIGHTNESS,
+
+	SETT_MIDI_THRU,
+    SETT_USB_THRU,
+    CHANNEL_FILTER,
+
+	FT1, FT2, FT3, FT4, FT5, FT6, FT7, FT8,
+	FT9, FT10, FT11, FT12, FT13, FT14, FT15, FT16,
+
+
     ABOUT,
     AMOUNT_OF_SETTINGS
 } current_select_list_t;
@@ -61,7 +72,13 @@ void screen_update_settings(){
 		screen_update_settings_midi_transpose();
 	}
 	else if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
-		screen_update_global_settings();
+		screen_update_global_settings1();
+	}
+	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
+		screen_update_global_settings2();
+	}
+	else if (current_select >= FT1 && current_select <= FT16){
+		screen_update_midi_filter();
 	}
 	else if (current_select == ABOUT){
 		screen_update_settings_about();
@@ -105,8 +122,8 @@ void screen_update_settings_midi_transpose(){
 }
 
 // Settings Section
-void screen_update_global_settings(){
-	menu_display(&Font_6x8, message->global_settings);
+void screen_update_global_settings1(){
+	menu_display(&Font_6x8, message->global_settings_1);
 
 	// Start Menu
 	screen_driver_SetCursor_WriteString(message->start_menu, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
@@ -120,11 +137,52 @@ void screen_update_global_settings(){
 
 	// Send to USB
 	screen_driver_SetCursor_WriteString(message->usb_midi, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.usb_receive_send[settings_data.send_to_usb], Font_6x8, White, 70, LINE_2_VERT, select_states[SEND_TO_USB]);
+	screen_driver_underline_WriteString(message->choices.usb_receive_send[settings_data.send_to_usb], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_SEND_TO_USB]);
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
 	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
+}
+
+
+void screen_update_global_settings2(){
+	menu_display(&Font_6x8, message->global_settings_2);
+
+	// MIDI THRU
+	screen_driver_SetCursor_WriteString(message->MIDI_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+	screen_driver_underline_WriteString(message->choices.off_on[settings_data.midi_thru], Font_6x8, White, 80, LINE_1_VERT, select_states[SETT_MIDI_THRU]);
+
+	// USB THRU
+	screen_driver_SetCursor_WriteString(message->USB_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
+	screen_driver_underline_WriteString(message->choices.off_on[settings_data.usb_thru], Font_6x8, White, 80, LINE_2_VERT, select_states[SETT_USB_THRU]);
+
+	// MIDI
+	screen_driver_SetCursor_WriteString(message->MIDI_Filter, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	screen_driver_underline_WriteString(message->choices.off_on[settings_data.channel_filter], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
+}
+
+void screen_update_midi_filter(){
+	menu_display(&Font_6x8, message->USB_Thru);
+	screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+
+
+	for (uint8_t i = 0; i < 16; i++) {
+	    char label[3];  // Enough for "16" or "X"
+
+	    // Show "X" if bit is cleared, else show channel number
+	    if ((settings_data.filtered_channels & (1U << i)) != 0) {
+	        strcpy(label, "X");  // Bit = 1 → channel is blocked
+	    } else {
+	        snprintf(label, sizeof(label), "%u", i + 1);  // Bit = 0 → channel allowed
+	    }
+
+	    uint8_t x = 5 + 15 * (i % 8);
+	    uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
+
+	    screen_driver_underline_WriteString(label, Font_6x8, White, x, y, select_states[FT1 + i]);
+	}
+
+
 }
 
 // About Section
@@ -175,7 +233,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
 			break;
 
-		case SEND_TO_USB:
+		case SETT_SEND_TO_USB:
 			utils_counter_change(timer4, &settings_data.send_to_usb, USB_MIDI_OFF, USB_MIDI_SEND, select_changed, 1, WRAP);
 			break;
 
@@ -188,7 +246,38 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 				}
 			}
 			break;
+		case SETT_MIDI_THRU:
+			utils_counter_change(timer4, &settings_data.midi_thru, 0, 1, select_changed, 1, WRAP);
+			break;
+		case SETT_USB_THRU:
+			utils_counter_change(timer4, &settings_data.usb_thru, 0, 1, select_changed, 1, WRAP);
+			break;
+		case CHANNEL_FILTER:
+			utils_counter_change(timer4, &settings_data.channel_filter, 0, 1, select_changed, 1, WRAP);
+			break;
+
+		case FT1: case FT2: case FT3: case FT4:
+		case FT5: case FT6: case FT7: case FT8:
+		case FT9: case FT10: case FT11: case FT12:
+		case FT13: case FT14: case FT15: case FT16: {
+		    uint8_t channel_index = current_select - FT1;
+
+		    // Current value of that channel's filter bit (1 = blocked)
+		    uint8_t bit_value = (settings_data.filtered_channels >> channel_index) & 1;
+
+		    // Change the bit value (toggle via encoder)
+		    utils_counter_change(timer4, &bit_value, 0, 1, select_changed, 1, WRAP);
+
+		    if (bit_value)
+		        settings_data.filtered_channels |= (1U << channel_index);  // Set bit → block channel
+		    else
+		        settings_data.filtered_channels &= ~(1U << channel_index); // Clear bit → allow channel
+
+		    break;
+		}
 	}
+
+
 	// Selecting the current item being selected
 	for (uint8_t x=0; x < AMOUNT_OF_SETTINGS; x++){
 		select_states[x] = 0;
@@ -206,6 +295,12 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		old_midi_transpose_data.send_original != midi_transpose_data.send_original ||
 		old_settings_data.start_menu != settings_data.start_menu ||
 		old_settings_data.send_to_usb != settings_data.send_to_usb ||
+
+		old_settings_data.usb_thru != settings_data.usb_thru ||
+		old_settings_data.midi_thru != settings_data.midi_thru ||
+		old_settings_data.filtered_channels != settings_data.filtered_channels ||
+		old_settings_data.channel_filter != settings_data.channel_filter ||
+
 		old_settings_data.brightness != settings_data.brightness){
 		osThreadFlagsSet(display_updateHandle, 0x08);
 	}
