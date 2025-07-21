@@ -54,26 +54,24 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 void midi_buffer_push(uint8_t byte);
 uint8_t midi_buffer_pop(uint8_t *byte);
 
-void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data,
-							midi_transpose_data_struct *midi_transpose_data);
+void calculate_incoming_midi();
 
-void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
-void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
+void change_midi_channel(uint8_t *midi_msg);
+void change_velocity(uint8_t *midi_msg);
 
 
-void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data);
+
 //Transpose functions
 void get_mode_scale(uint8_t mode, uint8_t *scale_out);
 int find_scale_degree(uint8_t note_in_scale, uint8_t *scale);
 int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
+void midi_pitch_shift(uint8_t *midi_msg);
+int midi_transpose_notes(uint8_t note);
 
-int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_data);
+uint8_t is_channel_blocked(uint8_t status_byte);
+void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) ;
 
-void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
-                                   midi_modify_data_struct *midi_modify_data,
-                                   midi_transpose_data_struct *transpose_data) ;
-
-void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data, uint8_t note_type);
+void send_midi_out(uint8_t *midi_message, uint8_t length);
 
 #endif /* INC_MIDI_MODIFY_H_ */
