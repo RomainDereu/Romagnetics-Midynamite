@@ -55,7 +55,7 @@ void calculate_incoming_midi() {
             // Real-Time messages (1 byte only)
             uint8_t rt_msg[1] = {byte};
         	if(settings_data.midi_thru ==1) {
-                send_midi_out(rt_msg, 1, MIDI_NOTE_ORIGINAL);
+                send_midi_out(rt_msg, 1);
         	}
             continue;
         }
@@ -240,15 +240,15 @@ void midi_pitch_shift(uint8_t *midi_msg) {
     }
 }
 
-bool is_channel_filtered(uint8_t status) {
-    if (!settings_data.channel_filter) return false;
+uint8_t is_channel_filtered(uint8_t status) {
+    if (!settings_data.channel_filter) return 0;
 
     uint8_t status_nibble = status & 0xF0;
     if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
         uint8_t channel = status & 0x0F;
         return (settings_data.filtered_channels >> channel) & 0x01;
     }
-    return false;
+    return 0;
 }
 
 
@@ -289,7 +289,7 @@ void handle_transpose_with_original(uint8_t *msg, uint8_t length) {
     }
 
     if (settings_data.midi_thru == 1) {
-        send_midi_out(msg, length, MIDI_NOTE_ORIGINAL);
+        send_midi_out(msg, length);
     }
 
     // Create shifted copy
@@ -298,26 +298,26 @@ void handle_transpose_with_original(uint8_t *msg, uint8_t length) {
     if (is_channel_filtered(modified_msg[0])) return;
 
     midi_pitch_shift(modified_msg);
-    send_midi_out(modified_msg, length, MIDI_NOTE_SHIFTED);
+    send_midi_out(modified_msg, length);
 }
 
 void handle_transpose_only(uint8_t *msg, uint8_t length) {
     if (is_channel_filtered(msg[0])) return;
 
     midi_pitch_shift(msg);
-    send_midi_out(msg, length, MIDI_NOTE_SHIFTED);
+    send_midi_out(msg, length);
 }
 
 void handle_unmodified_thru(uint8_t *msg, uint8_t length) {
     if (settings_data.midi_thru == 1 && !is_channel_filtered(msg[0])) {
-        send_midi_out(msg, length, MIDI_NOTE_ORIGINAL);
+        send_midi_out(msg, length);
     }
 }
 
 
 
 
-void send_midi_out(uint8_t *midi_message, uint8_t length, uint8_t note_type) {
+void send_midi_out(uint8_t *midi_message, uint8_t length) {
     uint8_t status = midi_message[0];
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t note = (length > 1) ? midi_message[1] : 0;

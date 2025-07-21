@@ -58,6 +58,7 @@ void change_velocity(uint8_t *midi_msg);
 
 
 void midi_pitch_shift(uint8_t *midi_msg);
+
 //Transpose functions
 void get_mode_scale(uint8_t mode, uint8_t *scale_out);
 int find_scale_degree(uint8_t note_in_scale, uint8_t *scale);
@@ -66,6 +67,7 @@ uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 
 int midi_transpose_notes(uint8_t note);
 
+uint8_t is_channel_filtered(uint8_t status);
 void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) ;
 
 void handle_transpose_with_original(uint8_t *msg, uint8_t length);
@@ -74,6 +76,6 @@ void handle_unmodified_thru(uint8_t *msg, uint8_t length);
 
 
 
-void send_midi_out(uint8_t *midi_message, uint8_t length, uint8_t note_type);
+void send_midi_out(uint8_t *midi_message, uint8_t length);
 
 #endif /* INC_MIDI_MODIFY_H_ */
