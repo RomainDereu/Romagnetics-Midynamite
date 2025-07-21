@@ -265,6 +265,9 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
         original_midi_message[i] = midi_msg[i];
     }
 
+    uint8_t status_nibble = status & 0xF0;
+
+    // Apply velocity and channel modifications if enabled
     if (midi_modify_data.currently_sending == 1) {
         if (length == 3) {
             change_velocity(midi_msg);
@@ -272,53 +275,52 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
         change_midi_channel(midi_msg);
     }
 
-    uint8_t status_nibble = status & 0xF0;
+    // Send raw original only if midi_thru enabled AND send_original disabled
+    if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 0) {
+        send_midi_out(original_midi_message, length);
+    }
 
     if ((midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SHIFT || midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED)
         && midi_transpose_data.currently_sending == 1 && (status_nibble == 0x90 || status_nibble == 0x80)) {
 
         if (midi_transpose_data.send_original == 1) {
-            // Snap the original note to scale but don't apply interval shift
+            // Send the modified note (velocity and channel changed, but pitch unshifted)
+            uint8_t pre_shift_msg[3];
+            for (int i = 0; i < length; ++i) {
+                pre_shift_msg[i] = midi_msg[i];
+            }
+
             if (midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED) {
                 uint8_t mode = midi_transpose_data.transpose_scale % AMOUNT_OF_MODES;
                 uint8_t scale_intervals[7];
                 get_mode_scale(mode, scale_intervals);
-                midi_msg[1] = snap_note_to_scale(midi_msg[1], scale_intervals, midi_transpose_data.transpose_base_note);
+                pre_shift_msg[1] = snap_note_to_scale(pre_shift_msg[1], scale_intervals, midi_transpose_data.transpose_base_note);
             }
 
-            // Always send modified/transposed messages if processing is enabled
-            if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
-                send_midi_out(midi_msg, length);
-            }
-            // Otherwise, only send if MIDI THRU is enabled
-            else if (settings_data.midi_thru == 1) {
-                send_midi_out(midi_msg, length);
-            }
+            send_midi_out(pre_shift_msg, length);
 
-            // Create a copy for shifted message
-            uint8_t modified_msg[3];
+            // Now send the pitch-shifted note
+            uint8_t shifted_msg[3];
             for (int i = 0; i < length; ++i) {
-                modified_msg[i] = midi_msg[i];
+                shifted_msg[i] = pre_shift_msg[i];
             }
-
-            midi_pitch_shift(modified_msg);
-            send_midi_out(modified_msg, length);
+            midi_pitch_shift(shifted_msg);
+            send_midi_out(shifted_msg, length);
         } else {
+            // Just pitch shift and send
             midi_pitch_shift(midi_msg);
             send_midi_out(midi_msg, length);
         }
     } else {
-        // Always send modified/transposed messages if processing is enabled
+        // No transpose active — just send modified note if enabled
         if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
             send_midi_out(midi_msg, length);
         }
-        // Otherwise, only send if MIDI THRU is enabled
         else if (settings_data.midi_thru == 1) {
             send_midi_out(midi_msg, length);
         }
     }
 }
-
 
 
 void send_midi_out(uint8_t *midi_message, uint8_t length) {
@@ -327,6 +329,7 @@ void send_midi_out(uint8_t *midi_message, uint8_t length) {
 
     uint8_t note = (length > 1) ? midi_message[1] : 0;
 
+    // Send MIDI via UART depending on settings
     switch (midi_modify_data.send_to_midi_out) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_message, length, 1000);
@@ -354,13 +357,23 @@ void send_midi_out(uint8_t *midi_message, uint8_t length) {
             break;
     }
 
-    uint8_t original_status = original_midi_message[0];
+    // USB MIDI Thru logic - avoid duplicates
     if (settings_data.usb_thru == 1) {
-        if (!is_channel_blocked(original_status)) {
-            send_usb_midi_message(original_midi_message, length);
-        }
-        if (!is_channel_blocked(midi_message[0])) {
-            send_usb_midi_message(midi_message, length);
+        uint8_t original_status = original_midi_message[0];
+        // If midi_thru and send_original both active, send only modified (midi_message)
+        if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 1) {
+            if (!is_channel_blocked(midi_message[0])) {
+                send_usb_midi_message(midi_message, length);
+            }
+        } else {
+            // Otherwise, send original and modified as before
+            if (!is_channel_blocked(original_status)) {
+                send_usb_midi_message(original_midi_message, length);
+            }
+            if (!is_channel_blocked(midi_message[0])) {
+                send_usb_midi_message(midi_message, length);
+            }
         }
     }
 }
+
