@@ -14,6 +14,9 @@
 #define MIDI_NOTE_ORIGINAL 0
 #define MIDI_NOTE_SHIFTED  1
 
+extern uint8_t select_states_midi_modify[4];
+extern uint8_t select_states_midi_transpose[3];
+
 //midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
@@ -51,31 +54,26 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 void midi_buffer_push(uint8_t byte);
 uint8_t midi_buffer_pop(uint8_t *byte);
 
-void calculate_incoming_midi();
+void calculate_incoming_midi(midi_modify_data_struct * midi_modify_data,
+							midi_transpose_data_struct *midi_transpose_data);
 
-void change_midi_channel(uint8_t *midi_msg);
-void change_velocity(uint8_t *midi_msg);
+void change_midi_channel(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
+void change_velocity(uint8_t *midi_msg, midi_modify_data_struct * midi_modify_data);
 
 
-void midi_pitch_shift(uint8_t *midi_msg);
-
+void midi_pitch_shift(uint8_t *midi_msg, midi_transpose_data_struct *transpose_data);
 //Transpose functions
 void get_mode_scale(uint8_t mode, uint8_t *scale_out);
 int find_scale_degree(uint8_t note_in_scale, uint8_t *scale);
 int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 
-int midi_transpose_notes(uint8_t note);
+int midi_transpose_notes(uint8_t note, midi_transpose_data_struct *transpose_data);
 
-uint8_t is_channel_filtered(uint8_t status);
-void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) ;
+void process_complete_midi_message(uint8_t *midi_msg, uint8_t length,
+                                   midi_modify_data_struct *midi_modify_data,
+                                   midi_transpose_data_struct *transpose_data) ;
 
-void handle_transpose_with_original(uint8_t *msg, uint8_t length);
-void handle_transpose_only(uint8_t *msg, uint8_t length);
-void handle_unmodified_thru(uint8_t *msg, uint8_t length);
-
-
-
-void send_midi_out(uint8_t *midi_message, uint8_t length);
+void send_midi_out(uint8_t *midi_message, uint8_t length, midi_modify_data_struct *midi_modify_data, uint8_t note_type);
 
 #endif /* INC_MIDI_MODIFY_H_ */
