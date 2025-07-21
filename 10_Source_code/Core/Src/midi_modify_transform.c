@@ -286,7 +286,12 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
                 midi_msg[1] = snap_note_to_scale(midi_msg[1], scale_intervals, midi_transpose_data.transpose_base_note);
             }
 
-            if (settings_data.midi_thru == 1) {
+            // Always send modified/transposed messages if processing is enabled
+            if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
+                send_midi_out(midi_msg, length);
+            }
+            // Otherwise, only send if MIDI THRU is enabled
+            else if (settings_data.midi_thru == 1) {
                 send_midi_out(midi_msg, length);
             }
 
@@ -303,7 +308,12 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
             send_midi_out(midi_msg, length);
         }
     } else {
-        if (settings_data.midi_thru == 1) {
+        // Always send modified/transposed messages if processing is enabled
+        if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
+            send_midi_out(midi_msg, length);
+        }
+        // Otherwise, only send if MIDI THRU is enabled
+        else if (settings_data.midi_thru == 1) {
             send_midi_out(midi_msg, length);
         }
     }
