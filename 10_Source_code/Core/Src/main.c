@@ -151,16 +151,6 @@ int main(void)
   //Romagnetics code
   screen_driver_Init();
 
-  //DFU Part
-  if (check_dfu_buttons()) {
-	  update_screen_message();
-      while (1) {
-
-
-      }
-  }
-
-
   load_settings();
   current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);

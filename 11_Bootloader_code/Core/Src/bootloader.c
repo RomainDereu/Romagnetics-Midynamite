@@ -19,7 +19,8 @@
 #define FAT16_ROOT_DIR_OFFSET 0x2000
 #define FAT16_DIR_ENTRY_SIZE  32
 #define FAT16_ROOT_DIR_SIZE   (512 * 16)
-#define MAX_FIRMWARE_SIZE   (448 * 1024)
+#define MAX_FIRMWARE_SIZE   (320 * 1024)
+
 
 extern uint8_t MSC_RamDisk[];
 
@@ -111,12 +112,13 @@ void flash_erase_application_area(void)
     uint32_t sectorError = 0;
     eraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
     eraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    eraseInitStruct.Sector = FLASH_SECTOR_4;    // start at sector 4 (64K in)
-    eraseInitStruct.NbSectors = 4;              // 4 sectors: 4,5,6,7 (up to 512K)
+    eraseInitStruct.Sector = FLASH_SECTOR_4;    // Start at sector 4 (0x08010000)
+    eraseInitStruct.NbSectors = 3;              // Sectors 4, 5, 6 only!
 
     if (HAL_FLASHEx_Erase(&eraseInitStruct, &sectorError) != HAL_OK) {
-        // Handle error (optional: blink LED, reset, etc.)
+        // Optional: handle error
     }
 
     HAL_FLASH_Lock();
 }
+
