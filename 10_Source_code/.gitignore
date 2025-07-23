@@ -1,6 +1,10 @@
-# Eclipse
-.metadata
-.settings
-[Rr]elease
-[Dd]ebug
-.launch
+# Eclipse metadata and settings
+.metadata/
+.settings/
+*.launch
+
+# Build output (any folder named Debug or Release, case-insensitive)
+[Dd]ebug/
+[Rr]elease/
+**/[Dd]ebug/
+**/[Rr]elease/
