@@ -119,6 +119,10 @@ static const Message _message = {
     //USB Midi
 	.usb_midi = "USB Midi",
 
+
+    //USB Midi
+	.upgrade_mode = "Upgrade Mode",
+
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
         "C-1", "C#-1", "D-1", "D#-1", "E-1", "F-1", "F#-1", "G-1", "G#-1", "A-1", "A#-1", "B-1",

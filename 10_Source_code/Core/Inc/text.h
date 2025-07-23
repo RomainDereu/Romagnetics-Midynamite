@@ -120,6 +120,10 @@ typedef struct {
     //USB Midi
     const char *usb_midi;
 
+
+    //Upgrade mode
+    const char *upgrade_mode;
+
     // Note names
     const char *midi_note_names[128];
     const char *twelve_notes_names[12];

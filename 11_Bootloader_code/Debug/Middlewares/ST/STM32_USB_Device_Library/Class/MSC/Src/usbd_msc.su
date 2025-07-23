@@ -1,0 +1,10 @@
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:214:9:USBD_MSC_Init	24	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:270:9:USBD_MSC_DeInit	16	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:308:9:USBD_MSC_Setup	32	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:441:9:USBD_MSC_DataIn	16	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:455:9:USBD_MSC_DataOut	16	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:468:10:USBD_MSC_GetHSCfgDesc	24	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:493:10:USBD_MSC_GetFSCfgDesc	24	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:518:10:USBD_MSC_GetOtherSpeedCfgDesc	24	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:542:10:USBD_MSC_GetDeviceQualifierDescriptor	16	static
+../Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c:554:9:USBD_MSC_RegisterStorage	16	static

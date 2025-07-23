@@ -66,4 +66,14 @@ void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t f
 void panic_midi_all_notes_off(UART_HandleTypeDef *huart);
 void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2);
 
+
+
+// Firmwire update functions
+int check_dfu_buttons(void);
+
+void update_screen_message(void);
+
+
+
+
 #endif /* SRC_UTILS_H_ */
