@@ -68,12 +68,5 @@ void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDe
 
 
 
-// Firmwire update functions
-int check_dfu_buttons(void);
-
-void update_screen_message(void);
-
-
-
 
 #endif /* SRC_UTILS_H_ */

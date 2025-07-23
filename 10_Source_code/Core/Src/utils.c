@@ -159,23 +159,3 @@ void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDe
     panic_midi_all_notes_off(huart2);
 }
 
-
-
-
-//Firmwire update functions
-
-
-int check_dfu_buttons(void) {
-    return (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == 0) &&
-           (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_15) == 0);
-}
-
-
-void update_screen_message(void){
- 	  screen_driver_Fill(Black);
-      screen_driver_SetCursor_WriteString(message->upgrade_mode, Font_7x10 , White, TEXT_LEFT_START, 15);
-      screen_driver_UpdateScreen();
-
-
-
-}
