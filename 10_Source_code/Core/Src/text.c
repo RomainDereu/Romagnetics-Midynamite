@@ -5,6 +5,8 @@
  *      Author: Romain Dereu
  */
 
+#include <string.h>
+
 #include "text.h"
 
 static const Message _message = {

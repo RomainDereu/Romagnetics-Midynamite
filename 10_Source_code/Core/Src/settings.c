@@ -5,6 +5,8 @@
  *      Author: Romain Dereu
  */
 
+
+
 // List of current select
 typedef enum {
     MM_CHANNEL_SELECT = 0,
@@ -31,6 +33,8 @@ typedef enum {
 
 
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3
+
+#include <string.h>
 
 #include "cmsis_os.h"
 #include "screen_driver.h"
