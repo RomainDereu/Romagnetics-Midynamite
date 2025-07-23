@@ -100,6 +100,7 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+
   //__disable_irq();
   screen_driver_Init();
 
@@ -110,7 +111,9 @@ int main(void)
 
 
   Bootloader_JumpToApplication();
+  // Check if both buttons are pressed for bootloader mode
 
+       // Jump directly to main application
 
   /* USER CODE END 2 */
 

@@ -44,6 +44,7 @@ void Bootloader_JumpToApplication(void)
 
 
     // 2. Set the Main Stack Pointer (MSP) to the application's stack pointer
+    SCB->VTOR = 0x08010000;
     __set_MSP(stack_pointer);
 
 
