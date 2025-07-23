@@ -67,8 +67,6 @@ void Error_Handler(void);
 #define Btn2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define APP_ADDRESS 0x08008000
-
 
 /* USER CODE END Private defines */
 
