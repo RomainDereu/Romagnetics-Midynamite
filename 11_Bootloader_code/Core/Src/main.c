@@ -19,10 +19,15 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
-#include "bootloader.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+
+#include "bootloader.h"
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
+
 
 /* USER CODE END Includes */
 
@@ -59,6 +64,7 @@ static void MX_I2C1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
 /* USER CODE END 0 */
 
 /**
@@ -69,7 +75,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -78,6 +83,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+
 
   /* USER CODE END Init */
 
@@ -90,8 +96,20 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USB_DEVICE_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
+  //__disable_irq();
+  screen_driver_Init();
+
+  screen_driver_Fill(Black);
+  screen_driver_SetCursor_WriteString("OK", Font_6x8, White, 10, 20);
+  screen_driver_UpdateScreen();
+
+
+
+  Bootloader_JumpToApplication();
 
 
   /* USER CODE END 2 */
@@ -103,6 +121,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }

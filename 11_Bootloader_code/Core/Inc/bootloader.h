@@ -8,18 +8,24 @@
 #ifndef INC_BOOTLOADER_C_
 #define INC_BOOTLOADER_C_
 
-uint8_t check_bootloader_button(void);
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
 
-void jump_to_application(void);
 
-void poll_mass_storage_for_firmware_update(void);
 
-uint8_t find_firmware_file_in_ramdisk(uint32_t *fw_offset,
-										uint32_t *fw_size);
+typedef void (*pFunction)(void);
 
-void flash_write_application_area(uint8_t *data, uint32_t size);
+// Function to jump to the main application
+void Bootloader_JumpToApplication(void);
 
-void flash_erase_application_area(void);
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+		 screen_driver_COLOR color,
+		 uint8_t x_align,
+		 uint8_t y_align);
 
 
 #endif /* SRC_BOOTLOADER_H_ */
+// Initialize GPIO for button input
+
+
+

@@ -151,6 +151,7 @@ int main(void)
   //Romagnetics code
   screen_driver_Init();
 
+
   load_settings();
   current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);

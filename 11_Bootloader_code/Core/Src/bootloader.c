@@ -6,119 +6,77 @@
  */
 
 
-
+#include <stdio.h>
 #include <string.h>
+
 #include "main.h"
 #include "bootloader.h"
 #include "stm32f4xx_hal.h"
 
+#include "screen_driver.h"
+#include "screen_driver_fonts.h"
 
-#define FIRMWARE_FILENAME   "FIRMWAREBIN"
-#define FIRMWARE_EXT        ""
-
-#define FAT16_ROOT_DIR_OFFSET 0x2000
-#define FAT16_DIR_ENTRY_SIZE  32
-#define FAT16_ROOT_DIR_SIZE   (512 * 16)
-#define MAX_FIRMWARE_SIZE   (320 * 1024)
-
-
-extern uint8_t MSC_RamDisk[];
+#define MAIN_APP_ADDRESS 0x08010000
 
 
 
-uint8_t check_bootloader_button(void) {
-    return (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12) == GPIO_PIN_RESET) &&
-           (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == GPIO_PIN_RESET);
-}
+// Define the main application entry point
+typedef void (*pFunction)(void);
 
-void jump_to_application(void) {
-    // The main application start address (e.g., 0x08010000 if you reserved 64K for bootloader)
-    uint32_t appAddress = 0x08010000;
-    uint32_t appStack = *(volatile uint32_t*)appAddress;
-    uint32_t appEntry = *(volatile uint32_t*)(appAddress + 4);
-
-    if (appStack == 0xFFFFFFFF || appEntry == 0xFFFFFFFF) return; // No app
-
-    __disable_irq();
-    SCB->VTOR = appAddress;
-    __set_MSP(appStack);
-    ((void (*)(void))appEntry)();
-}
-
-void poll_mass_storage_for_firmware_update(void)
+// Function to jump to the main application
+void Bootloader_JumpToApplication(void)
 {
-    static uint8_t already_flashed = 0;
+    // 1. Check if the main application exists at the specified address
+    uint32_t app_start_address = MAIN_APP_ADDRESS;
 
-    if (already_flashed) return;
-
-    // 1. Search MSC_RamDisk for "FIRMWARE.BIN"
-    uint32_t fw_offset, fw_size;
-    if (find_firmware_file_in_ramdisk(&fw_offset, &fw_size)) {
-        // 2. (Optionally) verify file checksum or signature
-
-        // 3. Flash erase & write
-        if (fw_size < MAX_FIRMWARE_SIZE) {
-            flash_erase_application_area();
-            flash_write_application_area(&MSC_RamDisk[fw_offset], fw_size);
-            already_flashed = 1;
-            // (Optionally: blink LED or set some flag for success)
-            HAL_Delay(200);
-            NVIC_SystemReset(); // or jump_to_application()
-        }
-    }
-}
+    // Get the stack pointer value from the main application's start address
+    uint32_t stack_pointer = *(volatile uint32_t*) app_start_address;
 
 
-uint8_t find_firmware_file_in_ramdisk(uint32_t *fw_offset, uint32_t *fw_size)
-{
-    uint32_t dir_start = FAT16_ROOT_DIR_OFFSET;
-    uint32_t dir_end   = FAT16_ROOT_DIR_OFFSET + FAT16_ROOT_DIR_SIZE;
-
-    for (uint32_t i = dir_start; i < dir_end; i += FAT16_DIR_ENTRY_SIZE) {
-        uint8_t *entry = &MSC_RamDisk[i];
-        if (entry[0] == 0x00 || entry[0] == 0xE5) continue; // Unused/deleted
-        if (memcmp(entry, FIRMWARE_FILENAME, (size_t)11) == 0) {    // FAT16: 8 chars + 3 ext, upper-case, no dot
-            uint16_t first_cluster = *(uint16_t *)(entry + 26);
-            uint32_t file_size = *(uint32_t *)(entry + 28);
-            // FAT16 data region offset: (adjust as needed for your FS)
-            *fw_offset = 0x4000 + (first_cluster - 2) * 512;
-            *fw_size = file_size;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-void flash_write_application_area(uint8_t *data, uint32_t size)
-{
-    HAL_FLASH_Unlock();
-
-    uint32_t dest = 0x08010000;
-    for (uint32_t i = 0; i < size; i += 4) {
-        uint32_t word = 0xFFFFFFFF;
-        memcpy(&word, data + i, (size - i >= 4) ? 4 : (size - i));
-        HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, dest + i, word);
+    // Check if the stack pointer is valid (not 0xFFFFFFFF, which indicates invalid memory)
+    if (stack_pointer == 0xFFFFFFFF)
+    {
+        // Invalid application, stay in the bootloader
+        while (1);  // Enter infinite loop for error handling
     }
 
-    HAL_FLASH_Lock();
-}
+    stack_pointer &= ~0x03;
 
-void flash_erase_application_area(void)
-{
-    HAL_FLASH_Unlock();
 
-    FLASH_EraseInitTypeDef eraseInitStruct = {0};
-    uint32_t sectorError = 0;
-    eraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-    eraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    eraseInitStruct.Sector = FLASH_SECTOR_4;    // Start at sector 4 (0x08010000)
-    eraseInitStruct.NbSectors = 3;              // Sectors 4, 5, 6 only!
+    // 2. Set the Main Stack Pointer (MSP) to the application's stack pointer
+    __set_MSP(stack_pointer);
 
-    if (HAL_FLASHEx_Erase(&eraseInitStruct, &sectorError) != HAL_OK) {
-        // Optional: handle error
+
+
+
+
+    // 3. Get the Reset Handler address (entry point of the main application)
+    uint32_t reset_handler_address = *(volatile uint32_t*) (app_start_address + 4);
+
+    // Check if the reset handler is valid (not 0xFFFFFFFF)
+    if (reset_handler_address == 0xFFFFFFFF)
+    {
+        // Invalid reset handler, stay in the bootloader
+        while (1);  // Enter infinite loop for error handling
+
     }
 
-    HAL_FLASH_Lock();
+    // 4. Define a pointer to the Reset Handler function
+    pFunction reset_handler = (pFunction) reset_handler_address;
+    // 5. Jump to the main application
+
+
+
+    reset_handler();  // Jump to the main application
+
 }
 
+
+
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+										 screen_driver_COLOR color,
+										 uint8_t x_align,
+										 uint8_t y_align){
+	screen_driver_SetCursor(x_align, y_align);
+	screen_driver_WriteString(str, font , color);
+}

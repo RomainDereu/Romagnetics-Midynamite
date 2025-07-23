@@ -14,7 +14,7 @@
 **
 **                Set memory bank area and size if external memory is used
 **
-**  Target      : STMicroelectronics STM32
+**  Target      : STMicroelectronics STM32  
 **
 **  Distribution: The file is distributed as is, without any warranty
 **                of any kind.
