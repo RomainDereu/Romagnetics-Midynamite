@@ -276,7 +276,7 @@ void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
     }
 
     // Send raw original only if midi_thru enabled AND send_original disabled
-    if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 0) {
+    if (settings_data.midi_thru == 1) {
         send_midi_out(original_midi_message, length);
     }
 
