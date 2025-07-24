@@ -22,6 +22,7 @@
 #include "usbd_storage_if.h"
 
 /* USER CODE BEGIN INCLUDE */
+#include "bootloader.h"
 
 /* USER CODE END INCLUDE */
 
@@ -267,10 +268,41 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
-  UNUSED(lun);
-  UNUSED(buf);
-  UNUSED(blk_addr);
-  UNUSED(blk_len);
+	  UNUSED(lun);
+
+	  static uint32_t current_flash_address = APP_START_ADDRESS;
+	  static uint8_t is_updating = 0;
+
+	  if (blk_addr == 0) {
+	    // First block written — assume new firmware is incoming
+	    Bootloader_StartFirmwareUpdate();
+	    current_flash_address = APP_START_ADDRESS;
+	    is_updating = 1;
+	  }
+
+	  if (is_updating) {
+	    // Write directly to flash
+	    if (!Bootloader_WriteFirmwareChunk(current_flash_address, buf, blk_len * STORAGE_BLK_SIZ)) {
+	        // Writing failed
+	        return USBD_FAIL;
+	    }
+
+	    current_flash_address += blk_len * STORAGE_BLK_SIZ;
+
+	    // If last block is shorter than full size, assume transfer is complete
+	    if (blk_len * STORAGE_BLK_SIZ < STORAGE_BLK_SIZ) {
+	        Bootloader_EndFirmwareUpdate();
+	        is_updating = 0;
+
+	        // Optional: display message
+	        screen_driver_Fill(Black);
+	        screen_driver_SetCursor_WriteString("Update complete", Font_6x8, White, 0, 50);
+	        screen_driver_UpdateScreen();
+	    }
+
+	  }
+
+	  return (USBD_OK);
 
   return (USBD_OK);
   /* USER CODE END 7 */

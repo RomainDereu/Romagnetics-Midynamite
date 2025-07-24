@@ -102,15 +102,34 @@ int main(void)
 
 
   //__disable_irq();
-  screen_driver_Init();
-
-  screen_driver_Fill(Black);
-  screen_driver_SetCursor_WriteString("OK", Font_6x8, White, 10, 20);
-  screen_driver_UpdateScreen();
 
 
 
-  Bootloader_JumpToApplication();
+
+  // Check if both buttons are pressed: Btn3 = PB12, Btn4 = PB13
+  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == GPIO_PIN_RESET &&
+      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == GPIO_PIN_RESET)
+  {
+	  screen_driver_Init();
+	  screen_driver_Fill(Black);
+	  screen_driver_SetCursor_WriteString("Bootloader", Font_6x8, White, 10, 0);
+	  screen_driver_UpdateScreen();
+
+      // Enter bootloader MSC mode
+      screen_driver_SetCursor_WriteString("MSC Mode", Font_6x8, White, 10, 10);
+      screen_driver_UpdateScreen();
+
+      MX_USB_DEVICE_Init();
+
+      while (1)
+      {
+          // Stay in USB MSC mode
+      }
+  }
+  else
+  {
+      Bootloader_JumpToApplication();
+  }
   // Check if both buttons are pressed for bootloader mode
 
        // Jump directly to main application
