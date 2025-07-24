@@ -49,6 +49,7 @@ extern volatile uint32_t g_bytes_written;
 uint8_t Bootloader_CheckFirmwareSize(uint32_t file_size_bytes);
 void Bootloader_StartFirmwareUpdate(void);
 
+
 void Bootloader_FormatFlashFAT16(void);
 
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length);

@@ -72,6 +72,7 @@ void Bootloader_StartFirmwareUpdate(void)
 }
 
 
+
 void Bootloader_FormatFlashFAT16(void)
 {
     const uint16_t BYTES_PER_SECTOR     = 512;

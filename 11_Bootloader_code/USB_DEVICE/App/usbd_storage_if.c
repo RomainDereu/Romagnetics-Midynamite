@@ -131,10 +131,13 @@ const int8_t STORAGE_Inquirydata_FS[] = {/* 36 */
   0x00,
   0x00,
   0x00,
-  'S', 'T', 'M', ' ', ' ', ' ', ' ', ' ', /* Manufacturer : 8 bytes */
-  'P', 'r', 'o', 'd', 'u', 'c', 't', ' ', /* Product      : 16 Bytes */
-  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-  '0', '.', '0' ,'1'                      /* Version      : 4 Bytes */
+  // Manufacturer: 8 bytes
+  'R','o','m','a','g','n','e','t',
+  // Product: 16 bytes
+  'i','c','s',' ','M','i','d','y',
+  'n','a','m','i','t','e',' ',' ',
+  // Version: 4 bytes
+  '0','.','0','1'                   /* Version      : 4 Bytes */
 };
 /* USER CODE END INQUIRY_DATA_FS */
 
@@ -243,6 +246,15 @@ int8_t STORAGE_Init_FS(uint8_t lun)
 	         &MSC_RamDisk[ FAT_BYTES_PER_SECTOR ],
 	         FAT_SECTORS_PER_FAT * FAT_BYTES_PER_SECTOR);
 
+      uint8_t *root = MSC_RamDisk
+        + (FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT)
+          * FAT_BYTES_PER_SECTOR;
+      // Fill name (11 chars, space‑padded)
+      memset(root, ' ', 11);
+      memcpy(root, "MIDYNAMITE", 10);  // up to 11 chars (no dot)
+      // Set attribute byte = Volume Label (0x08)
+      root[11] = 0x08;
+      // rest of that 32‑byte entry can remain zero
 
 	  return USBD_OK;
   /* USER CODE END 2 */
@@ -332,35 +344,30 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
   /* USER CODE BEGIN 7 */
     UNUSED(lun);
 
-
-    // 1) Mirror FAT+root‑dir so host sees a valid FAT16 FS:
+    // 1) Mirror FAT+root so host sees the file
     if (blk_addr < FAT_FIRST_DATA_SECTOR) {
         memcpy(&MSC_RamDisk[blk_addr * FAT_BYTES_PER_SECTOR],
                buf,
                blk_len * FAT_BYTES_PER_SECTOR);
 
-        // If this is a root‑dir sector, scan for our 8.3 entry:
+        // if in root‐dir region, detect the FIRMWARE entry
         uint32_t rootStart = FAT_RESERVED_SECTORS
                            + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
         if (blk_addr >= rootStart) {
             for (int off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 32) {
                 if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
-                    // found "FIRMWAREBIN"
-                    uint16_t firstCluster =
-                        buf[off + 26]
-                      | (buf[off + 27] << 8);
-                    // host will start writing data at cluster #2 => LBA = FAT_FIRST_DATA_SECTOR,
-                    // so cluster N lands at FAT_FIRST_DATA_SECTOR + (N‑2)
+                    // read first cluster (bytes 26–27) little endian
+                    uint16_t firstClust = buf[off+26] | (buf[off+27] << 8);
+                    // convert to LBA: cluster #2 → FAT_FIRST_DATA_SECTOR
                     g_file_data_start_sector = FAT_FIRST_DATA_SECTOR
-                                             + (firstCluster - 2);
-                    // pull expected file size (bytes 28..31)
+                                             + (firstClust - 2) * FAT_SECTORS_PER_CLUSTER;
+                    // read file size (bytes 28–31)
                     g_expected_length =
-                          buf[off + 28]
-                        | (buf[off + 29] << 8)
-                        | (buf[off + 30] << 16)
-                        | (buf[off + 31] << 24);
+                        buf[off+28]       |
+                       (buf[off+29] << 8) |
+                       (buf[off+30] << 16)|
+                       (buf[off+31] << 24);
                     g_file_detected = 1;
-                    g_erase_requested = 1;  // notify main loop to do the big sector erase
                     break;
                 }
             }
@@ -368,41 +375,42 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
         return USBD_OK;
     }
 
-    // 2) If the host hasn't created our .BIN entry yet, ignore data‐cluster writes
+    // 2) if we haven’t seen the file entry yet, drop into the filesystem only
     if (!g_file_detected) {
         return USBD_OK;
     }
 
-    // 3) First data‐cluster write: kick off the erase in main context
+    // 3) on the first real data‐cluster write, kick off the flash erase
     if (!g_data_cluster_seen) {
         g_data_cluster_seen = 1;
-        g_bytes_written    = 0;
+        g_bytes_written     = 0;
         Bootloader_StartFirmwareUpdate();
     }
 
-    // 4) Compute file‐relative offset
+    // 4) map this LBA into the proper flash offset
     uint32_t data_idx   = blk_addr - g_file_data_start_sector;
     uint32_t flash_addr = APP_START_ADDRESS
                         + data_idx * FAT_BYTES_PER_SECTOR;
 
-    // 5) Program each 4‑byte word
-    for (uint32_t off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 4) {
+    // 5) program each 4‑byte word
+    for (uint32_t offset = 0;
+         offset < blk_len * FAT_BYTES_PER_SECTOR;
+         offset += 4)
+    {
         uint32_t word = 0xFFFFFFFF;
-        memcpy(&word, buf + off, 4);
+        memcpy(&word, buf + offset, 4);
         __disable_irq();
-        HAL_StatusTypeDef st = HAL_FLASH_Program(
-            FLASH_TYPEPROGRAM_WORD,
-            flash_addr + off,
-            word
-        );
-        __enable_irq();
-        if (st != HAL_OK) {
-            // flash error
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
+                              flash_addr + offset,
+                              word) != HAL_OK)
+        {
+            __enable_irq();
             return USBD_FAIL;
         }
+        __enable_irq();
     }
 
-    // 6) Track progress & finish
+    // 6) track progress & finish when complete
     g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
     if (g_bytes_written >= g_expected_length) {
         Bootloader_EndFirmwareUpdate();

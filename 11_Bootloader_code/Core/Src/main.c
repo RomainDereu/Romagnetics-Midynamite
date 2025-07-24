@@ -103,12 +103,12 @@ int main(void)
 
 
   // Check if both buttons are pressed: Btn3 = PB12, Btn4 = PB13
-  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
-      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1)
+  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
+      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
   {
 	  HAL_Delay(50);
-	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
-	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1){
+	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
+	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
 
 		  MX_USB_DEVICE_Init();
 
