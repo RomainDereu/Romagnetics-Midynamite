@@ -15,11 +15,15 @@
 
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
+#include "usb_device.h"
 
 
+extern USBD_HandleTypeDef hUsbDeviceFS;
 
 
 static uint32_t current_flash_write_addr = APP_START_ADDRESS;
+
+
 
 
 uint8_t Bootloader_CheckFirmwareSize(uint32_t file_size_bytes)
@@ -121,58 +125,42 @@ void Bootloader_EndFirmwareUpdate(void)
 typedef void (*pFunction)(void);
 
 // Function to jump to the main application
-void  Bootloader_JumpToApplication(void)
+void Bootloader_JumpToApplication(void)
 {
-    // 1. Check if the main application exists at the specified address
-    uint32_t app_start_address = APP_START_ADDRESS;
+    const uint32_t app_addr = APP_START_ADDRESS;
+    uint32_t sp   = *(volatile uint32_t*)app_addr;
+    uint32_t rst  = *(volatile uint32_t*)(app_addr + 4);
 
-    // Get the stack pointer value from the main application's start address
-    uint32_t stack_pointer = *(volatile uint32_t*) app_start_address;
-
-
-    // Check if the stack pointer is valid (not 0xFFFFFFFF, which indicates invalid memory)
-    if (stack_pointer == 0xFFFFFFFF)
-    {
-        // Invalid application, stay in the bootloader
-        while (1);  // Enter infinite loop for error handling
+    // 1) Validate vectors
+    if ((sp == 0xFFFFFFFF) || (rst == 0xFFFFFFFF)) {
+        while (1);  // no valid app, stay here
     }
 
-    stack_pointer &= ~0x03;
+    // 2) Clean up HAL + USB
+    HAL_DeInit();
+    USBD_DeInit(&hUsbDeviceFS);
 
-    // 2. Set the Main Stack Pointer (MSP) to the application's stack pointer
-    SCB->VTOR = 0x08010000;
-    __set_MSP(stack_pointer);
+    // 3) Shut down SysTick
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL  = 0;
 
+    // 4) Disable interrupts
+    __disable_irq();
 
+    // 5) Remap vector table to application
+    SCB->VTOR = app_addr;
 
+    // 6) Set MSP to application’s initial SP
+    __set_MSP(sp & ~0x03);
 
+    // 7) Jump to application Reset Handler
+    pFunction app_entry = (pFunction)rst;
+    app_entry();
 
-    // 3. Get the Reset Handler address (entry point of the main application)
-    uint32_t reset_handler_address = *(volatile uint32_t*) (app_start_address + 4);
-
-
-
-    // Check if the reset handler is valid (not 0xFFFFFFFF)
-    if (reset_handler_address == 0xFFFFFFFF)
-    {
-        // Invalid reset handler, stay in the bootloader
-        while (1);  // Enter infinite loop for error handling
-
-    }
-
-    // 4. Define a pointer to the Reset Handler function
-    pFunction reset_handler = (pFunction) reset_handler_address;
-    // 5. Jump to the main application
-
-
-
-    reset_handler();  // Jump to the main application
-
-
-
-
+    // should never return, but just in case:
+    while (1);
 }
-
 
 
 void Bootloader_FormatFlashFAT16(void)

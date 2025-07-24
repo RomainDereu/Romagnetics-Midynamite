@@ -327,16 +327,17 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
   /* USER CODE BEGIN 7 */
     UNUSED(lun);
 
-    // 1) FAT + root-dir in RAM
+    // 1) Mirror FAT + root-dir so Windows sees the file entry:
     if (blk_addr < FAT_FIRST_DATA_SECTOR) {
         memcpy(&MSC_RamDisk[blk_addr * FAT_BYTES_PER_SECTOR],
                buf,
                blk_len * FAT_BYTES_PER_SECTOR);
 
-        // only parse the one root-dir sector
-        uint32_t rootStart = FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
-        if (blk_addr == rootStart) {
-            for (int off = 0; off < FAT_BYTES_PER_SECTOR; off += 32) {
+        // if this is a root-dir sector, detect "FIRMWAREBIN"
+        const uint32_t rootStart = FAT_RESERVED_SECTORS
+                                 + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
+        if (blk_addr >= rootStart) {
+            for (int off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 32) {
                 if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
                     g_file_detected = 1;
                     g_expected_length =
@@ -351,34 +352,52 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
         return USBD_OK;
     }
 
-    // 2) Data clusters: ignore until file metadata seen
+    // 2) Wait until host has created the .BIN entry
     if (!g_file_detected) {
         return USBD_OK;
     }
 
-    // 3) First data cluster write -> request erase, do NOT flash now
+    // 3) On the *very first* data-cluster write, kick off the erase.
     if (!g_data_cluster_seen) {
         g_data_cluster_seen = 1;
-        g_erase_requested   = 1;
-        return USBD_OK;
+        g_bytes_written    = 0;
+        Bootloader_StartFirmwareUpdate();
     }
 
-    // 4) Actually program each chunk
-    uint32_t flash_addr = APP_START_ADDRESS;
-                        + (blk_addr - FAT_FIRST_DATA_SECTOR) * FAT_BYTES_PER_SECTOR;
-    if (!Bootloader_WriteFirmwareChunk(flash_addr,
-                                       buf,
-                                       blk_len * FAT_BYTES_PER_SECTOR))
-    {
-        return USBD_FAIL;
+    // 4) Compute the correct flash address for this block:
+    uint32_t data_idx   = blk_addr - FAT_FIRST_DATA_SECTOR;
+    uint32_t flash_addr = APP_START_ADDRESS
+                        + data_idx * FAT_BYTES_PER_SECTOR;
+
+    // Sanity check: must be 32‑bit aligned
+    assert((flash_addr & 0x3) == 0);
+
+    // 5) Program each 512‑byte chunk in 4‑byte words
+    for (uint32_t offset = 0; offset < blk_len * FAT_BYTES_PER_SECTOR; offset += 4) {
+        uint32_t word = 0xFFFFFFFF;
+        memcpy(&word, buf + offset, 4);
+        __disable_irq();
+        HAL_StatusTypeDef st = HAL_FLASH_Program(
+            FLASH_TYPEPROGRAM_WORD,
+            flash_addr + offset,
+            word
+        );
+        __enable_irq();
+
+        if (st != HAL_OK) {
+            uint32_t err = HAL_FLASH_GetError();
+            // You can log err here if you want...
+            return USBD_FAIL;
+        }
     }
 
-    // 5) Track progress, finish when we’ve hit the length
+    // 6) Track progress & finish up
     g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
     if (g_bytes_written >= g_expected_length) {
         Bootloader_EndFirmwareUpdate();
         g_update_complete = 1;
     }
+
     return USBD_OK;
   /* USER CODE END 7 */
 }
