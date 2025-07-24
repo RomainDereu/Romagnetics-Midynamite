@@ -86,7 +86,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -102,18 +101,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
-  //__disable_irq();
-
-
-
 
   // Check if both buttons are pressed: Btn3 = PB12, Btn4 = PB13
-  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
-      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
+  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
+      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1)
   {
 	  HAL_Delay(50);
-	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
-	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
+	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
+	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1){
 
 		  MX_USB_DEVICE_Init();
 
@@ -123,33 +118,37 @@ int main(void)
 	      screen_driver_SetCursor_WriteString("Upload FIRMWIRE.bin", Font_6x8, White, 10, 10);
 	      screen_driver_UpdateScreen();
 
-	      while (!g_file_detected) {
-	          HAL_Delay(50);
-	      }
-
-	      // optional: tell user “file seen”
-	      screen_driver_SetCursor_WriteString("File detected", Font_6x8, White, 10,20);
-	      screen_driver_UpdateScreen();
-
-
-	      while (!g_data_cluster_seen) {
-	        HAL_Delay(50);
-	      }
-	      screen_driver_SetCursor_WriteString("Gathering Data", Font_6x8, White, 10,30);
-	      screen_driver_UpdateScreen();
-	      HAL_Delay(500);
-
-
-	      // now wait until flash update finishes (you could introduce a
-	      // second flag g_update_done in Bootloader_EndFirmwareUpdate())
 	      while (!g_update_complete) {
-	          HAL_Delay(50);
+	          // 1) file metadata arrived?
+	          if (g_file_detected) {
+	              screen_driver_SetCursor_WriteString("File detected",  Font_6x8, White, 10,20);
+	              screen_driver_UpdateScreen();
+	              // clear so we only show this once
+	              g_file_detected = 2;
+	          }
+
+	          // 2) if erase hasn’t run yet, do it here
+	          if (g_erase_requested) {
+	              screen_driver_SetCursor_WriteString("Erasing…",       Font_6x8, White, 10,30);
+	              screen_driver_UpdateScreen();
+
+	              Bootloader_StartFirmwareUpdate();
+	              g_erase_requested = 0;
+	          }
+
+	          // 3) show progress as soon as we’ve written any bytes
+	          if (g_bytes_written) {
+	              char pct[16];
+	              uint8_t percent = (g_expected_length > 0)
+	                              ? (g_bytes_written * 100) / g_expected_length
+	                              : 0;
+	              snprintf(pct, sizeof(pct), "%u%%", percent);
+	              screen_driver_SetCursor_WriteString(pct, Font_6x8, White, 10,40);
+	              screen_driver_UpdateScreen();
+	          }
+
+	          HAL_Delay(100);
 	      }
-
-	      screen_driver_SetCursor_WriteString("Update OK!", Font_6x8, White, 10,60);
-	      screen_driver_UpdateScreen();
-	      HAL_Delay(500);
-
 	      // jump to app
 	      Bootloader_JumpToApplication();
 	  }

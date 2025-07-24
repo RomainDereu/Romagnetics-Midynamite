@@ -9,9 +9,6 @@
 #define __BOOTLOADER_H__
 
 #define APP_START_ADDRESS      0x08010000
-#define FIRMWARE_MAX_SIZE      (320 * 1024)
-#define UPDATE_FILENAME        "FIRMWIREBIN"  // 11-char 8.3 FAT name
-
 #define MAX_FIRMWARE_SIZE_BYTES (320 * 1024)
 
 
@@ -23,7 +20,7 @@
 #define FAT_SECTORS_PER_FAT        8
 #define FAT_SECTORS_PER_CLUSTER    1
 
-#define UPDATE_FILENAME  "FIRMWIREBIN"  // 11 chars, no dot
+#define UPDATE_FILENAME  "FIRMWAREBIN"
 
 
 #ifndef MIN
@@ -38,9 +35,13 @@
 
 
 
-extern volatile uint8_t g_file_detected;
-extern volatile uint8_t g_update_complete;
-extern volatile uint8_t g_data_cluster_seen;
+extern volatile uint8_t  g_file_detected;
+extern volatile uint8_t  g_data_cluster_seen;
+extern volatile uint8_t g_erase_requested;
+extern volatile uint8_t  g_update_complete;
+extern volatile uint32_t g_expected_length;
+extern volatile uint32_t g_bytes_written;
+/* USER CODE END PV */
 
 
 

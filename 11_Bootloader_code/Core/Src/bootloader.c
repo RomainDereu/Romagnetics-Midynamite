@@ -35,45 +35,85 @@ uint8_t Bootloader_CheckFirmwareSize(uint32_t file_size_bytes)
 
 void Bootloader_StartFirmwareUpdate(void)
 {
-
-    screen_driver_SetCursor_WriteString("Start Update", Font_6x8, White, 10,60);
-    screen_driver_UpdateScreen();
-    // Erase all sectors for the main app
+    // 1) Unlock flash & clear any existing error flags
     HAL_FLASH_Unlock();
+    __HAL_FLASH_CLEAR_FLAG(
+        FLASH_FLAG_EOP    |
+        FLASH_FLAG_OPERR  |
+        FLASH_FLAG_WRPERR |
+        FLASH_FLAG_PGAERR |
+        FLASH_FLAG_PGPERR |
+        FLASH_FLAG_PGSERR
+    );
 
-    FLASH_EraseInitTypeDef eraseInit;
+    // 2) Erase sectors 4..7 (first app sector is 4)
+    FLASH_EraseInitTypeDef eraseInit = {0};
     uint32_t sectorError = 0;
 
-    eraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
-    eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    eraseInit.Sector = FLASH_SECTOR_1;
-    eraseInit.NbSectors = FLASH_SECTOR_6 - FLASH_SECTOR_1 + 1;
+    eraseInit.TypeErase    = FLASH_TYPEERASE_SECTORS;
+    eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;  // adjust if your supply is different
 
-    if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK)
-    {
-        // Handle erase error
+    for (uint32_t sector = FLASH_SECTOR_4; sector <= FLASH_SECTOR_6; ++sector) {
+        eraseInit.Sector    = sector;
+        eraseInit.NbSectors = 1;
+        if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK) {
+            // show exactly which sector failed
+            char err[32];
+            snprintf(err, sizeof(err), "Erase err S%lu", sectorError);
+            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 10,40);
+            screen_driver_UpdateScreen();
+            // hang here so you can see the error
+            while (1);
+        }
     }
 
+    // 3) Reset the write pointer so Bootloader_WriteFirmwareChunk writes
+    //    starting at the beginning of your app image region.
     current_flash_write_addr = APP_START_ADDRESS;
 }
 
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length)
 {
+    uint32_t error_code;
+    // Round up to a multiple of 4 bytes
+    uint32_t padded_len = (length + 3) & ~3u;
 
-    for (uint32_t i = 0; i < length; i += 4)
+    for (uint32_t offset = 0; offset < padded_len; offset += 4)
     {
-        uint32_t word = 0xFFFFFFFF;  // Padding default
-        memcpy(&word, data + i, MIN(4, length - i));
+        uint32_t word = 0xFFFFFFFF;
+        uint32_t copy = (offset + 4 <= length) ? 4 : (length - offset);
+        memcpy(&word, data + offset, copy);
 
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address, word) != HAL_OK)
+        // Clear any previous errors
+        __HAL_FLASH_CLEAR_FLAG(
+            FLASH_FLAG_EOP    |
+            FLASH_FLAG_OPERR  |
+            FLASH_FLAG_WRPERR |
+            FLASH_FLAG_PGAERR |
+            FLASH_FLAG_PGPERR |
+            FLASH_FLAG_PGSERR
+        );
+
+        // Program one word
+        __disable_irq();
+        HAL_StatusTypeDef st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address + offset, word);
+        __enable_irq();
+
+        if (st != HAL_OK)
         {
-            return 0; // Fail
+            error_code = HAL_FLASH_GetError();
+            char err[32];
+            // Show the error code on your display
+            snprintf(err, sizeof(err), "Prog err 0x%08lX", error_code);
+            screen_driver_Fill(Black);
+            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0, 50);
+            screen_driver_UpdateScreen();
+            return 0;  // fail
         }
-        address += 4;
     }
-    return 1; // Success
-}
 
+    return 1;  // success
+}
 
 
 void Bootloader_EndFirmwareUpdate(void)
@@ -244,9 +284,6 @@ void Bootloader_FormatFlashFAT16(void)
 
 
 
-
-
-
 void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
 										 screen_driver_COLOR color,
 										 uint8_t x_align,
@@ -254,3 +291,4 @@ void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t f
 	screen_driver_SetCursor(x_align, y_align);
 	screen_driver_WriteString(str, font , color);
 }
+

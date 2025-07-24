@@ -32,9 +32,12 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-volatile uint8_t  g_update_complete  = 0;
-volatile uint8_t g_file_detected = 0;
-volatile uint8_t g_data_cluster_seen = 0;
+volatile uint8_t  g_file_detected      = 0;
+volatile uint8_t  g_data_cluster_seen  = 0;
+volatile uint8_t  g_update_complete    = 0;
+volatile uint8_t g_erase_requested = 0;
+volatile uint32_t g_expected_length    = 0;
+volatile uint32_t g_bytes_written      = 0;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -78,9 +81,9 @@ volatile uint8_t g_data_cluster_seen = 0;
 #define FAT_NUM_FATS               2
 #define FAT_ROOT_ENTRIES           16
 #define FAT_SECTORS_PER_FAT        8
-#define FAT_ROOT_DIR_SECTORS       ((FAT_ROOT_ENTRIES*32 + FAT_BYTES_PER_SECTOR-1)/FAT_BYTES_PER_SECTOR)
+#define FAT_ROOT_DIR_SECTORS       1
 #define FAT_TOTAL_SECTORS          ((320*1024) / FAT_BYTES_PER_SECTOR)
-#define FAT_FIRST_DATA_SECTOR      (FAT_RESERVED_SECTORS + FAT_NUM_FATS*FAT_SECTORS_PER_FAT + FAT_ROOT_DIR_SECTORS)
+#define FAT_FIRST_DATA_SECTOR      18
 
 
 
@@ -322,22 +325,25 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
-	UNUSED(lun);
-    uint32_t byte_offset = blk_addr * FAT_BYTES_PER_SECTOR;
-    uint32_t byte_len    = blk_len * FAT_BYTES_PER_SECTOR;
+    UNUSED(lun);
 
-    // 1) FAT or root‑dir region?
+    // 1) FAT + root-dir in RAM
     if (blk_addr < FAT_FIRST_DATA_SECTOR) {
-    	 g_data_cluster_seen = 1;
-        // copy into our in‑RAM FS
-        memcpy(&MSC_RamDisk[byte_offset], buf, byte_len);
+        memcpy(&MSC_RamDisk[blk_addr * FAT_BYTES_PER_SECTOR],
+               buf,
+               blk_len * FAT_BYTES_PER_SECTOR);
 
-        // if this is the root‑directory area (beyond the two FAT tables)
-        if (blk_addr >= FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT) {
-            // scan each 32‑byte directory entry in this sector
-            for (int off = 0; off < byte_len; off += 32) {
+        // only parse the one root-dir sector
+        uint32_t rootStart = FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
+        if (blk_addr == rootStart) {
+            for (int off = 0; off < FAT_BYTES_PER_SECTOR; off += 32) {
                 if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
-                    g_file_detected = 1;   // host has created/opened "FIRMWIRE.bin"
+                    g_file_detected = 1;
+                    g_expected_length =
+                        buf[off+28]
+                      | (buf[off+29] << 8)
+                      | (buf[off+30] << 16)
+                      | (buf[off+31] << 24);
                     break;
                 }
             }
@@ -345,33 +351,34 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
         return USBD_OK;
     }
 
-    // 2) Data clusters → only flash *after* the file has been detected
+    // 2) Data clusters: ignore until file metadata seen
     if (!g_file_detected) {
-        // these are initial mount‐time writes to the data area—ignore them
         return USBD_OK;
     }
 
-    // real firmware write path:
-    uint32_t data_cluster_index = blk_addr - FAT_FIRST_DATA_SECTOR;
-    uint32_t flash_addr = APP_START_ADDRESS
-                        + data_cluster_index * FAT_BYTES_PER_SECTOR;
-
-    // on the very first data‐cluster write, erase the application region
-    if (blk_addr == FAT_FIRST_DATA_SECTOR) {
-        Bootloader_StartFirmwareUpdate();
+    // 3) First data cluster write -> request erase, do NOT flash now
+    if (!g_data_cluster_seen) {
+        g_data_cluster_seen = 1;
+        g_erase_requested   = 1;
+        return USBD_OK;
     }
 
-    // program this chunk into flash
-    if (!Bootloader_WriteFirmwareChunk(flash_addr, buf, byte_len)) {
+    // 4) Actually program each chunk
+    uint32_t flash_addr = APP_START_ADDRESS
+                        + (blk_addr - FAT_FIRST_DATA_SECTOR) * FAT_BYTES_PER_SECTOR;
+    if (!Bootloader_WriteFirmwareChunk(flash_addr,
+                                       buf,
+                                       blk_len * FAT_BYTES_PER_SECTOR))
+    {
         return USBD_FAIL;
     }
 
-    // once we've written at least MAX_FIRMWARE_SIZE_BYTES, finalize
-    if ((data_cluster_index + blk_len) * FAT_BYTES_PER_SECTOR >= MAX_FIRMWARE_SIZE_BYTES) {
+    // 5) Track progress, finish when we’ve hit the length
+    g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
+    if (g_bytes_written >= g_expected_length) {
         Bootloader_EndFirmwareUpdate();
         g_update_complete = 1;
     }
-
     return USBD_OK;
   /* USER CODE END 7 */
 }
