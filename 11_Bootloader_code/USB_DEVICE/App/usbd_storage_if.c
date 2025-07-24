@@ -38,6 +38,7 @@ volatile uint8_t  g_update_complete    = 0;
 volatile uint8_t g_erase_requested = 0;
 volatile uint32_t g_expected_length    = 0;
 volatile uint32_t g_bytes_written      = 0;
+volatile uint32_t g_file_data_start_sector = 0;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -74,9 +75,6 @@ volatile uint32_t g_bytes_written      = 0;
 #define STORAGE_BLK_SIZ            512
 #define STORAGE_BLK_NBR            ((320*1024) / STORAGE_BLK_SIZ)  // 320KB total
 
-#define ROOT_START_SECTOR  (FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT)
-#define ROOT_SIZE_BYTES    (FAT_ROOT_ENTRIES * 32)
-
 /* FAT16 layout constants */
 #define FAT_BYTES_PER_SECTOR       512
 #define FAT_SECTORS_PER_CLUSTER    1
@@ -84,7 +82,7 @@ volatile uint32_t g_bytes_written      = 0;
 #define FAT_NUM_FATS               2
 #define FAT_ROOT_ENTRIES           16
 #define FAT_SECTORS_PER_FAT        8
-#define FAT_ROOT_DIR_SECTORS       1
+#define FAT_ROOT_DIR_SECTORS       ((FAT_ROOT_ENTRIES * 32 + FAT_BYTES_PER_SECTOR - 1) \ / FAT_BYTES_PER_SECTOR)
 #define FAT_TOTAL_SECTORS          ((320*1024) / FAT_BYTES_PER_SECTOR)
 #define FAT_FIRST_DATA_SECTOR      18
 
@@ -231,15 +229,19 @@ int8_t STORAGE_Init_FS(uint8_t lun)
 	  bpb[510]=0x55; bpb[511]=0xAA;                                 // boot signature
 
 	  // 3) --- initialize both FAT copies ---
-	  for (int f = 0; f < FAT_NUM_FATS; f++) {
-	    uint8_t *fat = MSC_RamDisk
-	      + (FAT_RESERVED_SECTORS + f * FAT_SECTORS_PER_FAT) * FAT_BYTES_PER_SECTOR;
-	    fat[0] = 0xF8;
-	    fat[1] = 0xFF;
-	    fat[2] = 0xFF;
-	    fat[3] = 0xFF;  // mark clusters 0/1 as reserved
-	    // rest of that FAT stays zero
-	  }
+	  uint16_t *fat1 = (uint16_t *)&MSC_RamDisk[ FAT_BYTES_PER_SECTOR /* sector 1 */ ];
+	  // Mark clusters 0 & 1 as reserved
+	  fat1[0] = 0xFFF8;
+	  fat1[1] = 0xFFFF;
+	  // Force cluster 2 to be "allocated, end‑of‑chain"
+	  fat1[2] = 0xFFFF;
+
+	  // Mirror FAT1 into FAT2
+	  uint8_t *fat2 = MSC_RamDisk
+	      + (FAT_RESERVED_SECTORS + FAT_SECTORS_PER_FAT) * FAT_BYTES_PER_SECTOR;
+	  memcpy(fat2,
+	         &MSC_RamDisk[ FAT_BYTES_PER_SECTOR ],
+	         FAT_SECTORS_PER_FAT * FAT_BYTES_PER_SECTOR);
 
 
 	  return USBD_OK;
@@ -330,70 +332,77 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
   /* USER CODE BEGIN 7 */
     UNUSED(lun);
 
-    uint32_t byte_offset = blk_addr * FAT_BYTES_PER_SECTOR;
-    uint32_t byte_len    = blk_len * FAT_BYTES_PER_SECTOR;
 
-    // 1) FAT or root‑dir region?
+    // 1) Mirror FAT+root‑dir so host sees a valid FAT16 FS:
     if (blk_addr < FAT_FIRST_DATA_SECTOR) {
-        // copy into our in‑RAM FS
-        memcpy(MSC_RamDisk + byte_offset, buf, byte_len);
+        memcpy(&MSC_RamDisk[blk_addr * FAT_BYTES_PER_SECTOR],
+               buf,
+               blk_len * FAT_BYTES_PER_SECTOR);
 
-        // if this is _any_ root‑dir sector, re‑scan the entire root directory
-        if (blk_addr >= ROOT_START_SECTOR) {
-            uint8_t *root = MSC_RamDisk + ROOT_START_SECTOR * FAT_BYTES_PER_SECTOR;
-            for (int off = 0; off < ROOT_SIZE_BYTES; off += 32) {
-                if (memcmp(root + off, UPDATE_FILENAME, 11) == 0) {
-                    g_file_detected    = 1;
-                    g_expected_length  = root[off+28]
-                                       | (root[off+29]<<8)
-                                       | (root[off+30]<<16)
-                                       | (root[off+31]<<24);
+        // If this is a root‑dir sector, scan for our 8.3 entry:
+        uint32_t rootStart = FAT_RESERVED_SECTORS
+                           + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
+        if (blk_addr >= rootStart) {
+            for (int off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 32) {
+                if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
+                    // found "FIRMWAREBIN"
+                    uint16_t firstCluster =
+                        buf[off + 26]
+                      | (buf[off + 27] << 8);
+                    // host will start writing data at cluster #2 => LBA = FAT_FIRST_DATA_SECTOR,
+                    // so cluster N lands at FAT_FIRST_DATA_SECTOR + (N‑2)
+                    g_file_data_start_sector = FAT_FIRST_DATA_SECTOR
+                                             + (firstCluster - 2);
+                    // pull expected file size (bytes 28..31)
+                    g_expected_length =
+                          buf[off + 28]
+                        | (buf[off + 29] << 8)
+                        | (buf[off + 30] << 16)
+                        | (buf[off + 31] << 24);
+                    g_file_detected = 1;
+                    g_erase_requested = 1;  // notify main loop to do the big sector erase
                     break;
                 }
             }
         }
         return USBD_OK;
     }
-    // 2) Wait until host has created the .BIN entry
+
+    // 2) If the host hasn't created our .BIN entry yet, ignore data‐cluster writes
     if (!g_file_detected) {
         return USBD_OK;
     }
 
-    // 3) On the *very first* data-cluster write, kick off the erase.
+    // 3) First data‐cluster write: kick off the erase in main context
     if (!g_data_cluster_seen) {
         g_data_cluster_seen = 1;
         g_bytes_written    = 0;
         Bootloader_StartFirmwareUpdate();
     }
 
-    // 4) Compute the correct flash address for this block:
-    uint32_t data_idx   = blk_addr - FAT_FIRST_DATA_SECTOR;
+    // 4) Compute file‐relative offset
+    uint32_t data_idx   = blk_addr - g_file_data_start_sector;
     uint32_t flash_addr = APP_START_ADDRESS
                         + data_idx * FAT_BYTES_PER_SECTOR;
 
-    // Sanity check: must be 32‑bit aligned
-    assert((flash_addr & 0x3) == 0);
-
-    // 5) Program each 512‑byte chunk in 4‑byte words
-    for (uint32_t offset = 0; offset < blk_len * FAT_BYTES_PER_SECTOR; offset += 4) {
+    // 5) Program each 4‑byte word
+    for (uint32_t off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 4) {
         uint32_t word = 0xFFFFFFFF;
-        memcpy(&word, buf + offset, 4);
+        memcpy(&word, buf + off, 4);
         __disable_irq();
         HAL_StatusTypeDef st = HAL_FLASH_Program(
             FLASH_TYPEPROGRAM_WORD,
-            flash_addr + offset,
+            flash_addr + off,
             word
         );
         __enable_irq();
-
         if (st != HAL_OK) {
-            uint32_t err = HAL_FLASH_GetError();
-            // You can log err here if you want...
+            // flash error
             return USBD_FAIL;
         }
     }
 
-    // 6) Track progress & finish up
+    // 6) Track progress & finish
     g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
     if (g_bytes_written >= g_expected_length) {
         Bootloader_EndFirmwareUpdate();

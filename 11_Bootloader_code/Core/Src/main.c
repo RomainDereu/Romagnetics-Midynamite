@@ -103,12 +103,12 @@ int main(void)
 
 
   // Check if both buttons are pressed: Btn3 = PB12, Btn4 = PB13
-  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
-      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
+  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
+      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1)
   {
 	  HAL_Delay(50);
-	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
-	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
+	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 1 &&
+	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 1){
 
 		  MX_USB_DEVICE_Init();
 
@@ -131,8 +131,6 @@ int main(void)
 	          if (g_erase_requested) {
 	              screen_driver_SetCursor_WriteString("Erasing…",       Font_6x8, White, 10,30);
 	              screen_driver_UpdateScreen();
-
-	              Bootloader_StartFirmwareUpdate();
 	              g_erase_requested = 0;
 	          }
 
@@ -150,6 +148,8 @@ int main(void)
 	          HAL_Delay(100);
 	      }
 	      // jump to app
+          screen_driver_SetCursor_WriteString("Jumping now", Font_6x8, White, 10,40);
+          screen_driver_UpdateScreen();
 	      Bootloader_JumpToApplication();
 	  }
 
