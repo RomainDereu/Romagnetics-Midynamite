@@ -74,6 +74,9 @@ volatile uint32_t g_bytes_written      = 0;
 #define STORAGE_BLK_SIZ            512
 #define STORAGE_BLK_NBR            ((320*1024) / STORAGE_BLK_SIZ)  // 320KB total
 
+#define ROOT_START_SECTOR  (FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT)
+#define ROOT_SIZE_BYTES    (FAT_ROOT_ENTRIES * 32)
+
 /* FAT16 layout constants */
 #define FAT_BYTES_PER_SECTOR       512
 #define FAT_SECTORS_PER_CLUSTER    1
@@ -327,31 +330,30 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
   /* USER CODE BEGIN 7 */
     UNUSED(lun);
 
-    // 1) Mirror FAT + root-dir so Windows sees the file entry:
-    if (blk_addr < FAT_FIRST_DATA_SECTOR) {
-        memcpy(&MSC_RamDisk[blk_addr * FAT_BYTES_PER_SECTOR],
-               buf,
-               blk_len * FAT_BYTES_PER_SECTOR);
+    uint32_t byte_offset = blk_addr * FAT_BYTES_PER_SECTOR;
+    uint32_t byte_len    = blk_len * FAT_BYTES_PER_SECTOR;
 
-        // if this is a root-dir sector, detect "FIRMWAREBIN"
-        const uint32_t rootStart = FAT_RESERVED_SECTORS
-                                 + FAT_NUM_FATS * FAT_SECTORS_PER_FAT;
-        if (blk_addr >= rootStart) {
-            for (int off = 0; off < blk_len * FAT_BYTES_PER_SECTOR; off += 32) {
-                if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
-                    g_file_detected = 1;
-                    g_expected_length =
-                        buf[off+28]
-                      | (buf[off+29] << 8)
-                      | (buf[off+30] << 16)
-                      | (buf[off+31] << 24);
+    // 1) FAT or root‑dir region?
+    if (blk_addr < FAT_FIRST_DATA_SECTOR) {
+        // copy into our in‑RAM FS
+        memcpy(MSC_RamDisk + byte_offset, buf, byte_len);
+
+        // if this is _any_ root‑dir sector, re‑scan the entire root directory
+        if (blk_addr >= ROOT_START_SECTOR) {
+            uint8_t *root = MSC_RamDisk + ROOT_START_SECTOR * FAT_BYTES_PER_SECTOR;
+            for (int off = 0; off < ROOT_SIZE_BYTES; off += 32) {
+                if (memcmp(root + off, UPDATE_FILENAME, 11) == 0) {
+                    g_file_detected    = 1;
+                    g_expected_length  = root[off+28]
+                                       | (root[off+29]<<8)
+                                       | (root[off+30]<<16)
+                                       | (root[off+31]<<24);
                     break;
                 }
             }
         }
         return USBD_OK;
     }
-
     // 2) Wait until host has created the .BIN entry
     if (!g_file_detected) {
         return USBD_OK;

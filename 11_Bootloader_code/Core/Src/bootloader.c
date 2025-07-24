@@ -71,97 +71,6 @@ void Bootloader_StartFirmwareUpdate(void)
     current_flash_write_addr = APP_START_ADDRESS;
 }
 
-uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length)
-{
-    uint32_t error_code;
-    // Round up to a multiple of 4 bytes
-    uint32_t padded_len = (length + 3) & ~3u;
-
-    for (uint32_t offset = 0; offset < padded_len; offset += 4)
-    {
-        uint32_t word = 0xFFFFFFFF;
-        uint32_t copy = (offset + 4 <= length) ? 4 : (length - offset);
-        memcpy(&word, data + offset, copy);
-
-        // Clear any previous errors
-        __HAL_FLASH_CLEAR_FLAG(
-            FLASH_FLAG_EOP    |
-            FLASH_FLAG_OPERR  |
-            FLASH_FLAG_WRPERR |
-            FLASH_FLAG_PGAERR |
-            FLASH_FLAG_PGPERR |
-            FLASH_FLAG_PGSERR
-        );
-
-        // Program one word
-        __disable_irq();
-        HAL_StatusTypeDef st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address + offset, word);
-        __enable_irq();
-
-        if (st != HAL_OK)
-        {
-            error_code = HAL_FLASH_GetError();
-            char err[32];
-            // Show the error code on your display
-            snprintf(err, sizeof(err), "Prog err 0x%08lX", error_code);
-            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0, 50);
-            screen_driver_UpdateScreen();
-            return 0;  // fail
-        }
-    }
-
-    return 1;  // success
-}
-
-
-void Bootloader_EndFirmwareUpdate(void)
-{
-    HAL_FLASH_Lock();
-}
-
-
-
-// Define the main application entry point
-typedef void (*pFunction)(void);
-
-// Function to jump to the main application
-void Bootloader_JumpToApplication(void)
-{
-    const uint32_t app_addr = APP_START_ADDRESS;
-    uint32_t sp   = *(volatile uint32_t*)app_addr;
-    uint32_t rst  = *(volatile uint32_t*)(app_addr + 4);
-
-    // 1) Validate vectors
-    if ((sp == 0xFFFFFFFF) || (rst == 0xFFFFFFFF)) {
-        while (1);  // no valid app, stay here
-    }
-
-    // 2) Clean up HAL + USB
-    HAL_DeInit();
-    USBD_DeInit(&hUsbDeviceFS);
-
-    // 3) Shut down SysTick
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 0;
-    SysTick->VAL  = 0;
-
-    // 4) Disable interrupts
-    __disable_irq();
-
-    // 5) Remap vector table to application
-    SCB->VTOR = app_addr;
-
-    // 6) Set MSP to application’s initial SP
-    __set_MSP(sp & ~0x03);
-
-    // 7) Jump to application Reset Handler
-    pFunction app_entry = (pFunction)rst;
-    app_entry();
-
-    // should never return, but just in case:
-    while (1);
-}
-
 
 void Bootloader_FormatFlashFAT16(void)
 {
@@ -263,6 +172,95 @@ void Bootloader_FormatFlashFAT16(void)
 
     HAL_FLASH_Lock();
 }
+
+
+
+uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length)
+{
+    uint32_t error_code;
+    // Round up to a multiple of 4 bytes
+    uint32_t padded_len = (length + 3) & ~3u;
+
+    for (uint32_t offset = 0; offset < padded_len; offset += 4)
+    {
+        uint32_t word = 0xFFFFFFFF;
+        uint32_t copy = (offset + 4 <= length) ? 4 : (length - offset);
+        memcpy(&word, data + offset, copy);
+
+        // Clear any previous errors
+        __HAL_FLASH_CLEAR_FLAG(
+            FLASH_FLAG_EOP    |
+            FLASH_FLAG_OPERR  |
+            FLASH_FLAG_WRPERR |
+            FLASH_FLAG_PGAERR |
+            FLASH_FLAG_PGPERR |
+            FLASH_FLAG_PGSERR
+        );
+
+        // Program one word
+        __disable_irq();
+        HAL_StatusTypeDef st = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, address + offset, word);
+        __enable_irq();
+
+        if (st != HAL_OK)
+        {
+            error_code = HAL_FLASH_GetError();
+            char err[32];
+            // Show the error code on your display
+            snprintf(err, sizeof(err), "Prog err 0x%08lX", error_code);
+            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0, 50);
+            screen_driver_UpdateScreen();
+            return 0;  // fail
+        }
+    }
+
+    return 1;  // success
+}
+
+
+void Bootloader_EndFirmwareUpdate(void)
+{
+    HAL_FLASH_Lock();
+}
+
+
+
+// Define the main application entry point
+typedef void (*pFunction)(void);
+
+// Function to jump to the main application
+void Bootloader_JumpToApplication(void) {
+    uint32_t *vectors    = (uint32_t*)APP_START_ADDRESS;
+    uint32_t  appStack   = vectors[0];
+    uint32_t  appEntry   = vectors[1];
+
+    // Sanity check: make sure stack & entry aren't 0xFFFFFFFF
+    if (appStack == 0xFFFFFFFF || appEntry == 0xFFFFFFFF) {
+        return;
+    }
+
+    // 1) Disable all interrupts
+    __disable_irq();
+
+    // 2) Relocate vector table
+    SCB->VTOR = APP_START_ADDRESS;
+    __DSB();  // Data Synchronization Barrier
+    __ISB();  // Instruction Synchronization Barrier
+
+    // 3) Set the MSP to the application's stack pointer
+    __set_MSP(appStack);
+
+    // 4) (Optionally) re‑enable interrupts here if your app needs them right away
+    __enable_irq();
+
+    // 5) Jump to the Reset handler
+    ((pFunction)appEntry)();
+
+    // Should never get here
+    for (;;);
+}
+
+
 
 
 
