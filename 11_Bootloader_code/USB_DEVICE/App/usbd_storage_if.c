@@ -364,7 +364,7 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
 
     // 4) Actually program each chunk
-    uint32_t flash_addr = APP_START_ADDRESS
+    uint32_t flash_addr = APP_START_ADDRESS;
                         + (blk_addr - FAT_FIRST_DATA_SECTOR) * FAT_BYTES_PER_SECTOR;
     if (!Bootloader_WriteFirmwareChunk(flash_addr,
                                        buf,

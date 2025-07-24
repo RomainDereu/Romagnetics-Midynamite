@@ -50,25 +50,20 @@ void Bootloader_StartFirmwareUpdate(void)
     FLASH_EraseInitTypeDef eraseInit = {0};
     uint32_t sectorError = 0;
 
-    eraseInit.TypeErase    = FLASH_TYPEERASE_SECTORS;
-    eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;  // adjust if your supply is different
+    eraseInit.TypeErase   = FLASH_TYPEERASE_SECTORS;
+    eraseInit.VoltageRange= FLASH_VOLTAGE_RANGE_3;
+    eraseInit.Sector      = FLASH_SECTOR_4;   // starts at APP_START_ADDRESS
+    eraseInit.NbSectors   = 3;               // only sectors 4,5,6
 
-    for (uint32_t sector = FLASH_SECTOR_4; sector <= FLASH_SECTOR_6; ++sector) {
-        eraseInit.Sector    = sector;
-        eraseInit.NbSectors = 1;
-        if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK) {
-            // show exactly which sector failed
-            char err[32];
-            snprintf(err, sizeof(err), "Erase err S%lu", sectorError);
-            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 10,40);
-            screen_driver_UpdateScreen();
-            // hang here so you can see the error
-            while (1);
-        }
+    if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK)
+    {
+        char err[32];
+        snprintf(err, sizeof(err), "Erase err %lu", sectorError);
+        screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0,40);
+        screen_driver_UpdateScreen();
+        HAL_Delay(600);
+        // hang or return
     }
-
-    // 3) Reset the write pointer so Bootloader_WriteFirmwareChunk writes
-    //    starting at the beginning of your app image region.
     current_flash_write_addr = APP_START_ADDRESS;
 }
 
@@ -105,7 +100,6 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
             char err[32];
             // Show the error code on your display
             snprintf(err, sizeof(err), "Prog err 0x%08lX", error_code);
-            screen_driver_Fill(Black);
             screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0, 50);
             screen_driver_UpdateScreen();
             return 0;  // fail
