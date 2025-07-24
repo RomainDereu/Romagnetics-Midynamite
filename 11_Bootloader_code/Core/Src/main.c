@@ -96,35 +96,42 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-
+  MX_USB_DEVICE_Init();
   //__disable_irq();
 
 
 
 
   // Check if both buttons are pressed: Btn3 = PB12, Btn4 = PB13
-  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == GPIO_PIN_RESET &&
-      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == GPIO_PIN_RESET)
+  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
+      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
   {
-	  screen_driver_Init();
-	  screen_driver_Fill(Black);
-	  screen_driver_SetCursor_WriteString("Bootloader", Font_6x8, White, 10, 0);
-	  screen_driver_UpdateScreen();
+	  HAL_Delay(50);
+	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
+	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
 
-      // Enter bootloader MSC mode
-      screen_driver_SetCursor_WriteString("MSC Mode", Font_6x8, White, 10, 10);
-      screen_driver_UpdateScreen();
+		  screen_driver_Init();
+		  screen_driver_Fill(Black);
+		  screen_driver_SetCursor_WriteString("Bootloader", Font_6x8, White, 10, 0);
+		  screen_driver_UpdateScreen();
 
-      MX_USB_DEVICE_Init();
+	      // Enter bootloader MSC mode
+	      screen_driver_SetCursor_WriteString("MSC Mode", Font_6x8, White, 10, 10);
+	      screen_driver_UpdateScreen();
 
-      while (1)
-      {
-          // Stay in USB MSC mode
-      }
+
+
+	      while (1)
+	      {
+	          // Stay in USB MSC mode
+	      }
+
+
+	  }
+
   }
   else
   {
@@ -247,7 +254,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : Btn3_Pin Btn4_Pin Btn1_Pin Btn2_Pin */
   GPIO_InitStruct.Pin = Btn3_Pin|Btn4_Pin|Btn1_Pin|Btn2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

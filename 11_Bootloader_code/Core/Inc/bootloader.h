@@ -9,8 +9,6 @@
 #define INC_BOOTLOADER_C_
 
 #define APP_START_ADDRESS      0x08010000
-#define FLASH_SECTOR_FIRST     FLASH_SECTOR_1
-#define FLASH_SECTOR_LAST      FLASH_SECTOR_6
 #define FLASH_PAGE_SIZE        0x20000  // 128 KB per sector for sectors 4-6
 #define FIRMWARE_MAX_SIZE      (320 * 1024)
 #define UPDATE_FILENAME        "FIRMWIREBIN"  // 11-char 8.3 FAT name

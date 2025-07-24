@@ -43,8 +43,8 @@ void Bootloader_StartFirmwareUpdate(void)
 
     eraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
     eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    eraseInit.Sector = FLASH_SECTOR_FIRST;
-    eraseInit.NbSectors = FLASH_SECTOR_LAST - FLASH_SECTOR_FIRST + 1;
+    eraseInit.Sector = FLASH_SECTOR_1;
+    eraseInit.NbSectors = FLASH_SECTOR_6 - FLASH_SECTOR_1 + 1;
 
     if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK)
     {
@@ -98,7 +98,6 @@ void  Bootloader_JumpToApplication(void)
 
     stack_pointer &= ~0x03;
 
-
     // 2. Set the Main Stack Pointer (MSP) to the application's stack pointer
     SCB->VTOR = 0x08010000;
     __set_MSP(stack_pointer);
@@ -109,6 +108,8 @@ void  Bootloader_JumpToApplication(void)
 
     // 3. Get the Reset Handler address (entry point of the main application)
     uint32_t reset_handler_address = *(volatile uint32_t*) (app_start_address + 4);
+
+
 
     // Check if the reset handler is valid (not 0xFFFFFFFF)
     if (reset_handler_address == 0xFFFFFFFF)
@@ -125,6 +126,9 @@ void  Bootloader_JumpToApplication(void)
 
 
     reset_handler();  // Jump to the main application
+
+
+
 
 }
 
