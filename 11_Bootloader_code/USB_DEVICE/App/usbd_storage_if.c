@@ -32,7 +32,9 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+volatile uint8_t  g_update_complete  = 0;
+volatile uint8_t g_file_detected = 0;
+volatile uint8_t g_data_cluster_seen = 0;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -62,18 +64,25 @@
   * @brief Private defines.
   * @{
   */
-
-#define STORAGE_LUN_NBR                  1
-#define STORAGE_BLK_NBR                  0x10000
-#define STORAGE_BLK_SIZ                  0x200
-
 /* USER CODE BEGIN PRIVATE_DEFINES */
 
-#define MSC_MEDIA_SIZE (64 * 1024) // 64KB RAM disk
-#define MSC_BLOCK_SIZE 512
-#define MSC_BLOCK_COUNT (MSC_MEDIA_SIZE / MSC_BLOCK_SIZE)
+/* Private defines */
+#define STORAGE_LUN_NBR            1
+#define STORAGE_BLK_SIZ            512
+#define STORAGE_BLK_NBR            ((320*1024) / STORAGE_BLK_SIZ)  // 320KB total
 
-__ALIGN_BEGIN uint8_t MSC_RamDisk[MSC_MEDIA_SIZE] __ALIGN_END;
+/* FAT16 layout constants */
+#define FAT_BYTES_PER_SECTOR       512
+#define FAT_SECTORS_PER_CLUSTER    1
+#define FAT_RESERVED_SECTORS       1
+#define FAT_NUM_FATS               2
+#define FAT_ROOT_ENTRIES           16
+#define FAT_SECTORS_PER_FAT        8
+#define FAT_ROOT_DIR_SECTORS       ((FAT_ROOT_ENTRIES*32 + FAT_BYTES_PER_SECTOR-1)/FAT_BYTES_PER_SECTOR)
+#define FAT_TOTAL_SECTORS          ((320*1024) / FAT_BYTES_PER_SECTOR)
+#define FAT_FIRST_DATA_SECTOR      (FAT_RESERVED_SECTORS + FAT_NUM_FATS*FAT_SECTORS_PER_FAT + FAT_ROOT_DIR_SECTORS)
+
+
 
 
 /* USER CODE END PRIVATE_DEFINES */
@@ -101,6 +110,11 @@ __ALIGN_BEGIN uint8_t MSC_RamDisk[MSC_MEDIA_SIZE] __ALIGN_END;
   */
 
 /* USER CODE BEGIN INQUIRY_DATA_FS */
+
+/* In‑RAM FAT + root‑dir */
+static uint8_t MSC_RamDisk[FAT_FIRST_DATA_SECTOR * FAT_BYTES_PER_SECTOR];
+
+
 /** USB Mass storage Standard Inquiry Data. */
 const int8_t STORAGE_Inquirydata_FS[] = {/* 36 */
 
@@ -185,9 +199,44 @@ USBD_StorageTypeDef USBD_Storage_Interface_fops_FS =
 int8_t STORAGE_Init_FS(uint8_t lun)
 {
   /* USER CODE BEGIN 2 */
- UNUSED(lun);
+	UNUSED(lun);
 
-  return (USBD_OK);
+	  // 1) clear the FAT+root area
+	  memset(MSC_RamDisk, 0x00, sizeof(MSC_RamDisk));
+
+	  // 2) --- BIOS Parameter Block (boot sector) ---
+	  uint8_t *bpb = MSC_RamDisk;
+	  bpb[0]=0xEB; bpb[1]=0x3C; bpb[2]=0x90;                        // JMP instruction
+	  memcpy(&bpb[3], "MSDOS5.0", 8);                               // OEM Name
+	  bpb[11]=LOBYTE(FAT_BYTES_PER_SECTOR);
+	  bpb[12]=HIBYTE(FAT_BYTES_PER_SECTOR);                         // bytes per sector = 512
+	  bpb[13]=FAT_SECTORS_PER_CLUSTER;                              // sectors per cluster = 1
+	  bpb[14]=LOBYTE(FAT_RESERVED_SECTORS);
+	  bpb[15]=HIBYTE(FAT_RESERVED_SECTORS);                         // reserved sectors = 1
+	  bpb[16]=FAT_NUM_FATS;                                         // number of FAT copies = 2
+	  bpb[17]=LOBYTE(FAT_ROOT_ENTRIES);
+	  bpb[18]=HIBYTE(FAT_ROOT_ENTRIES);                             // max root entries = 16
+	  bpb[19]=LOBYTE(FAT_TOTAL_SECTORS);
+	  bpb[20]=HIBYTE(FAT_TOTAL_SECTORS);                            // total sectors = 640
+	  bpb[21]=0xF8;                                                 // media descriptor
+	  bpb[22]=LOBYTE(FAT_SECTORS_PER_FAT);
+	  bpb[23]=HIBYTE(FAT_SECTORS_PER_FAT);                          // sectors per FAT = 8
+	  // leave bpb[24..509] = 0
+	  bpb[510]=0x55; bpb[511]=0xAA;                                 // boot signature
+
+	  // 3) --- initialize both FAT copies ---
+	  for (int f = 0; f < FAT_NUM_FATS; f++) {
+	    uint8_t *fat = MSC_RamDisk
+	      + (FAT_RESERVED_SECTORS + f * FAT_SECTORS_PER_FAT) * FAT_BYTES_PER_SECTOR;
+	    fat[0] = 0xF8;
+	    fat[1] = 0xFF;
+	    fat[2] = 0xFF;
+	    fat[3] = 0xFF;  // mark clusters 0/1 as reserved
+	    // rest of that FAT stays zero
+	  }
+
+
+	  return USBD_OK;
   /* USER CODE END 2 */
 }
 
@@ -247,13 +296,18 @@ int8_t STORAGE_IsWriteProtected_FS(uint8_t lun)
   */
 int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
-  /* USER CODE BEGIN 6 */
-  UNUSED(lun);
-  UNUSED(buf);
-  UNUSED(blk_addr);
-  UNUSED(blk_len);
-
-  return (USBD_OK);
+	  UNUSED(lun);
+	  if (blk_addr < FAT_FIRST_DATA_SECTOR) {
+	    memcpy(buf,
+	           MSC_RamDisk + blk_addr*FAT_BYTES_PER_SECTOR,
+	           blk_len*FAT_BYTES_PER_SECTOR);
+	    return USBD_OK;
+	  }
+	  // data region: map to flash
+	  uint32_t flash_offset = (blk_addr - FAT_FIRST_DATA_SECTOR)*FAT_BYTES_PER_SECTOR;
+	  uint8_t *src = (uint8_t*)(APP_START_ADDRESS + flash_offset);
+	  memcpy(buf, src, blk_len*FAT_BYTES_PER_SECTOR);
+	  return USBD_OK;
   /* USER CODE END 6 */
 }
 
@@ -268,43 +322,57 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
-	  UNUSED(lun);
+	UNUSED(lun);
+    uint32_t byte_offset = blk_addr * FAT_BYTES_PER_SECTOR;
+    uint32_t byte_len    = blk_len * FAT_BYTES_PER_SECTOR;
 
-	  static uint32_t current_flash_address = APP_START_ADDRESS;
-	  static uint8_t is_updating = 0;
+    // 1) FAT or root‑dir region?
+    if (blk_addr < FAT_FIRST_DATA_SECTOR) {
+    	 g_data_cluster_seen = 1;
+        // copy into our in‑RAM FS
+        memcpy(&MSC_RamDisk[byte_offset], buf, byte_len);
 
-	  if (blk_addr == 0) {
-	    // First block written — assume new firmware is incoming
-	    Bootloader_StartFirmwareUpdate();
-	    current_flash_address = APP_START_ADDRESS;
-	    is_updating = 1;
-	  }
+        // if this is the root‑directory area (beyond the two FAT tables)
+        if (blk_addr >= FAT_RESERVED_SECTORS + FAT_NUM_FATS * FAT_SECTORS_PER_FAT) {
+            // scan each 32‑byte directory entry in this sector
+            for (int off = 0; off < byte_len; off += 32) {
+                if (memcmp(buf + off, UPDATE_FILENAME, 11) == 0) {
+                    g_file_detected = 1;   // host has created/opened "FIRMWIRE.bin"
+                    break;
+                }
+            }
+        }
+        return USBD_OK;
+    }
 
-	  if (is_updating) {
-	    // Write directly to flash
-	    if (!Bootloader_WriteFirmwareChunk(current_flash_address, buf, blk_len * STORAGE_BLK_SIZ)) {
-	        // Writing failed
-	        return USBD_FAIL;
-	    }
+    // 2) Data clusters → only flash *after* the file has been detected
+    if (!g_file_detected) {
+        // these are initial mount‐time writes to the data area—ignore them
+        return USBD_OK;
+    }
 
-	    current_flash_address += blk_len * STORAGE_BLK_SIZ;
+    // real firmware write path:
+    uint32_t data_cluster_index = blk_addr - FAT_FIRST_DATA_SECTOR;
+    uint32_t flash_addr = APP_START_ADDRESS
+                        + data_cluster_index * FAT_BYTES_PER_SECTOR;
 
-	    // If last block is shorter than full size, assume transfer is complete
-	    if (blk_len * STORAGE_BLK_SIZ < STORAGE_BLK_SIZ) {
-	        Bootloader_EndFirmwareUpdate();
-	        is_updating = 0;
+    // on the very first data‐cluster write, erase the application region
+    if (blk_addr == FAT_FIRST_DATA_SECTOR) {
+        Bootloader_StartFirmwareUpdate();
+    }
 
-	        // Optional: display message
-	        screen_driver_Fill(Black);
-	        screen_driver_SetCursor_WriteString("Update complete", Font_6x8, White, 0, 50);
-	        screen_driver_UpdateScreen();
-	    }
+    // program this chunk into flash
+    if (!Bootloader_WriteFirmwareChunk(flash_addr, buf, byte_len)) {
+        return USBD_FAIL;
+    }
 
-	  }
+    // once we've written at least MAX_FIRMWARE_SIZE_BYTES, finalize
+    if ((data_cluster_index + blk_len) * FAT_BYTES_PER_SECTOR >= MAX_FIRMWARE_SIZE_BYTES) {
+        Bootloader_EndFirmwareUpdate();
+        g_update_complete = 1;
+    }
 
-	  return (USBD_OK);
-
-  return (USBD_OK);
+    return USBD_OK;
   /* USER CODE END 7 */
 }
 

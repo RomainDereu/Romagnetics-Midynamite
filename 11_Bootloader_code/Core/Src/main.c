@@ -28,6 +28,8 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
+extern USBD_HandleTypeDef hUsbDeviceFS;
+
 
 /* USER CODE END Includes */
 
@@ -99,7 +101,7 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
-  MX_USB_DEVICE_Init();
+
   //__disable_irq();
 
 
@@ -113,23 +115,43 @@ int main(void)
 	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
 	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
 
+		  MX_USB_DEVICE_Init();
+
 		  screen_driver_Init();
 		  screen_driver_Fill(Black);
-		  screen_driver_SetCursor_WriteString("Bootloader", Font_6x8, White, 10, 0);
-		  screen_driver_UpdateScreen();
+		  screen_driver_SetCursor_WriteString("Bootloader Mode", Font_6x8, White, 10, 0);
+	      screen_driver_SetCursor_WriteString("Upload FIRMWIRE.bin", Font_6x8, White, 10, 10);
+	      screen_driver_UpdateScreen();
 
-	      // Enter bootloader MSC mode
-	      screen_driver_SetCursor_WriteString("MSC Mode", Font_6x8, White, 10, 10);
+	      while (!g_file_detected) {
+	          HAL_Delay(50);
+	      }
+
+	      // optional: tell user “file seen”
+	      screen_driver_SetCursor_WriteString("File detected", Font_6x8, White, 10,20);
 	      screen_driver_UpdateScreen();
 
 
+	      while (!g_data_cluster_seen) {
+	        HAL_Delay(50);
+	      }
+	      screen_driver_SetCursor_WriteString("Gathering Data", Font_6x8, White, 10,30);
+	      screen_driver_UpdateScreen();
+	      HAL_Delay(500);
 
-	      while (1)
-	      {
-	          // Stay in USB MSC mode
+
+	      // now wait until flash update finishes (you could introduce a
+	      // second flag g_update_done in Bootloader_EndFirmwareUpdate())
+	      while (!g_update_complete) {
+	          HAL_Delay(50);
 	      }
 
+	      screen_driver_SetCursor_WriteString("Update OK!", Font_6x8, White, 10,60);
+	      screen_driver_UpdateScreen();
+	      HAL_Delay(500);
 
+	      // jump to app
+	      Bootloader_JumpToApplication();
 	  }
 
   }
