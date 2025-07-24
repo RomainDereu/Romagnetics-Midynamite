@@ -115,7 +115,7 @@ int main(void)
 		  screen_driver_Init();
 		  screen_driver_Fill(Black);
 		  screen_driver_SetCursor_WriteString("Bootloader Mode", Font_6x8, White, 10, 0);
-	      screen_driver_SetCursor_WriteString("Upload FIRMWIRE.bin", Font_6x8, White, 10, 10);
+	      screen_driver_SetCursor_WriteString("Upload FIRMWIRE.BIN", Font_6x8, White, 10, 10);
 	      screen_driver_UpdateScreen();
 
 	      while (!g_update_complete) {
