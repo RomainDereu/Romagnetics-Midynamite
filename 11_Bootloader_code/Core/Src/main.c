@@ -148,7 +148,7 @@ int main(void)
 	          HAL_Delay(100);
 	      }
 	      // jump to app
-          screen_driver_SetCursor_WriteString("Jumping now", Font_6x8, White, 10,40);
+          screen_driver_SetCursor_WriteString("Restart the pedal", Font_6x8, White, 10,40);
           screen_driver_UpdateScreen();
 	      Bootloader_JumpToApplication();
 	  }
