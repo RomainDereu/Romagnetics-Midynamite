@@ -47,27 +47,16 @@ extern volatile uint8_t g_crc_failed;
 
 
 
-uint8_t Bootloader_CheckFirmwareSize(uint32_t file_size_bytes);
 void Bootloader_StartFirmwareUpdate(void);
 
-
-void Bootloader_FormatFlashFAT16(void);
-
+uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length);
+uint8_t Bootloader_EndFirmwareUpdate(void);
+typedef void (*pFunction)(void);
+void Bootloader_JumpToApplication(void);
 
 void Bootloader_InitCRC32(void);
 uint32_t Bootloader_ComputeCRC32(uint32_t addr, uint32_t size);
 
-
-
-uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length);
-uint8_t Bootloader_EndFirmwareUpdate(void);
-
-
-
-typedef void (*pFunction)(void);
-
-// Function to jump to the main application
-void Bootloader_JumpToApplication(void);
 
 void Bootloader_HandleFatalError(const char* message);
 
