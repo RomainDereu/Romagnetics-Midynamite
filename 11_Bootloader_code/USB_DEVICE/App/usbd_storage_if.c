@@ -406,6 +406,8 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
                               word) != HAL_OK)
         {
             __enable_irq();
+
+            Bootloader_HandleFatalError("Write error");
             return USBD_FAIL;
         }
         __enable_irq();
@@ -415,8 +417,9 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
     if (g_bytes_written >= g_expected_length) {
         if (Bootloader_EndFirmwareUpdate()) {
-            g_update_complete = 1;  // ✅ Only set this if CRC was OK
+            g_update_complete = 1;
         } else {
+            Bootloader_HandleFatalError("CRC Failed");
             return USBD_FAIL;
         }
     }

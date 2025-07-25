@@ -130,10 +130,7 @@ int main(void)
 
               if (g_crc_failed)
               {
-                  screen_driver_SetCursor_WriteString("CRC Failed", Font_6x8, White, 10, 30);
-                  screen_driver_UpdateScreen();
-                  HAL_Delay(1000);
-                  USBD_Stop(&hUsbDeviceFS);
+                  Bootloader_HandleFatalError("CRC Failed");
                   while (1);  // Stop everything — do not continue
               }
 

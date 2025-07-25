@@ -286,3 +286,12 @@ void Bootloader_JumpToApplication(void) {
     // Should never get here
     for (;;);
 }
+
+
+void Bootloader_HandleFatalError(const char* message)
+{
+    screen_driver_SetCursor_WriteString(message, Font_6x8, White, 10, 30);
+    screen_driver_UpdateScreen();
+    USBD_Stop(&hUsbDeviceFS);  // Cleanly cut USB
+    while (1);  // Lock up safely
+}

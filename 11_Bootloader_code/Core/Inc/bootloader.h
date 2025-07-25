@@ -69,6 +69,8 @@ typedef void (*pFunction)(void);
 // Function to jump to the main application
 void Bootloader_JumpToApplication(void);
 
+void Bootloader_HandleFatalError(const char* message);
+
 
 
 #endif /* __BOOTLOADER_H__ */
