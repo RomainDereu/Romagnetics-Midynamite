@@ -16,6 +16,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "usb_device.h"
+#include "usbd_core.h"
 
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
@@ -67,7 +68,6 @@ void Bootloader_StartFirmwareUpdate(void)
 
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length)
 {
-    uint32_t error_code;
     // Round up to a multiple of 4 bytes
     uint32_t padded_len = (length + 3) & ~3u;
 
@@ -94,7 +94,6 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
 
         if (st != HAL_OK)
         {
-            error_code = HAL_FLASH_GetError();
             screen_driver_SetCursor_WriteString("FLASH WRITE ERROR", Font_6x8, White, 0, 40);
             screen_driver_UpdateScreen();
             return 0;  // fail
