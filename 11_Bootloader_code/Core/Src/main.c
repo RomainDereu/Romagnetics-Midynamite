@@ -17,16 +17,17 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
 
 #include "bootloader.h"
+#include "main.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
+#include "usb_device.h"
+#include "usbd_core.h"
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
@@ -106,52 +107,45 @@ int main(void)
   if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
       HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
   {
-	  HAL_Delay(50);
-	  if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
-	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
-
-		  MX_USB_DEVICE_Init();
-		  Bootloader_InitCRC32();
-		  screen_driver_Init();
-		  screen_driver_Fill(Black);
-		  screen_driver_SetCursor_WriteString("Bootloader Mode", Font_6x8, White, 10, 0);
-	      screen_driver_SetCursor_WriteString("Upload FIRMWIRE.BIN", Font_6x8, White, 10, 10);
-	      screen_driver_UpdateScreen();
-
-	      while (!g_update_complete) {
-	          // 1) file metadata arrived?
-	          if (g_file_detected) {
-	              screen_driver_SetCursor_WriteString("File detected",  Font_6x8, White, 10,20);
-	              screen_driver_UpdateScreen();
-	              // clear so we only show this once
-	              g_file_detected = 2;
-	          }
-
-	          // 2) if erase hasn’t run yet, do it here
-	          if (g_crc_failed) {
-	              screen_driver_SetCursor_WriteString("CRC Failed",       Font_6x8, White, 10,30);
-	              screen_driver_UpdateScreen();
-	          }
-
-	          // 3) show progress as soon as we’ve written any bytes
-	          if (g_bytes_written) {
-	              char pct[16];
-	              uint8_t percent = (g_expected_length > 0)
-	                              ? (g_bytes_written * 100) / g_expected_length
-	                              : 0;
-	              snprintf(pct, sizeof(pct), "%u%%", percent);
-	              screen_driver_SetCursor_WriteString(pct, Font_6x8, White, 10,40);
-	              screen_driver_UpdateScreen();
-	          }
-
-	          HAL_Delay(100);
-	      }
-	      // jump to app
-          screen_driver_SetCursor_WriteString("Restart the pedal", Font_6x8, White, 10,40);
+      HAL_Delay(50);
+      if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == 0 &&
+          HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0)
+      {
+          MX_USB_DEVICE_Init();
+          Bootloader_InitCRC32();
+          screen_driver_Init();
+          screen_driver_Fill(Black);
+          screen_driver_SetCursor_WriteString("Bootloader Mode", Font_6x8, White, 10, 0);
+          screen_driver_SetCursor_WriteString("Upload FIRMWIRE.BIN", Font_6x8, White, 10, 10);
           screen_driver_UpdateScreen();
-	      Bootloader_JumpToApplication();
-	  }
 
+          while (!g_update_complete)
+          {
+              if (g_file_detected == 1)
+              {
+                  screen_driver_SetCursor_WriteString("File detected", Font_6x8, White, 10, 20);
+                  screen_driver_UpdateScreen();
+                  g_file_detected = 2;
+              }
+
+              if (g_crc_failed)
+              {
+                  screen_driver_SetCursor_WriteString("CRC Failed", Font_6x8, White, 10, 30);
+                  screen_driver_UpdateScreen();
+                  HAL_Delay(1000);
+                  USBD_Stop(&hUsbDeviceFS);
+                  while (1);  // Stop everything — do not continue
+              }
+
+              HAL_Delay(100);
+          }
+
+          // CRC was OK if we got here
+          screen_driver_SetCursor_WriteString("Restart the pedal", Font_6x8, White, 10, 50);
+          screen_driver_UpdateScreen();
+          HAL_Delay(1000);
+          Bootloader_JumpToApplication();  // Safe to jump
+      }
   }
   else
   {

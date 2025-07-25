@@ -60,9 +60,7 @@ void Bootloader_StartFirmwareUpdate(void)
 
     if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) != HAL_OK)
     {
-        char err[32];
-        snprintf(err, sizeof(err), "Erase err %lu", sectorError);
-        screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0,40);
+        screen_driver_SetCursor_WriteString("ERASE ERROR", Font_6x8, White, 0,30);
         screen_driver_UpdateScreen();
         HAL_Delay(600);
         // hang or return
@@ -228,10 +226,7 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
         if (st != HAL_OK)
         {
             error_code = HAL_FLASH_GetError();
-            char err[32];
-            // Show the error code on your display
-            snprintf(err, sizeof(err), "Prog err 0x%08lX", error_code);
-            screen_driver_SetCursor_WriteString(err, Font_6x8, White, 0, 50);
+            screen_driver_SetCursor_WriteString("FLASH WRITE ERROR", Font_6x8, White, 0, 40);
             screen_driver_UpdateScreen();
             return 0;  // fail
         }
@@ -241,7 +236,7 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
 }
 
 
-uint8_t  Bootloader_EndFirmwareUpdate(void)
+uint8_t Bootloader_EndFirmwareUpdate(void)
 {
     uint32_t fw_size    = g_expected_length;
     uint32_t crc_stored = *(uint32_t*)(APP_START_ADDRESS + fw_size - 4);
@@ -255,7 +250,6 @@ uint8_t  Bootloader_EndFirmwareUpdate(void)
     HAL_FLASH_Lock();
     return 1;
 }
-
 
 
 // Define the main application entry point

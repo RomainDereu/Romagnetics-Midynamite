@@ -414,8 +414,11 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     // 6) track progress & finish when complete
     g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
     if (g_bytes_written >= g_expected_length) {
-        Bootloader_EndFirmwareUpdate();
-        g_update_complete = 1;
+        if (Bootloader_EndFirmwareUpdate()) {
+            g_update_complete = 1;  // ✅ Only set this if CRC was OK
+        } else {
+            return USBD_FAIL;
+        }
     }
 
     return USBD_OK;
