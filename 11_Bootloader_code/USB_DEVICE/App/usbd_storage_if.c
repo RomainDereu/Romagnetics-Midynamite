@@ -39,6 +39,7 @@ volatile uint8_t g_erase_requested = 0;
 volatile uint32_t g_expected_length    = 0;
 volatile uint32_t g_bytes_written      = 0;
 volatile uint32_t g_file_data_start_sector = 0;
+volatile uint8_t g_crc_failed = 0;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY

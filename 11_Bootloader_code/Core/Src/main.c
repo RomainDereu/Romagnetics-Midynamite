@@ -111,7 +111,7 @@ int main(void)
 	      HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0){
 
 		  MX_USB_DEVICE_Init();
-
+		  Bootloader_InitCRC32();
 		  screen_driver_Init();
 		  screen_driver_Fill(Black);
 		  screen_driver_SetCursor_WriteString("Bootloader Mode", Font_6x8, White, 10, 0);
@@ -128,10 +128,9 @@ int main(void)
 	          }
 
 	          // 2) if erase hasn’t run yet, do it here
-	          if (g_erase_requested) {
-	              screen_driver_SetCursor_WriteString("Erasing…",       Font_6x8, White, 10,30);
+	          if (g_crc_failed) {
+	              screen_driver_SetCursor_WriteString("CRC Failed",       Font_6x8, White, 10,30);
 	              screen_driver_UpdateScreen();
-	              g_erase_requested = 0;
 	          }
 
 	          // 3) show progress as soon as we’ve written any bytes

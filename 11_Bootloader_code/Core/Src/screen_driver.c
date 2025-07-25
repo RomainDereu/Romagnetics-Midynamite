@@ -610,3 +610,14 @@ void screen_driver_SetDisplayOn(const uint8_t on) {
 uint8_t screen_driver_GetDisplayOn() {
     return screen_driver.DisplayOn;
 }
+
+
+
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+										 screen_driver_COLOR color,
+										 uint8_t x_align,
+										 uint8_t y_align){
+	screen_driver_SetCursor(x_align, y_align);
+	screen_driver_WriteString(str, font , color);
+}
+

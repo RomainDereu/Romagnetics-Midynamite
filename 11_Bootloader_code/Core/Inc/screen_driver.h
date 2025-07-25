@@ -209,6 +209,11 @@ void screen_driver_WriteCommand(uint8_t byte);
 void screen_driver_WriteData(uint8_t* buffer, size_t buff_size);
 screen_driver_Error_t screen_driver_FillBuffer(uint8_t* buf, uint32_t len);
 
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+										 screen_driver_COLOR color,
+										 uint8_t x_align,
+										 uint8_t y_align);
+
 _END_STD_C
 
 #endif // __screen_driver_H__

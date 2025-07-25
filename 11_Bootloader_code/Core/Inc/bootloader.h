@@ -41,6 +41,7 @@ extern volatile uint8_t g_erase_requested;
 extern volatile uint8_t  g_update_complete;
 extern volatile uint32_t g_expected_length;
 extern volatile uint32_t g_bytes_written;
+extern volatile uint8_t g_crc_failed;
 /* USER CODE END PV */
 
 
@@ -52,8 +53,14 @@ void Bootloader_StartFirmwareUpdate(void);
 
 void Bootloader_FormatFlashFAT16(void);
 
+
+void Bootloader_InitCRC32(void);
+uint32_t Bootloader_ComputeCRC32(uint32_t addr, uint32_t size);
+
+
+
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length);
-void Bootloader_EndFirmwareUpdate(void);
+uint8_t Bootloader_EndFirmwareUpdate(void);
 
 
 
@@ -62,13 +69,6 @@ typedef void (*pFunction)(void);
 // Function to jump to the main application
 void Bootloader_JumpToApplication(void);
 
-
-
-
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
-		 screen_driver_COLOR color,
-		 uint8_t x_align,
-		 uint8_t y_align);
 
 
 #endif /* __BOOTLOADER_H__ */

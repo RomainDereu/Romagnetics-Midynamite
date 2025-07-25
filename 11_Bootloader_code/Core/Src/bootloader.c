@@ -20,9 +20,8 @@
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
-
 static uint32_t current_flash_write_addr = APP_START_ADDRESS;
-
+static uint32_t crc32_table[256];
 
 
 
@@ -174,6 +173,29 @@ void Bootloader_FormatFlashFAT16(void)
     HAL_FLASH_Lock();
 }
 
+void Bootloader_InitCRC32(void) {
+    const uint32_t poly = 0xEDB88320;
+    for (uint32_t i = 0; i < 256; i++) {
+        uint32_t crc = i;
+        for (uint32_t j = 0; j < 8; j++) {
+            if (crc & 1)
+                crc = (crc >> 1) ^ poly;
+            else
+                crc >>= 1;
+        }
+        crc32_table[i] = crc;
+    }
+}
+
+uint32_t Bootloader_ComputeCRC32(uint32_t addr, uint32_t size) {
+    uint32_t crc = 0xFFFFFFFF;
+    for (uint32_t i = 0; i < size; i++) {
+        uint8_t byte = *(uint8_t*)(addr + i);
+        crc = (crc >> 8) ^ crc32_table[(crc ^ byte) & 0xFF];
+    }
+    return crc ^ 0xFFFFFFFF;
+}
+
 
 
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length)
@@ -219,9 +241,19 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
 }
 
 
-void Bootloader_EndFirmwareUpdate(void)
+uint8_t  Bootloader_EndFirmwareUpdate(void)
 {
+    uint32_t fw_size    = g_expected_length;
+    uint32_t crc_stored = *(uint32_t*)(APP_START_ADDRESS + fw_size - 4);
+    uint32_t crc_calc   = Bootloader_ComputeCRC32(APP_START_ADDRESS, fw_size - 4);
+
+    if (crc_calc != crc_stored) {
+        g_crc_failed = 1;
+        return 0;
+    }
+
     HAL_FLASH_Lock();
+    return 1;
 }
 
 
@@ -260,16 +292,3 @@ void Bootloader_JumpToApplication(void) {
     // Should never get here
     for (;;);
 }
-
-
-
-
-
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
-										 screen_driver_COLOR color,
-										 uint8_t x_align,
-										 uint8_t y_align){
-	screen_driver_SetCursor(x_align, y_align);
-	screen_driver_WriteString(str, font , color);
-}
-
