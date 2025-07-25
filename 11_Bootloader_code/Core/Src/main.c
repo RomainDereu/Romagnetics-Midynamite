@@ -128,13 +128,6 @@ int main(void)
                   g_file_detected = 2;
               }
 
-              if (g_crc_failed)
-              {
-                  Bootloader_HandleFatalError("CRC Failed");
-                  while (1);  // Stop everything — do not continue
-              }
-
-              HAL_Delay(100);
           }
 
           // CRC was OK if we got here
