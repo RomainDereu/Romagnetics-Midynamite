@@ -81,5 +81,7 @@ uint8_t is_channel_blocked(uint8_t status_byte);
 void pipeline_final(midi_note *midi_msg, uint8_t length) ;
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length);
+void send_usb_midi_out(midi_note *original, midi_note *processed, uint8_t length);
+void send_usb_midi_bytes(midi_note *msg, uint8_t length);
 
 #endif /* INC_MIDI_MODIFY_H_ */

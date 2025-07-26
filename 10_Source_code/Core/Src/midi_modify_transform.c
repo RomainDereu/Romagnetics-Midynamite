@@ -16,18 +16,12 @@
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
-
 extern midi_modify_data_struct midi_modify_data;
 extern midi_transpose_data_struct midi_transpose_data;
 extern settings_data_struct settings_data;
 
-
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
-
-static midi_note midi_message;
-static midi_note original_midi_message;
-static uint8_t byte_count = 0;
 
 // Logic functions
 void midi_buffer_push(uint8_t byte) {
@@ -47,8 +41,10 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
 }
 
 void calculate_incoming_midi() {
+	midi_note midi_message;
     uint8_t byte;
     uint8_t midi_status;
+    uint8_t byte_count = 0;
 
     while (midi_buffer_pop(&byte)) {
         if (byte >= 0xF8) {
@@ -168,6 +164,7 @@ void pipeline_midi_modify(midi_note *midi_msg){
 		change_midi_channel(&midi_note_1, &midi_modify_data.send_to_midi_channel_1);
 		pipeline_final(&midi_note_1, 3);
 	}
+
 }
 
 // Transpose functions
@@ -298,7 +295,7 @@ uint8_t is_channel_blocked(uint8_t status_byte) {
 }
 
 void pipeline_final(midi_note *midi_msg, uint8_t length) {
-    original_midi_message = *midi_msg;
+    midi_note original_midi_message = *midi_msg;
     uint8_t status_nibble = midi_msg->status & 0xF0;
 
     // Send raw original only if midi_thru enabled AND send_original disabled
@@ -336,6 +333,9 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) {
             send_midi_out(midi_msg, length);
         }
     }
+
+    send_usb_midi_out(&original_midi_message, midi_msg, length);
+
 }
 
 
@@ -377,25 +377,33 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
         default:
             break;
     }
+}
 
-    // USB MIDI Thru — behaves like a UART now
-    if (settings_data.usb_thru == 1) {
-        if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 1) {
-            if (!is_channel_blocked(midi_bytes[0])) {
-                send_usb_midi_message(midi_bytes, length);
-            }
-        } else {
-            if (!is_channel_blocked(original_midi_message.status)) {
-                uint8_t original_bytes[3] = {
-                    original_midi_message.status,
-                    original_midi_message.note,
-                    original_midi_message.velocity
-                };
-                send_usb_midi_message(original_bytes, length);
-            }
-            if (!is_channel_blocked(midi_bytes[0])) {
-                send_usb_midi_message(midi_bytes, length);
-            }
+
+
+void send_usb_midi_out(midi_note *original, midi_note *processed, uint8_t length) {
+    if (!settings_data.usb_thru) return;
+
+    if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 1) {
+        if (!is_channel_blocked(processed->status)) {
+            send_usb_midi_bytes(processed, length);
+        }
+    } else {
+        if (!is_channel_blocked(original->status)) {
+            send_usb_midi_bytes(original, length);
+        }
+        if (!is_channel_blocked(processed->status)) {
+            send_usb_midi_bytes(processed, length);
         }
     }
 }
+
+void send_usb_midi_bytes(midi_note *msg, uint8_t length) {
+    uint8_t bytes[3] = {
+        msg->status,
+        msg->note,
+        msg->velocity
+    };
+    send_usb_midi_message(bytes, length);
+}
+
