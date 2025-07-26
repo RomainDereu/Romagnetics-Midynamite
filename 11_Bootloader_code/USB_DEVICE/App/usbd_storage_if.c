@@ -33,13 +33,13 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 volatile uint8_t  g_file_detected      = 0;
-volatile uint8_t  g_data_cluster_seen  = 0;
+
 volatile uint8_t  g_update_complete    = 0;
-volatile uint8_t g_erase_requested = 0;
-volatile uint32_t g_expected_length    = 0;
-volatile uint32_t g_bytes_written      = 0;
-volatile uint32_t g_file_data_start_sector = 0;
+
 volatile uint8_t g_crc_failed = 0;
+
+
+
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -343,7 +343,14 @@ int8_t STORAGE_Read_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t bl
 int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len)
 {
   /* USER CODE BEGIN 7 */
+
     UNUSED(lun);
+    static uint8_t data_cluster_seen = 0;
+    static uint32_t file_data_start_sector = 0;
+    static uint32_t g_expected_length    = 0;
+    static uint32_t bytes_written      = 0;
+
+
 
     // 1) Mirror FAT+root so host sees the file
     if (blk_addr < FAT_FIRST_DATA_SECTOR) {
@@ -360,7 +367,7 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
                     // read first cluster (bytes 26–27) little endian
                     uint16_t firstClust = buf[off+26] | (buf[off+27] << 8);
                     // convert to LBA: cluster #2 → FAT_FIRST_DATA_SECTOR
-                    g_file_data_start_sector = FAT_FIRST_DATA_SECTOR
+                    file_data_start_sector = FAT_FIRST_DATA_SECTOR
                                              + (firstClust - 2) * FAT_SECTORS_PER_CLUSTER;
                     // read file size (bytes 28–31)
                     g_expected_length =
@@ -382,14 +389,14 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
 
     // 3) on the first real data‐cluster write, kick off the flash erase
-    if (!g_data_cluster_seen) {
-        g_data_cluster_seen = 1;
-        g_bytes_written     = 0;
+    if (!data_cluster_seen) {
+        data_cluster_seen = 1;
+        bytes_written     = 0;
         Bootloader_StartFirmwareUpdate();
     }
 
     // 4) map this LBA into the proper flash offset
-    uint32_t data_idx   = blk_addr - g_file_data_start_sector;
+    uint32_t data_idx   = blk_addr - file_data_start_sector;
     uint32_t flash_addr = APP_START_ADDRESS
                         + data_idx * FAT_BYTES_PER_SECTOR;
 
@@ -414,9 +421,9 @@ int8_t STORAGE_Write_FS(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t b
     }
 
     // 6) track progress & finish when complete
-    g_bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
-    if (g_bytes_written >= g_expected_length) {
-        if (Bootloader_EndFirmwareUpdate()) {
+    bytes_written += blk_len * FAT_BYTES_PER_SECTOR;
+    if (bytes_written >= g_expected_length) {
+        if (Bootloader_EndFirmwareUpdate(g_expected_length)) {
             g_update_complete = 1;
         } else {
             Bootloader_HandleFatalError();

@@ -104,11 +104,10 @@ uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uin
 }
 
 
-uint8_t Bootloader_EndFirmwareUpdate(void)
+uint8_t Bootloader_EndFirmwareUpdate(uint32_t g_expected_length)
 {
-    uint32_t fw_size    = g_expected_length;
-    uint32_t crc_stored = *(uint32_t*)(APP_START_ADDRESS + fw_size - 4);
-    uint32_t crc_calc   = Bootloader_ComputeCRC32(APP_START_ADDRESS, fw_size - 4);
+    uint32_t crc_stored = *(uint32_t*)(APP_START_ADDRESS + g_expected_length - 4);
+    uint32_t crc_calc   = Bootloader_ComputeCRC32(APP_START_ADDRESS, g_expected_length - 4);
 
     if (crc_calc != crc_stored) {
         g_crc_failed = 1;

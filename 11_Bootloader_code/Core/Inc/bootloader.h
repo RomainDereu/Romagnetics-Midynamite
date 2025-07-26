@@ -36,12 +36,11 @@
 
 
 extern volatile uint8_t  g_file_detected;
-extern volatile uint8_t  g_data_cluster_seen;
-extern volatile uint8_t g_erase_requested;
-extern volatile uint8_t  g_update_complete;
-extern volatile uint32_t g_expected_length;
-extern volatile uint32_t g_bytes_written;
+
 extern volatile uint8_t g_crc_failed;
+extern volatile uint8_t  g_update_complete;
+
+
 
 extern uint8_t update_failed;
 
@@ -53,7 +52,7 @@ extern uint8_t update_failed;
 void Bootloader_StartFirmwareUpdate(void);
 
 uint8_t Bootloader_WriteFirmwareChunk(uint32_t address, const uint8_t *data, uint32_t length);
-uint8_t Bootloader_EndFirmwareUpdate(void);
+uint8_t Bootloader_EndFirmwareUpdate(uint32_t g_expected_length);
 typedef void (*pFunction)(void);
 void Bootloader_JumpToApplication(void);
 
