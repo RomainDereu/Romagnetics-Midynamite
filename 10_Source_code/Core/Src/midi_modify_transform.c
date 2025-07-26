@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>  // for abs()
+#include <stdlib.h>
 #include <string.h>
 
 #include "midi_modify.h"
