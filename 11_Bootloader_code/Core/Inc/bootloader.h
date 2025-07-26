@@ -42,6 +42,9 @@ extern volatile uint8_t  g_update_complete;
 extern volatile uint32_t g_expected_length;
 extern volatile uint32_t g_bytes_written;
 extern volatile uint8_t g_crc_failed;
+
+extern uint8_t update_failed;
+
 /* USER CODE END PV */
 
 
@@ -58,7 +61,7 @@ void Bootloader_InitCRC32(void);
 uint32_t Bootloader_ComputeCRC32(uint32_t addr, uint32_t size);
 
 
-void Bootloader_HandleFatalError(const char* message);
+void Bootloader_HandleFatalError();
 
 
 

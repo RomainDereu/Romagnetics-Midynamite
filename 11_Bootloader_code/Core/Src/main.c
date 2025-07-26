@@ -128,6 +128,14 @@ int main(void)
                   g_file_detected = 2;
               }
 
+              if (update_failed == 1)
+              {
+            	    screen_driver_SetCursor_WriteString("Write error", Font_6x8, White, 10, 30);
+            	    screen_driver_UpdateScreen();
+            	    USBD_Stop(&hUsbDeviceFS);
+              }
+
+
           }
 
           // CRC was OK if we got here

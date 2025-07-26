@@ -23,7 +23,7 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 
 static uint32_t current_flash_write_addr = APP_START_ADDRESS;
 static uint32_t crc32_table[256];
-
+uint8_t update_failed;
 
 
 void Bootloader_StartFirmwareUpdate(void)
@@ -182,10 +182,7 @@ uint32_t Bootloader_ComputeCRC32(uint32_t addr, uint32_t size) {
 
 
 
-void Bootloader_HandleFatalError(const char* message)
+void Bootloader_HandleFatalError()
 {
-    screen_driver_SetCursor_WriteString(message, Font_6x8, White, 10, 30);
-    screen_driver_UpdateScreen();
-    USBD_Stop(&hUsbDeviceFS);  // Cleanly cut USB
-    while (1);  // Lock up safely
+	update_failed = 1;
 }
