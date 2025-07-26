@@ -48,6 +48,8 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 						   uint8_t multiplier,
 						   uint8_t wrap_or_not);
 
+void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_t max_value);
+
 
 
 void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,

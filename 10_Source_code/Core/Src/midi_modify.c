@@ -99,6 +99,50 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
+	static uint8_t Btn1PrevState = 1;
+    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+    if(Btn1State == 0 && Btn1PrevState == 1){
+    	osDelay(50);
+    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+        if(Btn1State == 0){
+        	//Toggling the type based on the current select
+        	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
+        		switch (current_select) {
+
+        			case 0:
+        				utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+        				break;
+
+        			case 1:
+        				utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+        				break;
+        		}
+    		}
+
+
+        	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
+        		switch (current_select) {
+
+					case 0:
+					case 1:
+					case 2:
+						utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+						break;
+
+					case 3:
+						utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+						break;
+        			}
+        		}
+        }
+
+    }
+    Btn1PrevState = Btn1State;
+
+
+
+
+
 	if (menu_changed == 1 || old_select != current_select ||
 		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||
 		old_modify_data.split_note != midi_modify_data->split_note ||
@@ -107,7 +151,11 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		old_modify_data.split_midi_channel_2 != midi_modify_data->split_midi_channel_2 ||
 
 		old_modify_data.velocity_plus_minus != midi_modify_data->velocity_plus_minus ||
-		old_modify_data.velocity_absolute != midi_modify_data->velocity_absolute) {
+		old_modify_data.velocity_absolute != midi_modify_data->velocity_absolute ||
+
+		old_modify_data.change_or_split != midi_modify_data->change_or_split ||
+		old_modify_data.velocity_type != midi_modify_data->velocity_type)
+	 {
 		osThreadFlagsSet(display_updateHandle, 0x02);
 		}
 	*old_menu = MIDI_MODIFY;
