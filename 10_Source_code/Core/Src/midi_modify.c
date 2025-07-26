@@ -45,7 +45,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	//The amount of values to be changed depends on the MIDI_MODIFY setting
-    uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 2 : 4;
+    uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
 
 	//Updating the selected item and see if it has changed
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
@@ -62,6 +62,13 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 				break;
 			case 1:
+				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_2), 1, 16, select_changed, 1, NO_WRAP);
+				break;
+			case 2:
+				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 1, NO_WRAP);
+				break;
+
+			case 3:
 				if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
 					utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 					break;
@@ -87,6 +94,10 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);
 			break;
 		case 3:
+			utils_counter_change(timer4, &(midi_modify_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 12, NO_WRAP);
+			break;
+
+		case 4:
 			if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
 				utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
 				break;
@@ -110,10 +121,12 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
         		switch (current_select) {
 
         			case 0:
+        			case 1:
+        			case 2:
         				utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
         				break;
 
-        			case 1:
+        			case 3:
         				utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
         				break;
         		}
@@ -126,10 +139,11 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 					case 0:
 					case 1:
 					case 2:
+					case 3:
 						utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
 						break;
 
-					case 3:
+					case 4:
 						utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
 						break;
         			}
@@ -146,6 +160,10 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	if (menu_changed == 1 || old_select != current_select ||
 		old_modify_data.send_to_midi_channel_1 != midi_modify_data->send_to_midi_channel_1 ||
 		old_modify_data.send_to_midi_channel_2 != midi_modify_data->send_to_midi_channel_2 ||
+
+		old_modify_data.send_to_midi_out != midi_modify_data->send_to_midi_out ||
+
+
 
 
 		old_modify_data.split_note != midi_modify_data->split_note ||
@@ -221,34 +239,43 @@ void midi_modify_on_off(uint8_t on_or_off, uint8_t bottom_line){
 
 //Channel
 void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
-	screen_driver_SetCursor_WriteString(message->change, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
-    uint8_t channel = midi_modify_data->send_to_midi_channel_1;
+	screen_driver_SetCursor_WriteString(message->send_1_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
+    const char * channel_1_text = message->choices.midi_channels[midi_modify_data->send_to_midi_channel_1];
+    screen_driver_underline_WriteString(channel_1_text, Font_6x8 , White, 50, LINE_1_VERT, select_states[0]);
 
-    screen_driver_SetCursor_WriteString(message->to_channel, Font_6x8 , White, TEXT_LEFT_START, LINE_2_VERT);
-    char channel_text[5];
-    sprintf(channel_text, "%d", channel);
-    screen_driver_underline_WriteString(channel_text, Font_6x8 , White, 70, LINE_2_VERT, select_states[0]);
+	screen_driver_SetCursor_WriteString(message->send_2_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_2_VERT);
+    const char * channel_2_text = message->choices.midi_channels[midi_modify_data->send_to_midi_channel_2];
+    screen_driver_underline_WriteString(channel_2_text, Font_6x8 , White, 50, LINE_2_VERT, select_states[1]);
+
+	screen_driver_SetCursor_WriteString(message->output_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_3_VERT);
+    const char * midi_out_text = message->choices.midi_outs[midi_modify_data->send_to_midi_out];
+    screen_driver_underline_WriteString(midi_out_text, Font_6x8 , White, 50, LINE_3_VERT, select_states[2]);
+
 }
 
 
 void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
 
-    screen_driver_SetCursor_WriteString(message->low_to_ch, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
+    screen_driver_SetCursor_WriteString(message->low_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     uint8_t low_channel = midi_modify_data->split_midi_channel_1;
     char low_channel_text[6];
     sprintf(low_channel_text, "%d" , low_channel);
-    screen_driver_underline_WriteString(low_channel_text, Font_6x8, White, 70, LINE_1_VERT, select_states[0]);
+    screen_driver_underline_WriteString(low_channel_text, Font_6x8, White, 30, LINE_1_VERT, select_states[0]);
 
-    screen_driver_SetCursor_WriteString(message->high_to_ch, Font_6x8 , White, TEXT_LEFT_START, LINE_2_VERT);
+    screen_driver_SetCursor_WriteString(message->high_sem, Font_6x8 , White, 45, LINE_1_VERT);
     uint8_t high_channel = midi_modify_data->split_midi_channel_2;
     char high_channel_text[6];
     sprintf(high_channel_text, "%d", high_channel);
-    screen_driver_underline_WriteString(high_channel_text, Font_6x8, White, 70, LINE_2_VERT, select_states[1]);
+    screen_driver_underline_WriteString(high_channel_text, Font_6x8, White, 80, LINE_1_VERT, select_states[1]);
 
-	screen_driver_SetCursor_WriteString(message->split, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	screen_driver_SetCursor_WriteString(message->split, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
     const char * note_to_write = message->midi_note_names[midi_modify_data->split_note];
     //Needs more clearance than the other items due to sharps and flats
-    screen_driver_underline_WriteString(note_to_write, Font_6x8, White, 40, LINE_3_VERT, select_states[2]);
+    screen_driver_underline_WriteString(note_to_write, Font_6x8, White, 40, LINE_2_VERT, select_states[2]);
+
+	screen_driver_SetCursor_WriteString(message->output_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_3_VERT);
+    const char * midi_out_text = message->choices.midi_outs[midi_modify_data->send_to_midi_out];
+    screen_driver_underline_WriteString(midi_out_text, Font_6x8 , White, 50, LINE_3_VERT, select_states[3]);
 
 
 }
@@ -258,7 +285,7 @@ void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
 void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->change_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	//Depending on the value of midi modify, this will either be item 1 or 3
-	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 1 : 3;
+	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 3 : 4;
 	int8_t plus_minus_i8 = midi_modify_data->velocity_plus_minus;
     char modify_value[5];
     sprintf(modify_value, "%d", plus_minus_i8);
@@ -267,7 +294,7 @@ void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
 void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->fixed_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	//Depending on the value of midi modify, this will either be item 1 or 3
-	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 1 : 3;
+	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 3 : 4;
     char modify_value[5];
     sprintf(modify_value, "%d", midi_modify_data->velocity_absolute);
     screen_driver_underline_WriteString(modify_value, Font_6x8, White, 100, LINE_4_VERT+3, select_states[current_line]);

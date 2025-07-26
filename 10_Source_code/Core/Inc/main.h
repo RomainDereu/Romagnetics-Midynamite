@@ -133,7 +133,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 12891
+#define DATA_VALIDITY_CHECKSUM 12491
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 //Menu list

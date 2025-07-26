@@ -20,6 +20,7 @@ static const Message _message = {
     .about = "About",
     .midi_modify = "MIDI Modify",
     .midi_transpose = "MIDI Transpose",
+	.output_sem = "Output:",
 
 	.MIDI_Thru = "MIDI Thru",
 	.USB_Thru = "USB Thru",
@@ -28,11 +29,12 @@ static const Message _message = {
 	.X_equals_ignore_channel = "X = Ignore Channel",
 
     // Channel Modify
-    .to_channel = "To Channel",
     .midi_modify_select = "Ch. Modify",
     .split = "Split",
-    .low_to_ch = "Low to CH",
-    .high_to_ch = "High to CH",
+    .low_sem = "Low:",
+    .high_sem = "High:",
+	.send_1_sem = "Send 1:",
+	.send_2_sem = "Send 2:",
 
     // Velocity
     .velocity = "Velocity",
@@ -78,7 +80,7 @@ static const Message _message = {
     .octave_up = "Oct Up",
 
     // MIDI Out
-    .send_to = "Send To",
+    .send_to = "Send to",
     .midi_channel_1 = "Out",
     .midi_channel_2 = "Out 2",
     .midi_channel_1_2 = "OUT 1+2",
@@ -156,7 +158,14 @@ static const Message _message = {
         },
         .no_yes = { "No", "Yes" },
         .off_on = { "Off", "On" },
-        .usb_receive_send = { "No USB", "Send USB"}
+        .usb_receive_send = { "No USB", "Send USB"},
+        .midi_channels = {
+            "Off",
+            "Ch. 1",  "Ch. 2",  "Ch. 3",  "Ch. 4",
+            "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
+            "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
+            "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
+        }
     }
 };
 

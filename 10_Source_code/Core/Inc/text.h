@@ -21,6 +21,7 @@ typedef struct {
     const char *about;
     const char *midi_modify;
     const char *midi_transpose;
+    const char *output_sem;
 
     // Settings
     const char *MIDI_Thru;
@@ -31,11 +32,13 @@ typedef struct {
 
 
     // Channel Modify
-    const char *to_channel;
     const char *midi_modify_select;
     const char *split;
-    const char *low_to_ch;
-    const char *high_to_ch;
+    const char *low_sem;
+    const char *high_sem;
+    const char *send_1_sem;
+    const char *send_2_sem;
+
 
     // Velocity
     const char *velocity;
@@ -139,6 +142,7 @@ typedef struct {
         const char *no_yes[2];
         const char *off_on[2];
         const char *usb_receive_send[2];
+        const char *midi_channels[17];
     } choices;
 
 } Message;

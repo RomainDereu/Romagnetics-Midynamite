@@ -160,9 +160,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
                           uint8_t * old_menu){
 
 	contrast_index = calculate_contrast_index(settings_data.brightness);
-
-	midi_modify_data_struct old_modify_data = midi_modify_data;
-	midi_transpose_data_struct old_midi_transpose_data = midi_transpose_data;
 	settings_data_struct old_settings_data = settings_data;
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
