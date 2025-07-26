@@ -88,7 +88,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 			break;
 		case 1:
-			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 1, 16, select_changed, 1, NO_WRAP);
+			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 0, 16, select_changed, 1, NO_WRAP);
 			break;
 		case 2:
 			utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);

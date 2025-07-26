@@ -137,7 +137,6 @@ void Bootloader_JumpToApplication(void) {
     __disable_irq();
 
     // 2) Relocate vector table
-    SCB->VTOR = APP_START_ADDRESS;
     __DSB();  // Data Synchronization Barrier
     __ISB();  // Instruction Synchronization Barrier
 
