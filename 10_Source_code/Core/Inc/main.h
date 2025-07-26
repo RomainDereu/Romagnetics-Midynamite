@@ -37,7 +37,8 @@ typedef struct {
 	uint8_t send_to_midi_out;
 
 	//Modified in the menu
-	uint8_t send_to_midi_channel;
+	uint8_t send_to_midi_channel_1;
+	uint8_t send_to_midi_channel_2;
 
 
 	uint8_t split_note;

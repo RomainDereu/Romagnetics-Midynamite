@@ -99,7 +99,7 @@ void change_midi_channel(uint8_t *midi_msg) {
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t status_nibble = status & 0xF0;
         if(midi_modify_data.change_or_split == MIDI_MODIFY_CHANGE){
-            new_channel = midi_modify_data.send_to_midi_channel;
+            new_channel = midi_modify_data.send_to_midi_channel_1;
         }
         else if(midi_modify_data.change_or_split == MIDI_MODIFY_SPLIT){
             new_channel = (midi_msg[1] >= midi_modify_data.split_note) ?

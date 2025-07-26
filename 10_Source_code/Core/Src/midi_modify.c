@@ -59,7 +59,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
 		switch (current_select) {
 			case 0:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel), 1, 16, select_changed, 1, NO_WRAP);
+				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 				break;
 			case 1:
 				if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
@@ -144,7 +144,10 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	if (menu_changed == 1 || old_select != current_select ||
-		old_modify_data.send_to_midi_channel != midi_modify_data->send_to_midi_channel ||
+		old_modify_data.send_to_midi_channel_1 != midi_modify_data->send_to_midi_channel_1 ||
+		old_modify_data.send_to_midi_channel_2 != midi_modify_data->send_to_midi_channel_2 ||
+
+
 		old_modify_data.split_note != midi_modify_data->split_note ||
 
 		old_modify_data.split_midi_channel_1 != midi_modify_data->split_midi_channel_1 ||
@@ -219,7 +222,7 @@ void midi_modify_on_off(uint8_t on_or_off, uint8_t bottom_line){
 //Channel
 void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->change, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
-    uint8_t channel = midi_modify_data->send_to_midi_channel;
+    uint8_t channel = midi_modify_data->send_to_midi_channel_1;
 
     screen_driver_SetCursor_WriteString(message->to_channel, Font_6x8 , White, TEXT_LEFT_START, LINE_2_VERT);
     char channel_text[5];

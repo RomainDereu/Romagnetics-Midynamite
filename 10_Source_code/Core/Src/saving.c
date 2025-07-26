@@ -112,7 +112,8 @@ save_struct make_default_settings(void){
 	emergency_save.midi_modify_data.velocity_type = MIDI_MODIFY_CHANGED_VEL;
 	emergency_save.midi_modify_data.send_to_midi_out = MIDI_OUT_1;
 
-	emergency_save.midi_modify_data.send_to_midi_channel = 1;
+	emergency_save.midi_modify_data.send_to_midi_channel_1 = 1;
+	emergency_save.midi_modify_data.send_to_midi_channel_2 = 0;
 
 	emergency_save.midi_modify_data.split_note = 0;
 	emergency_save.midi_modify_data.split_midi_channel_1 = 1;

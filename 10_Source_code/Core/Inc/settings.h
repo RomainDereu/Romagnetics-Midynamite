@@ -13,8 +13,6 @@
 void screen_update_settings();
 
 //Different pages of the settings
-void screen_update_settings_midi_modify();
-void screen_update_settings_midi_transpose();
 void screen_update_global_settings1();
 void screen_update_global_settings2();
 void screen_update_midi_filter();

@@ -9,13 +9,9 @@
 
 // List of current select
 typedef enum {
-    MM_CHANNEL_SELECT = 0,
-    MM_VELOCITY_SELECT,
-    MM_MIDI_SELECT,
 
-    MT_TRANSPOSE_MODE,
 
-	SETT_START_MENU,
+	SETT_START_MENU = 0,
     SETT_SEND_TO_USB,
     SETT_BRIGHTNESS,
 
@@ -69,13 +65,7 @@ static uint8_t old_select = 0;
 // The current selected menu part
 void screen_update_settings(){
 	screen_driver_Fill(Black);
-	if(current_select >= MM_CHANNEL_SELECT && current_select <= MM_MIDI_SELECT){
-		screen_update_settings_midi_modify();
-	}
-	else if (current_select == MT_TRANSPOSE_MODE){
-		screen_update_settings_midi_transpose();
-	}
-	else if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
+	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
 		screen_update_global_settings1();
 	}
 	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
@@ -90,39 +80,6 @@ void screen_update_settings(){
 	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
 	screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	screen_driver_UpdateScreen();
-}
-
-// Midi Modify page
-void screen_update_settings_midi_modify(){
-	menu_display(&Font_6x8, message->settings_modify);
-
-	// Channel Modify
-	screen_driver_SetCursor_WriteString(message->midi_modify_select, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	const char * split_choice = message->choices.change_split[midi_modify_data.change_or_split];
-	screen_driver_underline_WriteString(split_choice, Font_6x8, White, 80, LINE_1_VERT, select_states[MM_CHANNEL_SELECT]);
-
-	// Velocity
-	screen_driver_SetCursor_WriteString(message->velocity, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	const char * velocity_choice = message->choices.change_fixed[midi_modify_data.velocity_type];
-	screen_driver_underline_WriteString(velocity_choice, Font_6x8, White, 80, LINE_2_VERT, select_states[MM_VELOCITY_SELECT]);
-
-	// Channel
-	screen_driver_SetCursor_WriteString(message->send_to, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	const char * midi_out_choice = message->choices.midi_outs[midi_modify_data.send_to_midi_out];
-	screen_driver_underline_WriteString(midi_out_choice, Font_6x8, White, 60, LINE_3_VERT, select_states[MM_MIDI_SELECT]);
-
-
-}
-
-// Transpose section
-void screen_update_settings_midi_transpose(){
-	menu_display(&Font_6x8, message->settings_transpose);
-
-	// Transpose Mode
-	screen_driver_SetCursor_WriteString(message->type, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	const char * transpose_type = message->choices.transpose_modes[midi_transpose_data.transpose_type];
-	screen_driver_underline_WriteString(transpose_type, Font_6x8, White, 60, LINE_1_VERT, select_states[MT_TRANSPOSE_MODE]);
-
 }
 
 // Settings Section
@@ -214,24 +171,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	// Compute whether the selection changed before the switch
 	uint8_t select_changed = (old_select != current_select);
 	switch (current_select) {
-		// Midi Modify section
-		case MM_CHANNEL_SELECT:
-			utils_counter_change(timer4, &midi_modify_data.change_or_split, 0, 1, select_changed, 1, WRAP);
-			break;
-
-		case MM_VELOCITY_SELECT:
-			utils_counter_change(timer4, &midi_modify_data.velocity_type, 0, 1, select_changed, 1, WRAP);
-			break;
-
-		case MM_MIDI_SELECT:
-			utils_counter_change(timer4, &midi_modify_data.send_to_midi_out, MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 1, WRAP);
-			break;
-
-		// Transpose section
-		case MT_TRANSPOSE_MODE:
-			utils_counter_change(timer4, &midi_transpose_data.transpose_type, 0, 1, select_changed, 1, WRAP);
-			break;
-
 		// Global section
 		case SETT_START_MENU:
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
@@ -291,12 +230,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	saving_settings_ui();
 
 	if(menu_changed || current_select != old_select ||
-		old_modify_data.change_or_split != midi_modify_data.change_or_split ||
-		old_modify_data.velocity_type != midi_modify_data.velocity_type ||
-		old_modify_data.send_to_midi_out != midi_modify_data.send_to_midi_out ||
-		old_midi_transpose_data.transpose_type != midi_transpose_data.transpose_type ||
-		old_midi_transpose_data.transpose_scale != midi_transpose_data.transpose_scale ||
-		old_midi_transpose_data.send_original != midi_transpose_data.send_original ||
 		old_settings_data.start_menu != settings_data.start_menu ||
 		old_settings_data.send_to_usb != settings_data.send_to_usb ||
 
