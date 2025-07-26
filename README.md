@@ -35,8 +35,9 @@ Modify incoming MIDI messages in two main ways:
 #### 🌀 Channel Mode
 
 - **MIDI Change**  
-  Redirect all incoming MIDI messages to a selected MIDI channel.  
-  Useful when your controller doesn't support quick channel switching.
+  Redirect all incoming MIDI messages to one or two selected MIDI channels.
+  This allows you to play two synths at the same time.
+  Also allows very quick channel changes between scenes.
 
 - **MIDI Split**  
   Split the keyboard into two zones:  
@@ -45,7 +46,8 @@ Modify incoming MIDI messages in two main ways:
   Ideal for controlling two synths with one keyboard.
 
 > The split point and both output channels are fully configurable.
-
+> The switch between MIDI Change and MIDI Split is made by pressing the select button when selecting a MIDI Change or MIDI Split item
+> The OUTs are fully configurable between OUT 1, OUT 2, OUT 1 & 2 & Split.
 ---
 
 #### 🎛 Velocity Mode
@@ -58,6 +60,9 @@ Modify incoming MIDI messages in two main ways:
 - **Fixed Velocity**  
   All incoming notes are set to a fixed velocity.  
   Useful for consistent volume or triggering.
+
+  > The switch between Velocity Change and Fixed Velocity is made by pressing the select button when selecting a velocity item
+
 
 ---
 
@@ -75,34 +80,14 @@ Apply real-time note transformations to incoming MIDI notes.
 - Select a **scale**, **mode**, and **interval**.  
 - The pedal generates a harmonized note based on the input.
 
-> Optionally mute the original note to only hear the harmony.
+> Optionally mute the original note only to hear the harmony.
+> The switch between Pitch Shift and Scale Mode is made by pressing the select button in the Transpose menu
 
 ---
 
 ## ⚙️ Settings
 
 Accessible in the **Settings** menu:
-
-- **Ch Modify**  
-  Toggle between *Change* and *Split* modes in MIDI Modify.
-
-- **Velocity**  
-  Select either *Changed* or *Fixed* mode for velocity handling.
-
-- **Send To**  
-  Route MIDI Modify and Transpose output to:
-  - Out 1  
-  - Out 2  
-  - Both  
-  - **Split**
-
-> In **Split mode**:  
-> - If Channel Mode is *Split*, low notes go to Out 1, high notes to Out 2.  
-> - If Transpose is enabled, the **original note** goes to Out 1, the **transposed note** to Out 2.
-
-- **Type**  
-  Select between *Pitch Shift* and *Scale (Harmonizer)* for MIDI Transpose.
-
 - **Start Menu**  
   Choose default screen on startup:  
   *Tempo*, *MIDI Modify*, *Transpose*, or *Settings*.
