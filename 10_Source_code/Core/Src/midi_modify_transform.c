@@ -346,14 +346,14 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) {
 
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
-    if (midi_message_raw->status < 0x80 || midi_message_raw->status > 0xEF)
+    if (midi_message_raw->status < 0x80 || midi_message_raw->status > 0xFF)
         return;
 
-    uint8_t midi_bytes[3] = {
-        midi_message_raw->status,
-        midi_message_raw->note,
-        midi_message_raw->velocity
-    };
+    uint8_t midi_bytes[3] = {0};
+
+    midi_bytes[0] = midi_message_raw->status;
+    if (length > 1) midi_bytes[1] = midi_message_raw->note;
+    if (length > 2) midi_bytes[2] = midi_message_raw->velocity;
 
     uint8_t note = (length > 1) ? midi_bytes[1] : 0;
 
