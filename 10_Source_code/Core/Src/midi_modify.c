@@ -43,13 +43,58 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
 
 
+	static uint8_t Btn1PrevState = 1;
+    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+    if(Btn1State == 0 && Btn1PrevState == 1){
+    	osDelay(50);
+    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+        if(Btn1State == 0){
+        	//Toggling the type based on the current select
+        	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
+        		switch (current_select) {
+
+        			case 0:
+        			case 1:
+        			case 2:
+        				utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+        				break;
+
+        			case 3:
+        				utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+        				break;
+        		}
+    		}
+
+
+        	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
+        		switch (current_select) {
+
+					case 0:
+					case 1:
+					case 2:
+					case 3:
+						utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+						break;
+
+					case 4:
+						utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+						break;
+        			}
+        		}
+        	current_select = 0;
+        }
+
+    }
+    Btn1PrevState = Btn1State;
+
+
 	//The amount of values to be changed depends on the MIDI_MODIFY setting
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
 
 	//Updating the selected item and see if it has changed
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
-	// Finding urrent item being selected
+
 	for (uint8_t x=0; x < amount_of_settings; x++){
 		select_states[x] = 0;
 	}
@@ -109,49 +154,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
-	static uint8_t Btn1PrevState = 1;
-    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-    if(Btn1State == 0 && Btn1PrevState == 1){
-    	osDelay(50);
-    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-        if(Btn1State == 0){
-        	//Toggling the type based on the current select
-        	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
-        		switch (current_select) {
 
-        			case 0:
-        			case 1:
-        			case 2:
-        				utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
-        				break;
-
-        			case 3:
-        				utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
-        				break;
-        		}
-    		}
-
-
-        	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-        		switch (current_select) {
-
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-						utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
-						break;
-
-					case 4:
-						utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
-						break;
-        			}
-        		}
-        	current_select = 0;
-        }
-
-    }
-    Btn1PrevState = Btn1State;
 
 
 
@@ -162,9 +165,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		old_modify_data.send_to_midi_channel_2 != midi_modify_data->send_to_midi_channel_2 ||
 
 		old_modify_data.send_to_midi_out != midi_modify_data->send_to_midi_out ||
-
-
-
 
 		old_modify_data.split_note != midi_modify_data->split_note ||
 
