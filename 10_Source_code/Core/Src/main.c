@@ -138,10 +138,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-  //Offsetting because of the Bootloader
-  SCB->VTOR = 0x08010000; // This must point to the app's vector table
-  __set_MSP(*(volatile uint32_t*)0x08010000);
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
