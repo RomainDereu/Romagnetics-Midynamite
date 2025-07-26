@@ -51,8 +51,7 @@ void calculate_incoming_midi() {
             // Real-Time messages (1 byte only)
             if (settings_data.midi_thru == 1) {
             	midi_note msg = { .status = byte, .note = 0, .velocity = 0 };
-            	send_midi_out(&msg, 1);
-            	send_usb_midi_out(&msg,1);
+            	pipeline_final(&msg, 1);
             }
             continue;
         }
@@ -100,21 +99,29 @@ void pipeline_start(midi_note *midi_msg) {
         return;
     }
 
-    // Send raw original only if midi_thru enabled AND send_original disabled
+    // MIDI & USB Thru
     if (settings_data.midi_thru == 1) {
         send_midi_out(midi_msg, length);
     }
-
     if (settings_data.usb_thru == 1) {
         send_usb_midi_out(midi_msg, length);
     }
+
+    if (midi_modify_data.currently_sending == 0 &&
+        midi_transpose_data.currently_sending == 0) {
+        return;
+    }
+
 
 
 	if (length==3 && midi_modify_data.currently_sending == 1){
 		pipeline_midi_modify(midi_msg);
 	}
 
-	else{
+	else if (length==3 && midi_transpose_data.currently_sending == 1){
+		pipeline_midi_transpose(midi_msg);
+	}
+	else {
 		pipeline_final(midi_msg, length);
 	}
 
@@ -157,22 +164,23 @@ void change_velocity(midi_note *midi_msg){
 
 
 void pipeline_midi_modify(midi_note *midi_msg){
+
 	change_velocity(midi_msg);
 
 	if(midi_modify_data.send_to_midi_channel_2 != 0){
 		midi_note midi_note_1 = * midi_msg;
 		change_midi_channel(&midi_note_1, &midi_modify_data.send_to_midi_channel_1);
-		pipeline_final(&midi_note_1, 3);
+		pipeline_midi_transpose(&midi_note_1);
 
 		midi_note midi_note_2 = * midi_msg;
 		change_midi_channel(&midi_note_2, &midi_modify_data.send_to_midi_channel_2);
-		pipeline_final(&midi_note_2, 3);
+		pipeline_midi_transpose(&midi_note_2);
 
 	}
 	else{
 		midi_note midi_note_1 = * midi_msg;
 		change_midi_channel(&midi_note_1, &midi_modify_data.send_to_midi_channel_1);
-		pipeline_final(&midi_note_1, 3);
+		pipeline_midi_transpose(&midi_note_1);
 	}
 
 }
@@ -304,15 +312,13 @@ uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
-void pipeline_final(midi_note *midi_msg, uint8_t length) {
-    midi_note original_midi_message = *midi_msg;
-    uint8_t status_nibble = midi_msg->status & 0xF0;
 
-
-
-    if ((midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SHIFT || midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED)
-        && midi_transpose_data.currently_sending == 1
-        && (status_nibble == 0x90 || status_nibble == 0x80)) {
+void pipeline_midi_transpose(midi_note *midi_msg){
+	//Sendng the messages f midi transpose f off
+	if(midi_transpose_data.currently_sending != 1){
+		pipeline_final(midi_msg, 3);
+		 return;
+	}
 
         if (midi_transpose_data.send_original == 1) {
             midi_note pre_shift_msg = *midi_msg;
@@ -324,25 +330,28 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) {
                 pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note, scale_intervals, midi_transpose_data.transpose_base_note);
             }
 
-            send_midi_out(&pre_shift_msg, length);
-            send_usb_midi_out(&pre_shift_msg, length);
+            pipeline_final(&pre_shift_msg, 3);
 
             midi_note shifted_msg = pre_shift_msg;
             midi_pitch_shift(&shifted_msg);
-            send_midi_out(&shifted_msg, length);
-            send_usb_midi_out(&shifted_msg, length);
+            pipeline_final(&shifted_msg, 3);
         } else {
             midi_pitch_shift(midi_msg);
-            send_midi_out(midi_msg, length);
-            send_usb_midi_out(midi_msg, length);
+            pipeline_final(midi_msg, 3);
         }
-    } else {
-        if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
-            send_midi_out(midi_msg, length);
-            send_usb_midi_out(midi_msg, length);
-        }
-    }
+
+
+
 }
+
+
+void pipeline_final(midi_note *midi_msg, uint8_t length){
+    send_midi_out(midi_msg, length);
+    send_usb_midi_out(midi_msg, length);
+
+}
+
+
 
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length) {

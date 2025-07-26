@@ -76,6 +76,8 @@ int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note);
 void midi_pitch_shift(midi_note *midi_msg);
 int midi_transpose_notes(uint8_t note);
+void pipeline_midi_transpose(midi_note *midi_msg);
+
 
 uint8_t is_channel_blocked(uint8_t status_byte);
 void pipeline_final(midi_note *midi_msg, uint8_t length) ;
