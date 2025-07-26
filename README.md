@@ -111,10 +111,7 @@ To immediately stop all MIDI output:
 
 **Press Select + Value simultaneously**
 
-This will send:
-
-- **All Notes Off**
-- **Note Off (for all channels)**
+This will send all notes off to all 16 MIDI channels.
 
 ---
 
