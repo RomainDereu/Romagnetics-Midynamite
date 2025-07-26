@@ -52,6 +52,7 @@ void calculate_incoming_midi() {
             if (settings_data.midi_thru == 1) {
             	midi_note msg = { .status = byte, .note = 0, .velocity = 0 };
             	send_midi_out(&msg, 1);
+            	send_usb_midi_out(&msg,1);
             }
             continue;
         }
@@ -97,6 +98,15 @@ void pipeline_start(midi_note *midi_msg) {
 
     if (is_channel_blocked(status)) {
         return;
+    }
+
+    // Send raw original only if midi_thru enabled AND send_original disabled
+    if (settings_data.midi_thru == 1) {
+        send_midi_out(midi_msg, length);
+    }
+
+    if (settings_data.usb_thru == 1) {
+        send_usb_midi_out(midi_msg, length);
     }
 
 
@@ -298,10 +308,7 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) {
     midi_note original_midi_message = *midi_msg;
     uint8_t status_nibble = midi_msg->status & 0xF0;
 
-    // Send raw original only if midi_thru enabled AND send_original disabled
-    if (settings_data.midi_thru == 1) {
-        send_midi_out(&original_midi_message, length);
-    }
+
 
     if ((midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SHIFT || midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED)
         && midi_transpose_data.currently_sending == 1
@@ -318,24 +325,23 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) {
             }
 
             send_midi_out(&pre_shift_msg, length);
+            send_usb_midi_out(&pre_shift_msg, length);
 
             midi_note shifted_msg = pre_shift_msg;
             midi_pitch_shift(&shifted_msg);
             send_midi_out(&shifted_msg, length);
+            send_usb_midi_out(&shifted_msg, length);
         } else {
             midi_pitch_shift(midi_msg);
             send_midi_out(midi_msg, length);
+            send_usb_midi_out(midi_msg, length);
         }
     } else {
         if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
             send_midi_out(midi_msg, length);
-        } else if (settings_data.midi_thru == 1) {
-            send_midi_out(midi_msg, length);
+            send_usb_midi_out(midi_msg, length);
         }
     }
-
-    send_usb_midi_out(&original_midi_message, midi_msg, length);
-
 }
 
 
@@ -381,24 +387,10 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
 
 
 
-void send_usb_midi_out(midi_note *original, midi_note *processed, uint8_t length) {
-    if (!settings_data.usb_thru) return;
+void send_usb_midi_out(midi_note *msg, uint8_t length) {
+    if (settings_data.send_to_usb == 0)
+        return;
 
-    if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 1) {
-        if (!is_channel_blocked(processed->status)) {
-            send_usb_midi_bytes(processed, length);
-        }
-    } else {
-        if (!is_channel_blocked(original->status)) {
-            send_usb_midi_bytes(original, length);
-        }
-        if (!is_channel_blocked(processed->status)) {
-            send_usb_midi_bytes(processed, length);
-        }
-    }
-}
-
-void send_usb_midi_bytes(midi_note *msg, uint8_t length) {
     uint8_t bytes[3] = {
         msg->status,
         msg->note,
@@ -406,4 +398,5 @@ void send_usb_midi_bytes(midi_note *msg, uint8_t length) {
     };
     send_usb_midi_message(bytes, length);
 }
+
 
