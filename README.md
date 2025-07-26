@@ -46,7 +46,9 @@ Modify incoming MIDI messages in two main ways:
   Ideal for controlling two synths with one keyboard.
 
 > The split point and both output channels are fully configurable.
+
 > The switch between MIDI Change and MIDI Split is made by pressing the select button when selecting a MIDI Change or MIDI Split item
+
 > The OUTs are fully configurable between OUT 1, OUT 2, OUT 1 & 2 & Split.
 ---
 
@@ -81,6 +83,7 @@ Apply real-time note transformations to incoming MIDI notes.
 - The pedal generates a harmonized note based on the input.
 
 > Optionally mute the original note only to hear the harmony.
+
 > The switch between Pitch Shift and Scale Mode is made by pressing the select button in the Transpose menu
 
 ---
