@@ -148,6 +148,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 						break;
         			}
         		}
+        	current_select = 0;
         }
 
     }

@@ -87,9 +87,24 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
+	static uint8_t Btn1PrevState = 1;
+    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+    if(Btn1State == 0 && Btn1PrevState == 1){
+    	osDelay(50);
+    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
+        if(Btn1State == 0){
+			utils_change_settings(&midi_transpose_data->transpose_type, 0, 1);
+			current_select = 0;
+        }
+
+    }
+    Btn1PrevState = Btn1State;
+
+
 
 
 	if (menu_changed == 1 || old_select != current_select ||
+		old_transpose_data.transpose_type != midi_transpose_data->transpose_type ||
 	    old_transpose_data.midi_shift_value != midi_transpose_data->midi_shift_value ||
 	    old_transpose_data.send_original != midi_transpose_data-> send_original||
 	    old_transpose_data.transpose_base_note != midi_transpose_data->transpose_base_note ||
