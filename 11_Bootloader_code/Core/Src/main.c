@@ -27,7 +27,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "usb_device.h"
-
+#include "usbd_core.h"
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
