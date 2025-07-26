@@ -13,7 +13,6 @@
 #include "menu.h"
 #include "midi_modify.h"
 #include "utils.h"
-#include "main.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
@@ -27,9 +26,9 @@ extern osThreadId display_updateHandle;
 extern const Message * message;
 
 
-static uint8_t  current_select = 0;
-static uint8_t  old_select = 0;
-static uint8_t select_states[4] = {0};
+static uint8_t current_select = 0;
+static uint8_t old_select = 0;
+static uint8_t select_states[5] = {0};
 
 
 

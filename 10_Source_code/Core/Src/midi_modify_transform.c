@@ -25,8 +25,8 @@ extern settings_data_struct settings_data;
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
 
-static uint8_t midi_message[3];
-static uint8_t original_midi_message[3];
+static midi_note midi_message;
+static midi_note original_midi_message;
 static uint8_t byte_count = 0;
 
 // Logic functions
@@ -53,10 +53,10 @@ void calculate_incoming_midi() {
     while (midi_buffer_pop(&byte)) {
         if (byte >= 0xF8) {
             // Real-Time messages (1 byte only)
-            uint8_t rt_msg[1] = {byte};
-        	if(settings_data.midi_thru ==1) {
-                send_midi_out(rt_msg, 1);
-        	}
+            if (settings_data.midi_thru == 1) {
+            	midi_note msg = { .status = byte, .note = 0, .velocity = 0 };
+            	send_midi_out(&msg, 1);
+            }
             continue;
         }
 
@@ -70,34 +70,35 @@ void calculate_incoming_midi() {
 
         if (byte & 0x80) {
             // Status byte - start a new message
-            midi_message[0] = byte;
+            midi_message.status = byte;
             midi_status = byte & 0xF0;
             byte_count = 1;
-        } else if (byte_count > 0 && byte_count < 3) {
-            // Data byte
-            midi_message[byte_count++] = byte;
-        }
+        } else if (byte_count == 1) {
+            // First data byte (note)
+            midi_message.note = byte;
+            byte_count = 2;
+        } else if (byte_count == 2) {
+            // Second data byte (velocity)
+            midi_message.velocity = byte;
 
+            // Program Change and Channel Pressure = 2 bytes
+            if (midi_status == 0xC0 || midi_status == 0xD0) {
+                pipeline_start(&midi_message);  // Only status and note fields used
+            } else {
+                pipeline_start(&midi_message);  // Full message
+            }
 
-
-        // Check for complete message length:
-        // Program Change (0xC0) and Channel Pressure (0xD0) are 2 bytes
-        if ((byte_count == 2) && (midi_status == 0xC0 || midi_status == 0xD0)) {
-        	pipeline_start(midi_message, 2);
-            byte_count = 0;
-        }
-        // Other channel messages (Note On/Off, Control Change, etc.) 3 bytes
-        else if (byte_count == 3) {
-        	pipeline_start(midi_message, 3);
             byte_count = 0;
         }
     }
 }
 
 
-void pipeline_start(uint8_t *midi_msg, uint8_t length) {
+void pipeline_start(midi_note *midi_msg) {
 
-    uint8_t status = midi_msg[0];
+    uint8_t status = midi_msg->status;
+    uint8_t length = ((status & 0xF0) == 0xC0 || (status & 0xF0) == 0xD0) ? 2 : 3;
+
     if (is_channel_blocked(status)) {
         return;
     }
@@ -114,8 +115,8 @@ void pipeline_start(uint8_t *midi_msg, uint8_t length) {
 
 }
 
-void change_midi_channel(uint8_t *midi_msg, uint8_t * send_to_midi_channel) {
-    uint8_t status = midi_msg[0];
+void change_midi_channel(midi_note *midi_msg, uint8_t * send_to_midi_channel) {
+    uint8_t status = midi_msg->status;
     uint8_t new_channel;
 
     if (status >= 0x80 && status <= 0xEF) {
@@ -124,16 +125,16 @@ void change_midi_channel(uint8_t *midi_msg, uint8_t * send_to_midi_channel) {
             new_channel = * send_to_midi_channel;
         }
         else if(midi_modify_data.change_or_split == MIDI_MODIFY_SPLIT){
-            new_channel = (midi_msg[1] >= midi_modify_data.split_note) ?
+            new_channel = (midi_msg->note >= midi_modify_data.split_note) ?
                                 midi_modify_data.split_midi_channel_2 : midi_modify_data.split_midi_channel_1;
         }
-        midi_msg[0] = status_nibble | ((new_channel - 1) & 0x0F);
+        midi_msg->status = status_nibble | ((new_channel - 1) & 0x0F);
     }
 }
 
-void change_velocity(uint8_t *midi_msg){
+void change_velocity(midi_note *midi_msg){
     // int16 in case of overflow
-    int16_t velocity = midi_msg[2];
+    int16_t velocity = midi_msg->velocity;
     if(midi_modify_data.velocity_type == MIDI_MODIFY_CHANGED_VEL){
         velocity += midi_modify_data.velocity_plus_minus;
     }
@@ -145,35 +146,28 @@ void change_velocity(uint8_t *midi_msg){
     if (velocity < 0) velocity = 0;
     if (velocity > 127) velocity = 127;
 
-    midi_msg[2] = (uint8_t)velocity;
+    midi_msg->velocity = (uint8_t)velocity;
 }
 
 
-void pipeline_midi_modify(uint8_t *midi_msg){
+void pipeline_midi_modify(midi_note *midi_msg){
 	change_velocity(midi_msg);
 
 	if(midi_modify_data.send_to_midi_channel_2 != 0){
-		uint8_t midi_note_1[3];
-		memcpy(midi_note_1, midi_msg, 3);
-		change_midi_channel(midi_note_1, &midi_modify_data.send_to_midi_channel_1);
-		pipeline_final(midi_note_1, 3);
+		midi_note midi_note_1 = * midi_msg;
+		change_midi_channel(&midi_note_1, &midi_modify_data.send_to_midi_channel_1);
+		pipeline_final(&midi_note_1, 3);
 
-
-		uint8_t midi_note_2[3];
-		memcpy(midi_note_2, midi_msg, 3);
-		change_midi_channel(midi_note_2, &midi_modify_data.send_to_midi_channel_2);
-		pipeline_final(midi_note_2, 3);
+		midi_note midi_note_2 = * midi_msg;
+		change_midi_channel(&midi_note_2, &midi_modify_data.send_to_midi_channel_2);
+		pipeline_final(&midi_note_2, 3);
 
 	}
 	else{
-		uint8_t midi_note_1[3];
-		memcpy(midi_note_1, midi_msg, 3);
-		change_midi_channel(midi_note_1, &midi_modify_data.send_to_midi_channel_1);
-		pipeline_final(midi_note_1, 3);
-
+		midi_note midi_note_1 = * midi_msg;
+		change_midi_channel(&midi_note_1, &midi_modify_data.send_to_midi_channel_1);
+		pipeline_final(&midi_note_1, 3);
 	}
-
-
 }
 
 // Transpose functions
@@ -270,11 +264,11 @@ int midi_transpose_notes(uint8_t note) {
     return new_note;
 }
 
-void midi_pitch_shift(uint8_t *midi_msg) {
-    uint8_t status = midi_msg[0] & 0xF0;
+void midi_pitch_shift(midi_note *midi_msg) {
+    uint8_t status = midi_msg->status & 0xF0;
 
     if (status == 0x90 || status == 0x80) {
-        int16_t note = midi_msg[1];
+        int16_t note = midi_msg->note;
 
         if (midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED) {
             note = midi_transpose_notes(note);
@@ -286,7 +280,7 @@ void midi_pitch_shift(uint8_t *midi_msg) {
         if (note < 0) note = 0;
         if (note > 127) note = 127;
 
-        midi_msg[1] = (uint8_t)note;
+        midi_msg->note = (uint8_t)note;
     }
 }
 
@@ -303,112 +297,105 @@ uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
-void pipeline_final(uint8_t *midi_msg, uint8_t length) {
-    for (int i = 0; i < length; ++i) {
-        original_midi_message[i] = midi_msg[i];
-    }
-
-    uint8_t status_nibble = midi_msg[0] & 0xF0;
+void pipeline_final(midi_note *midi_msg, uint8_t length) {
+    original_midi_message = *midi_msg;
+    uint8_t status_nibble = midi_msg->status & 0xF0;
 
     // Send raw original only if midi_thru enabled AND send_original disabled
     if (settings_data.midi_thru == 1) {
-        send_midi_out(original_midi_message, length);
+        send_midi_out(&original_midi_message, length);
     }
 
     if ((midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SHIFT || midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED)
-        && midi_transpose_data.currently_sending == 1 && (status_nibble == 0x90 || status_nibble == 0x80)) {
+        && midi_transpose_data.currently_sending == 1
+        && (status_nibble == 0x90 || status_nibble == 0x80)) {
 
         if (midi_transpose_data.send_original == 1) {
-            // Send the modified note (velocity and channel changed, but pitch unshifted)
-            uint8_t pre_shift_msg[3];
-            for (int i = 0; i < length; ++i) {
-                pre_shift_msg[i] = midi_msg[i];
-            }
+            midi_note pre_shift_msg = *midi_msg;
 
             if (midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED) {
                 uint8_t mode = midi_transpose_data.transpose_scale % AMOUNT_OF_MODES;
                 uint8_t scale_intervals[7];
                 get_mode_scale(mode, scale_intervals);
-                pre_shift_msg[1] = snap_note_to_scale(pre_shift_msg[1], scale_intervals, midi_transpose_data.transpose_base_note);
+                pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note, scale_intervals, midi_transpose_data.transpose_base_note);
             }
 
-            send_midi_out(pre_shift_msg, length);
+            send_midi_out(&pre_shift_msg, length);
 
-            // Now send the pitch-shifted note
-            uint8_t shifted_msg[3];
-            for (int i = 0; i < length; ++i) {
-                shifted_msg[i] = pre_shift_msg[i];
-            }
-            midi_pitch_shift(shifted_msg);
-            send_midi_out(shifted_msg, length);
+            midi_note shifted_msg = pre_shift_msg;
+            midi_pitch_shift(&shifted_msg);
+            send_midi_out(&shifted_msg, length);
         } else {
-            // Just pitch shift and send
             midi_pitch_shift(midi_msg);
             send_midi_out(midi_msg, length);
         }
     } else {
-        // No transpose active — just send modified note if enabled
         if (midi_modify_data.currently_sending == 1 || midi_transpose_data.currently_sending == 1) {
             send_midi_out(midi_msg, length);
-        }
-        else if (settings_data.midi_thru == 1) {
+        } else if (settings_data.midi_thru == 1) {
             send_midi_out(midi_msg, length);
         }
     }
 }
 
 
-void send_midi_out(uint8_t *midi_message, uint8_t length) {
-    uint8_t status = midi_message[0];
-    if (status < 0x80 || status > 0xEF) return;
+void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
+    if (midi_message_raw->status < 0x80 || midi_message_raw->status > 0xEF)
+        return;
 
-    uint8_t note = (length > 1) ? midi_message[1] : 0;
+    uint8_t midi_bytes[3] = {
+        midi_message_raw->status,
+        midi_message_raw->note,
+        midi_message_raw->velocity
+    };
 
-    // Send MIDI via UART depending on settings
+    uint8_t note = (length > 1) ? midi_bytes[1] : 0;
+
+    // Send to UART(s)
     switch (midi_modify_data.send_to_midi_out) {
         case MIDI_OUT_1:
-            HAL_UART_Transmit(&huart1, midi_message, length, 1000);
+            HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             break;
         case MIDI_OUT_2:
-            HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+            HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             break;
         case MIDI_OUT_1_2:
-            HAL_UART_Transmit(&huart1, midi_message, length, 1000);
-            HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+            HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+            HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             break;
         case MIDI_OUT_SPLIT:
             if (midi_modify_data.change_or_split == MIDI_MODIFY_SPLIT) {
-                if (note < midi_modify_data.split_note) {
-                    HAL_UART_Transmit(&huart1, midi_message, length, 1000);
-                } else {
-                    HAL_UART_Transmit(&huart2, midi_message, length, 1000);
-                }
+                if (note < midi_modify_data.split_note)
+                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                else
+                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             } else {
-                HAL_UART_Transmit(&huart1, midi_message, length, 1000);
-                HAL_UART_Transmit(&huart2, midi_message, length, 1000);
+                HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             }
             break;
         default:
             break;
     }
 
-    // USB MIDI Thru logic - avoid duplicates
+    // USB MIDI Thru — behaves like a UART now
     if (settings_data.usb_thru == 1) {
-        uint8_t original_status = original_midi_message[0];
-        // If midi_thru and send_original both active, send only modified (midi_message)
         if (settings_data.midi_thru == 1 && midi_transpose_data.send_original == 1) {
-            if (!is_channel_blocked(midi_message[0])) {
-                send_usb_midi_message(midi_message, length);
+            if (!is_channel_blocked(midi_bytes[0])) {
+                send_usb_midi_message(midi_bytes, length);
             }
         } else {
-            // Otherwise, send original and modified as before
-            if (!is_channel_blocked(original_status)) {
-                send_usb_midi_message(original_midi_message, length);
+            if (!is_channel_blocked(original_midi_message.status)) {
+                uint8_t original_bytes[3] = {
+                    original_midi_message.status,
+                    original_midi_message.note,
+                    original_midi_message.velocity
+                };
+                send_usb_midi_message(original_bytes, length);
             }
-            if (!is_channel_blocked(midi_message[0])) {
-                send_usb_midi_message(midi_message, length);
+            if (!is_channel_blocked(midi_bytes[0])) {
+                send_usb_midi_message(midi_bytes, length);
             }
         }
     }
 }
-
