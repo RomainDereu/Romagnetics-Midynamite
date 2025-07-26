@@ -1,3 +1,15 @@
+/**
+ * This Library was originally written by Olivier Van den Eede (4ilo) in 2016.
+ * Some refactoring was done and SPI support was added by Aleksander Alekseev (afiskon) in 2018.
+ *
+ * https://github.com/afiskon/stm32-screen_driver
+ *
+ * Further modifications by Romain Dereu to implement inside Midynamite
+ *
+ *
+ */
+
+
 #include "screen_driver.h"
 #include <math.h>
 #include <stdlib.h>
@@ -518,6 +530,35 @@ void screen_driver_DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
 
     return;
 }
+
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+										 screen_driver_COLOR color,
+										 uint8_t x_align,
+										 uint8_t y_align){
+	screen_driver_SetCursor(x_align, y_align);
+	screen_driver_WriteString(str, font , color);
+}
+
+
+
+void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
+										  screen_driver_COLOR color,
+										  uint8_t x_align,
+										  uint8_t y_align,
+										  uint8_t underlined){
+
+	uint8_t line_height = font.height +1;
+	screen_driver_SetCursor(x_align, y_align);
+	screen_driver_WriteString(str, font , color);
+	if(underlined == 1){
+		screen_driver_SetCursor(x_align, y_align +1);
+		uint8_t line_length = font.width * strlen(str);
+		screen_driver_Line(x_align, y_align + line_height,
+						   x_align+ line_length, y_align + line_height, White);
+
+	}
+}
+
 
 /* Draw a filled rectangle */
 void screen_driver_FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color) {

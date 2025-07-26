@@ -52,23 +52,13 @@ void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_
 
 
 
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
-										 screen_driver_COLOR color,
-										 uint8_t x_align,
-										 uint8_t y_align);
 
-
-void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
-										  screen_driver_COLOR color,
-										  uint8_t x_align,
-										  uint8_t y_align,
-										  uint8_t underlined);
 
 
 void panic_midi_all_notes_off(UART_HandleTypeDef *huart);
 void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2);
 
 
-
+void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
 #endif /* SRC_UTILS_H_ */

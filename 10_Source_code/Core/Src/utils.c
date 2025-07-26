@@ -110,33 +110,6 @@ void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_
 
 
 
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
-										 screen_driver_COLOR color,
-										 uint8_t x_align,
-										 uint8_t y_align){
-	screen_driver_SetCursor(x_align, y_align);
-	screen_driver_WriteString(str, font , color);
-}
-
-
-
-void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
-										  screen_driver_COLOR color,
-										  uint8_t x_align,
-										  uint8_t y_align,
-										  uint8_t underlined){
-
-	uint8_t line_height = font.height +1;
-	screen_driver_SetCursor(x_align, y_align);
-	screen_driver_WriteString(str, font , color);
-	if(underlined == 1){
-		screen_driver_SetCursor(x_align, y_align +1);
-		uint8_t line_length = font.width * strlen(str);
-		screen_driver_Line(x_align, y_align + line_height,
-						   x_align+ line_length, y_align + line_height, White);
-
-	}
-}
 
 
 
@@ -167,5 +140,23 @@ void panic_midi_all_notes_off(UART_HandleTypeDef *huart) {
 void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2) {
     panic_midi_all_notes_off(huart1);
     panic_midi_all_notes_off(huart2);
+}
+
+
+
+
+//On/ Off Part
+void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
+	screen_driver_Line(92, 10, 92, bottom_line, White);
+	uint8_t text_position = bottom_line/2;
+    screen_driver_SetCursor(95, text_position);
+
+    if(on_or_off ==0){
+  	  screen_driver_WriteString(message->off, Font_11x18 , White);
+    }
+    else if (on_or_off ==1){
+  	  screen_driver_WriteString(message->on, Font_11x18 , White);
+    }
+
 }
 

@@ -3,6 +3,10 @@
  * Some refactoring was done and SPI support was added by Aleksander Alekseev (afiskon) in 2018.
  *
  * https://github.com/afiskon/stm32-screen_driver
+ *
+ * Further modifications by Romain Dereu to implement inside Midynamite
+ *
+ *
  */
 
 #ifndef __screen_driver_H__
@@ -168,6 +172,22 @@ void screen_driver_FillCircle(uint8_t par_x,uint8_t par_y,uint8_t par_r,screen_d
 void screen_driver_Polyline(const screen_driver_VERTEX *par_vertex, uint16_t par_size, screen_driver_COLOR color);
 void screen_driver_DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color);
 void screen_driver_FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color);
+
+
+// Midynamite defs
+void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
+										 screen_driver_COLOR color,
+										 uint8_t x_align,
+										 uint8_t y_align);
+
+
+void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
+										  screen_driver_COLOR color,
+										  uint8_t x_align,
+										  uint8_t y_align,
+										  uint8_t underlined);
+
+
 
 /**
  * @brief Invert color of pixels in rectangle (include border)

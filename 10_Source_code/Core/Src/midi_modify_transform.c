@@ -89,6 +89,20 @@ void calculate_incoming_midi() {
     }
 }
 
+static uint8_t is_channel_blocked(uint8_t status_byte) {
+    if (!settings_data.channel_filter) return 0;
+
+    uint8_t status_nibble = status_byte & 0xF0;
+    uint8_t channel = status_byte & 0x0F;
+
+    if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
+        return (settings_data.filtered_channels >> channel) & 0x01;
+    }
+
+    return 0;
+}
+
+
 
 void pipeline_start(midi_note *midi_msg) {
 
@@ -128,7 +142,7 @@ void pipeline_start(midi_note *midi_msg) {
 
 }
 
-void change_midi_channel(midi_note *midi_msg, uint8_t * send_to_midi_channel) {
+static void change_midi_channel(midi_note *midi_msg, uint8_t * send_to_midi_channel) {
     uint8_t status = midi_msg->status;
     uint8_t new_channel;
 
@@ -145,7 +159,7 @@ void change_midi_channel(midi_note *midi_msg, uint8_t * send_to_midi_channel) {
     }
 }
 
-void change_velocity(midi_note *midi_msg){
+static void change_velocity(midi_note *midi_msg){
     // int16 in case of overflow
     int16_t velocity = midi_msg->velocity;
     if(midi_modify_data.velocity_type == MIDI_MODIFY_CHANGED_VEL){
@@ -186,9 +200,7 @@ void pipeline_midi_modify(midi_note *midi_msg){
 }
 
 // Transpose functions
-
-// Helper: rotate scale intervals to get mode scale degrees
-void get_mode_scale(uint8_t mode, uint8_t *scale) {
+static void get_mode_scale(uint8_t mode, uint8_t *scale) {
     const uint8_t mode_intervals[7][7] = {
         {0, 2, 4, 5, 7, 9, 11},  // Ionian
         {0, 2, 3, 5, 7, 9, 10},  // Dorian
@@ -202,7 +214,7 @@ void get_mode_scale(uint8_t mode, uint8_t *scale) {
 }
 
 // Helper: check if note is in scale
-int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
+static uint8_t note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
     int semitone_from_root = ((note - base_note) + 120) % 12;
     for (int i = 0; i < 7; i++) {
         if (scale[i] == semitone_from_root) return 1;
@@ -211,7 +223,7 @@ int note_in_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
 }
 
 // Snap note up/down by semitones until in scale (max 12 semitones search)
-uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
+static uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
     uint8_t up_note = note;
     uint8_t down_note = note;
 
@@ -225,7 +237,7 @@ uint8_t snap_note_to_scale(uint8_t note, uint8_t *scale, uint8_t base_note) {
     return note;  // fallback (should not happen)
 }
 
-int midi_transpose_notes(uint8_t note) {
+static uint8_t midi_transpose_notes(uint8_t note) {
     uint8_t mode = midi_transpose_data.transpose_scale % AMOUNT_OF_MODES;
 
     uint8_t scale_intervals[7];
@@ -279,7 +291,7 @@ int midi_transpose_notes(uint8_t note) {
     return new_note;
 }
 
-void midi_pitch_shift(midi_note *midi_msg) {
+static void midi_pitch_shift(midi_note *midi_msg) {
     uint8_t status = midi_msg->status & 0xF0;
 
     if (status == 0x90 || status == 0x80) {
@@ -299,18 +311,6 @@ void midi_pitch_shift(midi_note *midi_msg) {
     }
 }
 
-uint8_t is_channel_blocked(uint8_t status_byte) {
-    if (!settings_data.channel_filter) return 0;
-
-    uint8_t status_nibble = status_byte & 0xF0;
-    uint8_t channel = status_byte & 0x0F;
-
-    if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
-        return (settings_data.filtered_channels >> channel) & 0x01;
-    }
-
-    return 0;
-}
 
 
 void pipeline_midi_transpose(midi_note *midi_msg){

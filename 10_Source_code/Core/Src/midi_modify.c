@@ -187,58 +187,14 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 
-void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
-	screen_driver_Fill(Black);
-
-	menu_display(&Font_6x8, message->midi_modify);
-
-	//Top part of the screen (Channel)
-	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
-		screen_update_channel_change(midi_modify_data);
-	}
-
-	else if(midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-		screen_update_channel_split(midi_modify_data);
-	}
-
-	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
-
-	//Bottom part of the screen (velocity)
-	if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-		screen_update_velocity_change(midi_modify_data);
-	}
-
-	else if(midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-		screen_update_velocity_fixed(midi_modify_data);
-	}
-
-	//On/Off part
-	midi_modify_on_off(midi_modify_data->currently_sending, LINE_4_VERT);
-
-    screen_driver_UpdateScreen();
-
-}
 
 
-//On/ Off Part
-void midi_modify_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	screen_driver_Line(92, 10, 92, bottom_line, White);
-	uint8_t text_position = bottom_line/2;
-    screen_driver_SetCursor(95, text_position);
 
-    if(on_or_off ==0){
-  	  screen_driver_WriteString(message->off, Font_11x18 , White);
-    }
-    else if (on_or_off ==1){
-  	  screen_driver_WriteString(message->on, Font_11x18 , White);
-    }
-
-}
 
 
 
 //Channel
-void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
+static void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->send_1_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     const char * channel_1_text = message->choices.midi_channels[midi_modify_data->send_to_midi_channel_1];
     screen_driver_underline_WriteString(channel_1_text, Font_6x8 , White, 50, LINE_1_VERT, select_states[0]);
@@ -254,7 +210,7 @@ void screen_update_channel_change(midi_modify_data_struct * midi_modify_data){
 }
 
 
-void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
+static void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
 
     screen_driver_SetCursor_WriteString(message->low_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     uint8_t low_channel = midi_modify_data->split_midi_channel_1;
@@ -282,7 +238,7 @@ void screen_update_channel_split(midi_modify_data_struct * midi_modify_data){
 
 
 //Velocity
-void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
+static void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->change_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	//Depending on the value of midi modify, this will either be item 1 or 3
 	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 3 : 4;
@@ -291,7 +247,8 @@ void screen_update_velocity_change(midi_modify_data_struct * midi_modify_data){
     sprintf(modify_value, "%d", plus_minus_i8);
     screen_driver_underline_WriteString(modify_value, Font_6x8, White, 100, BOTTOM_LINE_VERT, select_states[current_line]);
 }
-void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data){
+
+static void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data){
 	screen_driver_SetCursor_WriteString(message->fixed_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	//Depending on the value of midi modify, this will either be item 1 or 3
 	uint8_t current_line = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 3 : 4;
@@ -301,3 +258,34 @@ void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_data){
 }
 
 
+void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
+	screen_driver_Fill(Black);
+
+	menu_display(&Font_6x8, message->midi_modify);
+
+	//Top part of the screen (Channel)
+	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
+		screen_update_channel_change(midi_modify_data);
+	}
+
+	else if(midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
+		screen_update_channel_split(midi_modify_data);
+	}
+
+	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
+
+	//Bottom part of the screen (velocity)
+	if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
+		screen_update_velocity_change(midi_modify_data);
+	}
+
+	else if(midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
+		screen_update_velocity_fixed(midi_modify_data);
+	}
+
+	//On/Off part
+	midi_display_on_off(midi_modify_data->currently_sending, LINE_4_VERT);
+
+    screen_driver_UpdateScreen();
+
+}

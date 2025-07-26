@@ -133,9 +133,7 @@ void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_da
 		midi_transpose_scaled_display(midi_transpose_data);
 	}
 
-
-
-	midi_modify_on_off(midi_transpose_data->currently_sending, 63);
+	midi_display_on_off(midi_transpose_data->currently_sending, 63);
 
     screen_driver_UpdateScreen();
 
