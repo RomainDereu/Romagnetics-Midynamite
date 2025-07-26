@@ -17,6 +17,13 @@
 extern uint8_t select_states_midi_modify[4];
 extern uint8_t select_states_midi_transpose[3];
 
+typedef struct {
+    uint8_t status;   ///< 0x8n = Note Off, 0x9n = Note On, etc.
+    uint8_t note;     ///< 0–127 pitch value
+    uint8_t velocity; ///< 0–127 velocity
+} midi_note_t;
+
+
 //midi_modify_display
 void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
 
@@ -55,10 +62,11 @@ void midi_buffer_push(uint8_t byte);
 uint8_t midi_buffer_pop(uint8_t *byte);
 
 void calculate_incoming_midi();
+void pipeline_start(uint8_t *midi_msg, uint8_t length);
 
-void change_midi_channel(uint8_t *midi_msg);
+void change_midi_channel(uint8_t *midi_msg, uint8_t * send_to_midi_channel);
 void change_velocity(uint8_t *midi_msg);
-
+void pipeline_midi_modify(uint8_t *midi_msg);
 
 
 //Transpose functions
@@ -70,7 +78,7 @@ void midi_pitch_shift(uint8_t *midi_msg);
 int midi_transpose_notes(uint8_t note);
 
 uint8_t is_channel_blocked(uint8_t status_byte);
-void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) ;
+void pipeline_final(uint8_t *midi_msg, uint8_t length) ;
 
 void send_midi_out(uint8_t *midi_message, uint8_t length);
 

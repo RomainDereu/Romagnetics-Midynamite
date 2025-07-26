@@ -78,28 +78,50 @@ void calculate_incoming_midi() {
             midi_message[byte_count++] = byte;
         }
 
+
+
         // Check for complete message length:
         // Program Change (0xC0) and Channel Pressure (0xD0) are 2 bytes
         if ((byte_count == 2) && (midi_status == 0xC0 || midi_status == 0xD0)) {
-            process_complete_midi_message(midi_message, 2);
+        	pipeline_start(midi_message, 2);
             byte_count = 0;
         }
         // Other channel messages (Note On/Off, Control Change, etc.) 3 bytes
         else if (byte_count == 3) {
-            process_complete_midi_message(midi_message, 3);
+        	pipeline_start(midi_message, 3);
             byte_count = 0;
         }
     }
 }
 
-void change_midi_channel(uint8_t *midi_msg) {
+
+void pipeline_start(uint8_t *midi_msg, uint8_t length) {
+
+    uint8_t status = midi_msg[0];
+    if (is_channel_blocked(status)) {
+        return;
+    }
+
+
+	if (length==3 && midi_modify_data.currently_sending == 1){
+		pipeline_midi_modify(midi_msg);
+	}
+
+	else{
+		pipeline_final(midi_msg, length);
+	}
+
+
+}
+
+void change_midi_channel(uint8_t *midi_msg, uint8_t * send_to_midi_channel) {
     uint8_t status = midi_msg[0];
     uint8_t new_channel;
 
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t status_nibble = status & 0xF0;
         if(midi_modify_data.change_or_split == MIDI_MODIFY_CHANGE){
-            new_channel = midi_modify_data.send_to_midi_channel_1;
+            new_channel = * send_to_midi_channel;
         }
         else if(midi_modify_data.change_or_split == MIDI_MODIFY_SPLIT){
             new_channel = (midi_msg[1] >= midi_modify_data.split_note) ?
@@ -124,6 +146,34 @@ void change_velocity(uint8_t *midi_msg){
     if (velocity > 127) velocity = 127;
 
     midi_msg[2] = (uint8_t)velocity;
+}
+
+
+void pipeline_midi_modify(uint8_t *midi_msg){
+	change_velocity(midi_msg);
+
+	if(midi_modify_data.send_to_midi_channel_2 != 0){
+		uint8_t midi_note_1[3];
+		memcpy(midi_note_1, midi_msg, 3);
+		change_midi_channel(midi_note_1, &midi_modify_data.send_to_midi_channel_1);
+		pipeline_final(midi_note_1, 3);
+
+
+		uint8_t midi_note_2[3];
+		memcpy(midi_note_2, midi_msg, 3);
+		change_midi_channel(midi_note_2, &midi_modify_data.send_to_midi_channel_2);
+		pipeline_final(midi_note_2, 3);
+
+	}
+	else{
+		uint8_t midi_note_1[3];
+		memcpy(midi_note_1, midi_msg, 3);
+		change_midi_channel(midi_note_1, &midi_modify_data.send_to_midi_channel_1);
+		pipeline_final(midi_note_1, 3);
+
+	}
+
+
 }
 
 // Transpose functions
@@ -253,27 +303,12 @@ uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
-void process_complete_midi_message(uint8_t *midi_msg, uint8_t length) {
-    uint8_t status = midi_msg[0];
-
-    // Channel filtering should apply before anything is sent — including thru
-    if (is_channel_blocked(status)) {
-        return;
-    }
-
+void pipeline_final(uint8_t *midi_msg, uint8_t length) {
     for (int i = 0; i < length; ++i) {
         original_midi_message[i] = midi_msg[i];
     }
 
-    uint8_t status_nibble = status & 0xF0;
-
-    // Apply velocity and channel modifications if enabled
-    if (midi_modify_data.currently_sending == 1) {
-        if (length == 3) {
-            change_velocity(midi_msg);
-        }
-        change_midi_channel(midi_msg);
-    }
+    uint8_t status_nibble = midi_msg[0] & 0xF0;
 
     // Send raw original only if midi_thru enabled AND send_original disabled
     if (settings_data.midi_thru == 1) {
