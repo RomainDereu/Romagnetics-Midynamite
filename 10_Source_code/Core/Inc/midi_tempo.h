@@ -16,7 +16,7 @@
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
 
-void send_midi_tempo_out(int32_t current_tempo);
+void send_midi_tempo_out(int32_t tempo_click_rate);
 
 
 void mt_start_stop(TIM_HandleTypeDef * timer,
