@@ -150,11 +150,11 @@ void pipeline_start(midi_note *midi_msg) {
 
     // Send to appropriate pipeline
     if (midi_modify_data.currently_sending == 1) {
-        pipeline_midi_modify(midi_msg); // modify will call transpose
+        pipeline_midi_modify(midi_msg);
     } else if (midi_transpose_data.currently_sending == 1) {
-        pipeline_midi_transpose(midi_msg); // no modify active
+        pipeline_midi_transpose(midi_msg);
     } else {
-        pipeline_final(midi_msg, length); // fallback, should never hit
+        pipeline_final(midi_msg, length); //Fallback case
     }
 }
 

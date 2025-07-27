@@ -89,10 +89,12 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	static uint8_t Btn1PrevState = 1;
     uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-    if(Btn1State == 0 && Btn1PrevState == 1){
+    uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+    if(Btn1State == 0 && Btn1PrevState == 1 && Btn2State == 1){
     	osDelay(50);
     	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-        if(Btn1State == 0){
+        Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        if(Btn1State == 0 && Btn2State == 1){
 			utils_change_settings(&midi_transpose_data->transpose_type, 0, 1);
 			current_select = 0;
         }
