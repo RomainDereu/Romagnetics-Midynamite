@@ -41,49 +41,72 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
 }
 
 void calculate_incoming_midi() {
-	midi_note midi_message;
-    uint8_t byte;
-    uint8_t midi_status;
-    uint8_t byte_count = 0;
+    static uint8_t running_status = 0;
+    static midi_note msg;
+    static uint8_t byte_count = 0;
+    static uint8_t expected_length = 0;
 
+    uint8_t byte;
     while (midi_buffer_pop(&byte)) {
+        // Real-time messages (do not affect parsing)
         if (byte >= 0xF8) {
-            // Real-Time messages (1 byte only)
             if (settings_data.midi_thru == 1) {
-            	midi_note msg = { .status = byte, .note = 0, .velocity = 0 };
-            	pipeline_final(&msg, 1);
+                midi_note rt = { .status = byte, .note = 0, .velocity = 0 };
+                pipeline_final(&rt, 1);
             }
             continue;
         }
 
+        // SysEx (skip until 0xF7)
         if (byte == 0xF0) {
-            // Skip SysEx messages
-            while (midi_buffer_pop(&byte) && byte != 0xF7) {
-                // Discard SysEx bytes
-            }
+            running_status = 0;
+            while (midi_buffer_pop(&byte) && byte != 0xF7);
             continue;
         }
 
         if (byte & 0x80) {
-            // Status byte - start a new message
-            midi_message.status = byte;
-            midi_status = byte & 0xF0;
-            byte_count = 1;
-        } else if (byte_count == 1) {
-            // First data byte (note)
-            midi_message.note = byte;
-            byte_count = 2;
-        } else if (byte_count == 2) {
-            // Second data byte (velocity)
-            midi_message.velocity = byte;
-
-            // Program Change and Channel Pressure = 2 bytes
-            if (midi_status == 0xC0 || midi_status == 0xD0) {
-                pipeline_start(&midi_message);  // Only status and note fields used
-            } else {
-                pipeline_start(&midi_message);  // Full message
+            // Status byte
+            if (byte >= 0xF0) {
+                // System common — unsupported
+                running_status = 0;
+                continue;
             }
 
+            running_status = byte;
+            msg.status = byte;
+
+            uint8_t status_nibble = byte & 0xF0;
+            expected_length = (status_nibble == 0xC0 || status_nibble == 0xD0) ? 2 : 3;
+            byte_count = 1; // waiting for data
+            continue;
+        }
+
+        // Data byte
+        if (running_status == 0) continue; // no valid running status
+
+        if (byte_count == 0) {
+            // We assume running status is in effect, start a new message
+            msg.status = running_status;
+
+            uint8_t status_nibble = running_status & 0xF0;
+            expected_length = (status_nibble == 0xC0 || status_nibble == 0xD0) ? 2 : 3;
+
+            msg.note = byte;
+            byte_count = 2;
+            if (expected_length == 2) {
+                pipeline_start(&msg);
+                byte_count = 0;
+            }
+        } else if (byte_count == 1) {
+            msg.note = byte;
+            byte_count++;
+            if (expected_length == 2) {
+                pipeline_start(&msg);
+                byte_count = 0;
+            }
+        } else if (byte_count == 2) {
+            msg.velocity = byte;
+            pipeline_start(&msg);
             byte_count = 0;
         }
     }
@@ -105,42 +128,36 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
 
 
 void pipeline_start(midi_note *midi_msg) {
-
     uint8_t status = midi_msg->status;
     uint8_t length = ((status & 0xF0) == 0xC0 || (status & 0xF0) == 0xD0) ? 2 : 3;
 
-    if (is_channel_blocked(status)) {
-        return;
-    }
+    if (is_channel_blocked(status)) return;
 
-    // MIDI & USB Thru
-    if (settings_data.midi_thru == 1) {
-        send_midi_out(midi_msg, length);
-    }
-    if (settings_data.usb_thru == 1) {
-        send_usb_midi_out(midi_msg, length);
-    }
-
+    // Nothing active: do only MIDI/USB thru
     if (midi_modify_data.currently_sending == 0 &&
         midi_transpose_data.currently_sending == 0) {
+
+        if (settings_data.midi_thru == 1) {
+            send_midi_out(midi_msg, length);
+        }
+
+        if (settings_data.usb_thru == 1) {
+            send_usb_midi_out(midi_msg, length);
+        }
+
         return;
     }
 
-
-
-	if (length==3 && midi_modify_data.currently_sending == 1){
-		pipeline_midi_modify(midi_msg);
-	}
-
-	else if (length==3 && midi_transpose_data.currently_sending == 1){
-		pipeline_midi_transpose(midi_msg);
-	}
-	else {
-		pipeline_final(midi_msg, length);
-	}
-
-
+    // Send to appropriate pipeline
+    if (midi_modify_data.currently_sending == 1) {
+        pipeline_midi_modify(midi_msg); // modify will call transpose
+    } else if (midi_transpose_data.currently_sending == 1) {
+        pipeline_midi_transpose(midi_msg); // no modify active
+    } else {
+        pipeline_final(midi_msg, length); // fallback, should never hit
+    }
 }
+
 
 static void change_midi_channel(midi_note *midi_msg, uint8_t * send_to_midi_channel) {
     uint8_t status = midi_msg->status;
@@ -315,11 +332,6 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 
 void pipeline_midi_transpose(midi_note *midi_msg){
 	//Sendng the messages f midi transpose f off
-	if(midi_transpose_data.currently_sending != 1){
-		pipeline_final(midi_msg, 3);
-		 return;
-	}
-
         if (midi_transpose_data.send_original == 1) {
             midi_note pre_shift_msg = *midi_msg;
 
