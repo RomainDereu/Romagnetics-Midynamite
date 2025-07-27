@@ -88,24 +88,15 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 }
 
 
-void send_midi_tempo_out(int32_t current_tempo){
-    uint32_t tempo_click_rate = 6000000 / (current_tempo * 24);
-
+void send_midi_tempo_out(int32_t tempo_click_rate){
     send_usb_midi_message(&clock_tick, 1);
-
     for (int i = 0; i < 2; i++) {
         if (UART_list_tempo[i] != NULL) {
             HAL_UART_Transmit(UART_list_tempo[i], &clock_tick, 1, 1000);
-        }
+        	}
+    	}
+	TIM2->ARR = tempo_click_rate;
     }
-
-
-
-    //Roro this should be refactored. Calculations have nothing to do in an interupt.
-    if (TIM2->ARR != tempo_click_rate) {
-        TIM2->ARR = tempo_click_rate;
-    }
-}
 
 void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_data) {
     // Stop clock
@@ -163,6 +154,10 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
 
 
+
+	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo){
+		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
+	}
 
 	//Updating in case of change
 	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||

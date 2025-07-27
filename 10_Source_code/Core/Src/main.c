@@ -85,9 +85,6 @@ uint8_t current_menu;
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
-//midi_clock tick
-volatile uint8_t midi_clock_tick_flag = 0;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -579,11 +576,6 @@ void MidiCore(void *argument)
   //Reading the incoming midi and giving it back
   calculate_incoming_midi();
 
-  if (midi_clock_tick_flag) {
-      midi_clock_tick_flag = 0;
-  send_midi_tempo_out(midi_tempo_data.current_tempo);
-  }
-
   osDelay(5);
   }
   /* USER CODE END 5 */
@@ -755,7 +747,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-     midi_clock_tick_flag = 1;
+	  send_midi_tempo_out(midi_tempo_data.tempo_click_rate);
   }
 
 

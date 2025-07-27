@@ -25,6 +25,7 @@ extern "C" {
 typedef struct {
 	//Modified in the tempo menu
 	int32_t current_tempo;
+	int32_t tempo_click_rate;
 	uint8_t currently_sending;
 	uint8_t send_to_midi_out;
 }midi_tempo_data_struct;
@@ -133,7 +134,7 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 12491
+#define DATA_VALIDITY_CHECKSUM 17491
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 //Menu list
