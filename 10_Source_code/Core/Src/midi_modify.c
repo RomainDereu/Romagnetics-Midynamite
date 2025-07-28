@@ -162,7 +162,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		old_modify_data.change_or_split != midi_modify_data->change_or_split ||
 		old_modify_data.velocity_type != midi_modify_data->velocity_type)
 	 {
-		osThreadFlagsSet(display_updateHandle, 0x02);
+		osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
 		}
 	*old_menu = MIDI_MODIFY;
 	old_select = current_select;

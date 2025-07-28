@@ -104,7 +104,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	    old_transpose_data.transpose_scale != midi_transpose_data->transpose_scale ||
 	    old_transpose_data.transpose_interval != midi_transpose_data->transpose_interval ||
 	    old_transpose_data.currently_sending != midi_transpose_data->currently_sending){
-		osThreadFlagsSet(display_updateHandle, 0x04);
+		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 	}
 
 	*old_menu = MIDI_TRANSPOSE;

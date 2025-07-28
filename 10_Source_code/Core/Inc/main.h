@@ -108,8 +108,8 @@ typedef struct {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-#define MIDI_IN_PORTS_NUM   0x01 // Specify input ports number of your device
-#define MIDI_OUT_PORTS_NUM  0x01 // Specify output ports number of your device
+#define MIDI_IN_PORTS_NUM   0x01
+#define MIDI_OUT_PORTS_NUM  0x01
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -202,6 +202,14 @@ typedef enum {
     USB_MIDI_OFF,
 	USB_MIDI_SEND,
 } midi_mode_t;
+
+
+typedef enum {
+    FLAG_TEMPO      = (1 << 0),
+    FLAG_MODIFY     = (1 << 1),
+    FLAG_TRANSPOSE  = (1 << 2),
+    FLAG_SETTINGS   = (1 << 3)
+} DisplayFlags_t;
 
 /* USER CODE END Private defines */
 

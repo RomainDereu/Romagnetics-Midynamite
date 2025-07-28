@@ -164,7 +164,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	   old_midi_tempo_information.currently_sending != midi_tempo_data->currently_sending ||
 	   old_midi_tempo_information.send_to_midi_out != midi_tempo_data->send_to_midi_out||
 	   menu_changed == 1 || current_select != old_select ){
-	   osThreadFlagsSet(display_updateHandle, 0x01);
+	   osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
 	}
 
 	*old_menu = MIDI_TEMPO;

@@ -633,17 +633,17 @@ void MediumTasks(void *argument)
 		 	case MIDI_TEMPO:
 		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
 		 		mt_start_stop(&htim2, &midi_tempo_data);
-		 		osThreadFlagsSet(display_updateHandle, 0x01);
+		 		osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
 		 		break;
 
 		 	case MIDI_MODIFY:
 		 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
-		 		osThreadFlagsSet(display_updateHandle, 0x02);
+		 		osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
 		 		break;
 
 		 	case MIDI_TRANSPOSE:
 		 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
-		 		osThreadFlagsSet(display_updateHandle, 0x04);
+		 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 		 		break;
 
 		 	default:
@@ -654,8 +654,6 @@ void MediumTasks(void *argument)
 
 	// Check for panic button (both buttons held down)
 	panic_midi(&huart1, &huart2, GPIOB, Btn1_Pin, Btn2_Pin);
-
-
 
 	//Let other tasks update
 	osDelay(10);
@@ -681,25 +679,25 @@ void DisplayUpdate(void *argument)
 
 	  switch (current_menu) {
 	  	case MIDI_TEMPO:
-	  		if (displayFlags & 0x01) {
+	  		if (displayFlags & FLAG_TEMPO) {
 	  			screen_update_midi_tempo(&midi_tempo_data);
 	  		}
 	  		break;
 
 	  	case MIDI_MODIFY:
-	  		if (displayFlags & 0x02) {
+	  		if (displayFlags & FLAG_MODIFY) {
 	  			screen_update_midi_modify(&midi_modify_data);
 	  		}
 	  		break;
 
 	  	case MIDI_TRANSPOSE:
-	  		if (displayFlags & 0x04) {
+	  		if (displayFlags & FLAG_TRANSPOSE) {
 	  			screen_update_midi_transpose(&midi_transpose_data);
 	  		}
 	  		break;
 
 	  	case SETTINGS:
-	  		if (displayFlags & 0x08) {
+	  		if (displayFlags & FLAG_SETTINGS) {
 	  			screen_update_settings();
 	  		}
 	  		break;

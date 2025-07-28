@@ -236,7 +236,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		old_settings_data.channel_filter != settings_data.channel_filter ||
 
 		old_settings_data.brightness != settings_data.brightness){
-		osThreadFlagsSet(display_updateHandle, 0x08);
+		osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
 	}
 
 	*old_menu = SETTINGS;
