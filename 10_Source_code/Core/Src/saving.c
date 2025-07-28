@@ -22,12 +22,13 @@
 #include "screen_driver_fonts.h"
 
 #include "stm32f4xx_hal.h"
+#include "utils.h"
+
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
 extern midi_transpose_data_struct midi_transpose_data;
 extern settings_data_struct settings_data;
-
 
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 		                  midi_modify_data_struct * midi_modify_data_to_save,
@@ -42,11 +43,6 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 	this_save.check_data_validity = DATA_VALIDITY_CHECKSUM;
 	return this_save;
 }
-
-
-
-
-
 
 HAL_StatusTypeDef store_settings(save_struct *data){
 	HAL_StatusTypeDef status;
@@ -113,39 +109,39 @@ save_struct make_default_settings(void){
 	emergency_save.midi_modify_data.velocity_type = MIDI_MODIFY_CHANGED_VEL;
 	emergency_save.midi_modify_data.send_to_midi_out = MIDI_OUT_1;
 
-	emergency_save.midi_modify_data.send_to_midi_channel_1 = 1;
-	emergency_save.midi_modify_data.send_to_midi_channel_2 = 0;
+	emergency_save.midi_modify_data.send_to_midi_channel_1 = MIDI_CH_1;
+	emergency_save.midi_modify_data.send_to_midi_channel_2 = NO_MIDI_CH;
 
-	emergency_save.midi_modify_data.split_note = 0;
+	emergency_save.midi_modify_data.split_note = MIDDLE_C;
 	emergency_save.midi_modify_data.split_midi_channel_1 = 1;
 	emergency_save.midi_modify_data.split_midi_channel_2 = 2;
 
-	emergency_save.midi_modify_data.velocity_plus_minus = 0;
-	emergency_save.midi_modify_data.velocity_absolute = 127;
+	emergency_save.midi_modify_data.velocity_plus_minus = VEL_MIN;
+	emergency_save.midi_modify_data.velocity_absolute = VEL_MAX;
 
-	emergency_save.midi_modify_data.currently_sending = 0;
+	emergency_save.midi_modify_data.currently_sending = NOT_SENDING;
 
 	//midi_transpose_data
 	emergency_save.midi_transpose_data.transpose_type = MIDI_TRANSPOSE_SHIFT;
 
 	emergency_save.midi_transpose_data.midi_shift_value = 12;
 
-	emergency_save.midi_transpose_data.transpose_base_note = 0;
+	emergency_save.midi_transpose_data.transpose_base_note = FALSE;
 	emergency_save.midi_transpose_data.transpose_scale = IONIAN;
 	emergency_save.midi_transpose_data.transpose_interval = THIRD_DOWN;
 
-	emergency_save.midi_transpose_data.send_original = 1;
+	emergency_save.midi_transpose_data.send_original = TRUE;
 
-	emergency_save.midi_transpose_data.currently_sending = 0;
+	emergency_save.midi_transpose_data.currently_sending = NOT_SENDING;
 
 	//settings_data
 	emergency_save.settings_data.start_menu = MIDI_TEMPO;
-	emergency_save.settings_data.send_to_usb = 0;
+	emergency_save.settings_data.send_to_usb = USB_MIDI_OFF;
 	emergency_save.settings_data.brightness = 0xFF;
 
-	emergency_save.settings_data.midi_thru = 0;
-	emergency_save.settings_data.usb_thru = 0;
-	emergency_save.settings_data.channel_filter = 0;
+	emergency_save.settings_data.midi_thru = FALSE;
+	emergency_save.settings_data.usb_thru = FALSE;
+	emergency_save.settings_data.channel_filter = FALSE;
 
 	emergency_save.settings_data.filtered_channels = 0b0000000000000000;
 
@@ -169,11 +165,8 @@ void load_settings(){
 	  }
 	  //If the save is corrupt, use default values
 	  else {
-
 		  save_struct emergency_save = make_default_settings();
 		  store_settings(&emergency_save);
 		  load_settings();
 	  }
-
-
 }

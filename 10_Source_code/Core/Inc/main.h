@@ -204,6 +204,19 @@ typedef enum {
 } midi_mode_t;
 
 
+//Sending
+typedef enum {
+    NOT_SENDING,
+	SENDING,
+} sending_t;
+
+//Sending
+typedef enum {
+    FALSE,
+	TRUE,
+} boolean_t;
+
+
 typedef enum {
     FLAG_TEMPO      = (1 << 0),
     FLAG_MODIFY     = (1 << 1),
