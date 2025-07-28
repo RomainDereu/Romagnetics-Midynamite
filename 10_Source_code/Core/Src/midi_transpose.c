@@ -42,11 +42,8 @@ static void transpose_shift_build_select(
 }
 
 static void transpose_scaled_build_select(
-    TIM_HandleTypeDef           *timer4,
-    midi_transpose_data_struct  *d,
-    uint8_t                      current_select,
-    uint8_t                      select_changed
-) {
+    TIM_HandleTypeDef *timer4, midi_transpose_data_struct  *d,
+    uint8_t current_select, uint8_t select_changed) {
     switch (current_select) {
     case 0:
         utils_counter_change(timer4, &d->transpose_base_note, 0, 11, select_changed, 12, NO_WRAP);
@@ -106,32 +103,11 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	old_select = current_select;
 	*old_menu = MIDI_TRANSPOSE;
-
-
 }
 
 
 
-void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data){
-
-	screen_driver_Fill(Black);
-	menu_display(&Font_6x8, message->midi_transpose);
-
-	if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT){
-		midi_transpose_shift_display(midi_transpose_data);
-	}
-	else if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED){
-		midi_transpose_scaled_display(midi_transpose_data);
-	}
-
-	midi_display_on_off(midi_transpose_data->currently_sending, 63);
-
-    screen_driver_UpdateScreen();
-
-}
-
-
-void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data){
+static void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data){
 
 	screen_driver_SetCursor_WriteString(message->shift_by, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     char modify_value[5];
@@ -148,7 +124,7 @@ void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_da
 }
 
 
-void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data){
+static void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data){
 
 
 	//Base Note
@@ -174,3 +150,24 @@ void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_d
 	screen_driver_underline_WriteString(send_base_note_text, Font_6x8, White, 65, LINE_4_VERT, select_states[3]);
 
 }
+
+
+
+void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data){
+
+	screen_driver_Fill(Black);
+	menu_display(&Font_6x8, message->midi_transpose);
+
+	if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT){
+		midi_transpose_shift_display(midi_transpose_data);
+	}
+	else if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED){
+		midi_transpose_scaled_display(midi_transpose_data);
+	}
+
+	midi_display_on_off(midi_transpose_data->currently_sending, 63);
+
+    screen_driver_UpdateScreen();
+
+}
+
