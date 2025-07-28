@@ -75,4 +75,13 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 		                uint32_t      db_ms);
 
 
+uint8_t menu_check_for_updates(
+    uint8_t   menu_changed,
+    const void *old_data,
+    const void *data_ptr,
+    size_t    sz,
+    uint8_t       *old_select,
+    uint8_t       *current_select);
+
+
 #endif /* SRC_UTILS_H_ */

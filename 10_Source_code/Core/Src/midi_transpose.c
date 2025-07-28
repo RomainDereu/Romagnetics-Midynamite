@@ -19,9 +19,6 @@
 #include "text.h"
 #include "utils.h"
 
-
-static uint8_t current_select = 0;
-static uint8_t old_select = 0;
 static uint8_t select_states[4] = {0};
 
 extern UART_HandleTypeDef huart1;
@@ -34,6 +31,9 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 						     midi_transpose_data_struct * midi_transpose_data,
 							 uint8_t * old_menu){
 
+	static uint8_t current_select = 0;
+	static uint8_t old_select = 0;
+
 	midi_transpose_data_struct old_transpose_data = * midi_transpose_data;
 	uint8_t menu_changed = (*old_menu != MIDI_TRANSPOSE);
 
@@ -43,7 +43,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
 
-	// Finding urrent item being selected
+	// Finding current item being selected
 	for (uint8_t x=0; x < amount_of_settings; x++){
 		select_states[x] = 0;
 	}
@@ -93,22 +93,18 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	    }
 
 
-
-
-
-	if (menu_changed == 1 || old_select != current_select ||
-		old_transpose_data.transpose_type != midi_transpose_data->transpose_type ||
-	    old_transpose_data.midi_shift_value != midi_transpose_data->midi_shift_value ||
-	    old_transpose_data.send_original != midi_transpose_data-> send_original||
-	    old_transpose_data.transpose_base_note != midi_transpose_data->transpose_base_note ||
-	    old_transpose_data.transpose_scale != midi_transpose_data->transpose_scale ||
-	    old_transpose_data.transpose_interval != midi_transpose_data->transpose_interval ||
-	    old_transpose_data.currently_sending != midi_transpose_data->currently_sending){
+	if(menu_check_for_updates(menu_changed,
+						   &old_transpose_data,
+						   midi_transpose_data,
+						   sizeof *midi_transpose_data,
+						   &current_select,
+						   &old_select)){
 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 	}
 
-	*old_menu = MIDI_TRANSPOSE;
 	old_select = current_select;
+	*old_menu = MIDI_TRANSPOSE;
+
 
 }
 

@@ -16,6 +16,8 @@
 
 #include "text.h"
 
+extern osThreadId display_updateHandle;
+
 
 
 void list_of_UART_to_send_to(uint8_t send_channels,
@@ -228,6 +230,22 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 		    if (prev_state) *prev_state = cur;
 		    return 0;
 		}
+
+
+//Checks for updates to a menu and refreshes the screen if needed
+uint8_t menu_check_for_updates(
+    uint8_t   menu_changed,
+    const void *old_data,
+    const void *data_ptr,
+    size_t    sz,
+    uint8_t       *old_select,
+    uint8_t       *current_select) {
+	uint8_t changed =  ( menu_changed
+      || (*old_select != *current_select)
+      || memcmp(old_data, data_ptr, sz) != 0
+    );
+	return changed;
+}
 
 
 
