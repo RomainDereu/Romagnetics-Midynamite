@@ -226,21 +226,12 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 	saving_settings_ui();
 
-	if(menu_changed || current_select != old_select ||
-		old_settings_data.start_menu != settings_data.start_menu ||
-		old_settings_data.send_to_usb != settings_data.send_to_usb ||
-
-		old_settings_data.usb_thru != settings_data.usb_thru ||
-		old_settings_data.midi_thru != settings_data.midi_thru ||
-		old_settings_data.filtered_channels != settings_data.filtered_channels ||
-		old_settings_data.channel_filter != settings_data.channel_filter ||
-
-		old_settings_data.brightness != settings_data.brightness){
-		osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
-	}
-
-	*old_menu = SETTINGS;
-	old_select = current_select;
+    if (menu_check_for_updates(menu_changed,  &old_settings_data, &settings_data,
+          sizeof settings_data, &current_select, &old_select)) {
+        osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
+    }
+    old_select  = current_select;
+    *old_menu   = SETTINGS;
 }
 
 // Save portion

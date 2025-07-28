@@ -232,6 +232,19 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 		}
 
 
+//GUI function setting a flag on the currently selected item
+void select_current_state(uint8_t *select_states,
+                                        uint8_t  amount,
+                                        uint8_t  current_select)
+{
+    for (uint8_t i = 0; i < amount; i++) {
+        select_states[i] = 0;
+    }
+    select_states[current_select] = 1;
+}
+
+
+
 //Checks for updates to a menu and refreshes the screen if needed
 uint8_t menu_check_for_updates(
     uint8_t   menu_changed,

@@ -145,27 +145,13 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
 
-	if (menu_changed == 1 || old_select != current_select ||
-		old_modify_data.send_to_midi_channel_1 != midi_modify_data->send_to_midi_channel_1 ||
-		old_modify_data.send_to_midi_channel_2 != midi_modify_data->send_to_midi_channel_2 ||
-
-		old_modify_data.send_to_midi_out != midi_modify_data->send_to_midi_out ||
-
-		old_modify_data.split_note != midi_modify_data->split_note ||
-
-		old_modify_data.split_midi_channel_1 != midi_modify_data->split_midi_channel_1 ||
-		old_modify_data.split_midi_channel_2 != midi_modify_data->split_midi_channel_2 ||
-
-		old_modify_data.velocity_plus_minus != midi_modify_data->velocity_plus_minus ||
-		old_modify_data.velocity_absolute != midi_modify_data->velocity_absolute ||
-
-		old_modify_data.change_or_split != midi_modify_data->change_or_split ||
-		old_modify_data.velocity_type != midi_modify_data->velocity_type)
-	 {
-		osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
-		}
-	*old_menu = MIDI_MODIFY;
-	old_select = current_select;
+    if (menu_check_for_updates(menu_changed, &old_modify_data,
+                               midi_modify_data, sizeof *midi_modify_data,
+                               &current_select, &old_select)) {
+        osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
+    }
+    old_select  = current_select;
+    *old_menu   = MIDI_MODIFY;
 }
 
 
