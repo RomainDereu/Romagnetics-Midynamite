@@ -129,7 +129,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu){
 
-	midi_tempo_data_struct old_midi_tempo_information = * midi_tempo_data;
+	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
 	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 
 	utils_counter_change(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
@@ -152,21 +152,15 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
-
-
-
-	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo){
+	if(old_midi_tempo_data.current_tempo != midi_tempo_data->current_tempo){
 		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
 	}
+    if (menu_check_for_updates( menu_changed, &old_midi_tempo_data, midi_tempo_data, sizeof *midi_tempo_data,
+          &current_select, &old_select  )) {
+        osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
+    }
+    old_select  = current_select;
+    *old_menu   = MIDI_TEMPO;
 
-	//Updating in case of change
-	if(old_midi_tempo_information.current_tempo != midi_tempo_data->current_tempo ||
-	   old_midi_tempo_information.currently_sending != midi_tempo_data->currently_sending ||
-	   old_midi_tempo_information.send_to_midi_out != midi_tempo_data->send_to_midi_out||
-	   menu_changed == 1 || current_select != old_select ){
-	   osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
-	}
 
-	*old_menu = MIDI_TEMPO;
-	old_select = current_select;
 }
