@@ -21,15 +21,12 @@ void menu_display(const screen_driver_Font_t * font, const char * menu_message){
 
 
 void menu_change_check(uint8_t * current_menu){
-	uint8_t Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
-	  if(Btn4State == 0)
-		 {
-			 //Debouncing
-			 osDelay(10);
-			 Btn4State = HAL_GPIO_ReadPin(GPIOB, Btn4_Pin);
-			 if(Btn4State == 0){*current_menu+=1;}
-			 if(*current_menu > AMOUNT_OF_MENUS){*current_menu = MIDI_TEMPO;}
+	  if(debounce_button(GPIOB, Btn4_Pin, NULL, 50)){
+          *current_menu+=1;
+		  if(*current_menu > AMOUNT_OF_MENUS-1){
+			  *current_menu = MIDI_TEMPO;
+		  }
 			 //Delay to allow for continuous pressing of the button
-			 osDelay(300);
+			 osDelay(100);
 	  }
 }

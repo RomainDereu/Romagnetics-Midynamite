@@ -245,27 +245,23 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 // Save portion
 void saving_settings_ui(){
-	uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-	if(Btn1State == 0){
-		osDelay(10);
-		Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-		if(Btn1State == 0){
-			// Saving the current configuration to the memory
-			screen_driver_SetCursor_WriteString(message->saving, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-			screen_driver_UpdateScreen();
 
-			save_struct memory_to_be_saved = creating_save(&midi_tempo_data,
-			                                               &midi_modify_data,
-			                                               &midi_transpose_data,
-			                                               &settings_data);
-			store_settings(&memory_to_be_saved);
+	if(debounce_button(GPIOB, Btn1_Pin, NULL, 10)){
+		// Saving the current configuration to the memory
+		screen_driver_SetCursor_WriteString(message->saving, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
 
-			screen_driver_SetCursor_WriteString(message->saved, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-			screen_driver_UpdateScreen();
-			osDelay(1000);
-			screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-			screen_driver_UpdateScreen();
-		}
+		save_struct memory_to_be_saved = creating_save(&midi_tempo_data,
+		                                               &midi_modify_data,
+		                                               &midi_transpose_data,
+		                                               &settings_data);
+		store_settings(&memory_to_be_saved);
+
+		screen_driver_SetCursor_WriteString(message->saved, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+		osDelay(1000);
+		screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
 	}
 }
 
