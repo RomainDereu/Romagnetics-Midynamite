@@ -165,22 +165,6 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 
 //
 
-typedef void (*menu_toggle_t)(void);
-uint8_t handle_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2, menu_toggle_t toggle){
-  static uint8_t prev = 1;
-  uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-  uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
-  if (s1==0 && prev==1 && s2==1){
-    osDelay(100);
-    if (HAL_GPIO_ReadPin(port,pin1)==0 && HAL_GPIO_ReadPin(port,pin2)==1){
-      toggle();
-      prev = 0;
-      return 1;
-    }
-  }
-  prev = s1;
-  return 0;
-}
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
                                     uint16_t pin1,
@@ -192,8 +176,7 @@ uint8_t handle_menu_toggle(GPIO_TypeDef *port,
 
     // detect a fresh press of pin1 while pin2 is held
     if (s1 == 0 && prev_state == 1 && s2 == 1) {
-        osDelay(100);  // simple debounce
-        // re‐read to avoid chatter
+        osDelay(100);
         if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
             HAL_GPIO_ReadPin(port, pin2) == 1)
         {
@@ -207,6 +190,28 @@ uint8_t handle_menu_toggle(GPIO_TypeDef *port,
 }
 
 
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms)
+		{
+		    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
+
+		    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
+		    // Otherwise, fire on cur==0 immediately.
+		    if (cur == 0 && (!prev_state || *prev_state == 1)) {
+		        osDelay(db_ms);
+		        cur = HAL_GPIO_ReadPin(port, pin);
+		        if (cur == 0) {
+		            if (prev_state) *prev_state = 0;
+		            return 1;
+		        }
+		    }
+
+		    // remember state if tracking
+		    if (prev_state) *prev_state = cur;
+		    return 0;
+		}
 
 
 

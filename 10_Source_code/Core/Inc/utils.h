@@ -61,10 +61,15 @@ void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDe
 
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
-typedef void (*menu_toggle_t)(void);
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
 		                   uint16_t pin1,
 		                   uint16_t pin2);
+
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms);
+
 
 #endif /* SRC_UTILS_H_ */

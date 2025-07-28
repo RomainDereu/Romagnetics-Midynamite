@@ -624,38 +624,32 @@ void MediumTasks(void *argument)
 
 	old_menu = current_menu;
 
-	uint8_t OldBtn3State;
-	uint8_t Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-	if(Btn3State == 0)
-	 {
-		 //Debouncing
-		 osDelay(10);
-		 Btn3State = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
-		 if(Btn3State == 0 && OldBtn3State == 1)
-		 {
-			 switch (current_menu) {
-			 	case MIDI_TEMPO:
-			 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
-			 		mt_start_stop(&htim2, &midi_tempo_data);
-			 		osThreadFlagsSet(display_updateHandle, 0x01);
-			 		break;
 
-			 	case MIDI_MODIFY:
-			 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
-			 		osThreadFlagsSet(display_updateHandle, 0x02);
-			 		break;
 
-			 	case MIDI_TRANSPOSE:
-			 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
-			 		osThreadFlagsSet(display_updateHandle, 0x04);
-			 		break;
 
-			 	default:
-			 		break;
-			 }
+	static uint8_t OldBtn3State = 1;
+	if(debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)){
+		 switch (current_menu) {
+		 	case MIDI_TEMPO:
+		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
+		 		mt_start_stop(&htim2, &midi_tempo_data);
+		 		osThreadFlagsSet(display_updateHandle, 0x01);
+		 		break;
+
+		 	case MIDI_MODIFY:
+		 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+		 		osThreadFlagsSet(display_updateHandle, 0x02);
+		 		break;
+
+		 	case MIDI_TRANSPOSE:
+		 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
+		 		osThreadFlagsSet(display_updateHandle, 0x04);
+		 		break;
+
+		 	default:
+		 		break;
 		 }
 	}
-	OldBtn3State = Btn3State;
 
 
 	// Check for panic button (both buttons held down)
