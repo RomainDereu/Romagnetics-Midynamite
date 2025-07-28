@@ -54,7 +54,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
         	//Toggling the type based on the current select
         	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
         		switch (current_select) {
-
         			case 0:
         			case 1:
         			case 2:
@@ -184,15 +183,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	*old_menu = MIDI_MODIFY;
 	old_select = current_select;
 }
-
-
-
-
-
-
-
-
-
 
 
 //Channel
