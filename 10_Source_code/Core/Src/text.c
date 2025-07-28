@@ -145,6 +145,9 @@ static const Message _message = {
         "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
     },
 
+	//Error Handlers
+	.error = "ERROR",
+
     // Dropdowns and grouped choices
     .choices = {
         .change_split = { "Change", "Split" },

@@ -127,9 +127,13 @@ typedef struct {
     //Upgrade mode
     const char *upgrade_mode;
 
+    //Error handlers
+    const char *error;
+
     // Note names
     const char *midi_note_names[128];
     const char *twelve_notes_names[12];
+
 
     // All selectable dropdowns and grouped options
     struct {

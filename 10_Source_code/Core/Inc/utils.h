@@ -18,6 +18,21 @@
 #define LINE_3_VERT 35
 #define LINE_4_VERT 45
 
+
+#define NO_MULT 1
+#define TEN_MULT 10
+#define OCT_MULT 10
+
+#define VEL_MIN 0
+#define VEL_MAX 127
+
+#define VOL_DEC_MAX -50
+#define VOL_INC_MAX -50
+
+#define NO_MIDI_CH 0
+#define MIDI_CH_1 1
+#define MIDI_CH_16 1
+
 #define TEXT_LEFT_START 5
 
 

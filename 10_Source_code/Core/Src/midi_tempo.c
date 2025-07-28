@@ -26,7 +26,14 @@ extern osThreadId display_updateHandle;
 
 static UART_HandleTypeDef *UART_list_tempo[2];
 
-static uint8_t select_states[2] = {0};
+
+typedef enum {
+	TEMPO_PRINT = 0,
+	MIDI_OUT_PRINT,
+	AMOUNT_OF_SETTINGS
+} current_select_list_t;
+
+static uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
 static uint8_t current_select = 0;
 static uint8_t old_select = 0;
 
@@ -51,7 +58,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  char tempo_number[4];
 	  itoa(midi_tempo_data->current_tempo, tempo_number, 10);
 	  sprintf(tempo_print, tempo_number);
-	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[0]);
+	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[TEMPO_PRINT]);
 	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 48);
 
 
@@ -59,19 +66,26 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
       char message_midi_out[10];
+      switch (midi_tempo_data->send_to_midi_out) {
+        case MIDI_OUT_1:
+          strcpy(message_midi_out, message->midi_channel_1);
+          break;
 
+        case MIDI_OUT_2:
+          strcpy(message_midi_out, message->midi_channel_2);
+          break;
 
-      if(midi_tempo_data->send_to_midi_out == MIDI_OUT_1){
-    	  strcpy(message_midi_out, message->midi_channel_1);
-      }
-      else if(midi_tempo_data->send_to_midi_out == MIDI_OUT_2){
-    	  strcpy(message_midi_out, message->midi_channel_2);
-      }
-      else if(midi_tempo_data->send_to_midi_out == MIDI_OUT_1_2){
-    	  strcpy(message_midi_out, message->midi_channel_1_2);
+        case MIDI_OUT_1_2:
+          strcpy(message_midi_out, message->midi_channel_1_2);
+          break;
+
+        default:
+          // Optionally handle invalid values
+          strcpy(message_midi_out,  message->error);
+          break;
       }
 
-      screen_driver_underline_WriteString(message_midi_out, Font_6x8 , White, TEXT_LEFT_START, 25, select_states[1]);
+      screen_driver_underline_WriteString(message_midi_out, Font_6x8 , White, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
 
       //Stop/Sending status
       screen_driver_SetCursor(15, 42);
@@ -146,7 +160,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
 	//Updating the select_states
-	select_current_state(select_states, amount_of_settings, current_select);
+	select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
 
 
 	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);

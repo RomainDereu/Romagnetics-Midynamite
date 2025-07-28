@@ -250,7 +250,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	// Selecting the current item being selected
-	select_current_state(select_states, amount_of_settings, current_select);
+	select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
 
 	if(debounce_button(GPIOB, Btn1_Pin, NULL, 10)){
 		saving_settings_ui();

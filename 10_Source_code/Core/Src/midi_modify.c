@@ -12,7 +12,6 @@
 #include "main.h"
 #include "menu.h"
 #include "midi_modify.h"
-#include "utils.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
@@ -32,6 +31,61 @@ static uint8_t select_states[5] = {0};
 
 
 
+static void handle_modify_change(
+    TIM_HandleTypeDef         *timer4,
+    midi_modify_data_struct   *d,
+    uint8_t                    select_changed,
+    uint8_t                    current_select
+) {
+    switch (current_select) {
+      case 0:
+        utils_counter_change(timer4, &d->send_to_midi_channel_1, MIDI_CH_1, MIDI_CH_16, select_changed, NO_MULT, NO_WRAP);
+        break;
+      case 1:
+        utils_counter_change(timer4, &d->send_to_midi_channel_2, NO_MIDI_CH, OCT_MULT, select_changed, NO_MULT, NO_WRAP);
+        break;
+      case 2:
+        utils_counter_change(timer4, &d->send_to_midi_out, MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, NO_MULT, NO_WRAP);
+        break;
+      case 3:
+        if (d->velocity_type == MIDI_MODIFY_CHANGED_VEL) {
+            utils_counter_change_i32(timer4, &d->velocity_plus_minus, VOL_DEC_MAX, VOL_INC_MAX, select_changed, TEN_MULT, NO_WRAP);
+        } else {
+            utils_counter_change(timer4,  &d->velocity_absolute, VEL_MIN, VEL_MAX, select_changed, TEN_MULT, NO_WRAP);
+        }
+        break;
+    }
+}
+
+static void handle_modify_split(
+    TIM_HandleTypeDef         *timer4,
+    midi_modify_data_struct   *d,
+    uint8_t                    select_changed,
+    uint8_t                    current_select
+) {
+    switch (current_select) {
+      case 0:
+        utils_counter_change(timer4, &d->split_midi_channel_1, MIDI_CH_1, MIDI_CH_16, select_changed, NO_MULT, NO_WRAP);
+        break;
+      case 1:
+        utils_counter_change(timer4, &d->split_midi_channel_2, NO_MIDI_CH, MIDI_CH_16, select_changed, NO_MULT, NO_WRAP);
+        break;
+      case 2:
+        utils_counter_change(timer4,  &d->split_note, VEL_MIN, VEL_MAX, select_changed, OCT_MULT, NO_WRAP);
+        break;
+      case 3:
+        utils_counter_change(timer4, &d->send_to_midi_out,  MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, OCT_MULT, NO_WRAP);
+        break;
+      case 4:
+        if (d->velocity_type == MIDI_MODIFY_CHANGED_VEL) {
+            utils_counter_change_i32(timer4, &d->velocity_plus_minus, VOL_DEC_MAX, VOL_INC_MAX, select_changed, TEN_MULT, NO_WRAP);
+        } else {
+            utils_counter_change(timer4, &d->velocity_absolute, VEL_MIN, VEL_MAX, select_changed, TEN_MULT,  NO_WRAP);
+        }
+        break;
+    }
+}
+
 
 //midi modify menu
 void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
@@ -42,9 +96,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	midi_modify_data_struct old_modify_data = * midi_modify_data;
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
 
-
-
-
 	//The amount of values to be changed depends on the MIDI_MODIFY setting
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
 
@@ -53,64 +104,17 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t select_changed = (old_select != current_select);
 
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
-		switch (current_select) {
-			case 0:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
-				break;
-			case 1:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_2), 0, 16, select_changed, 1, NO_WRAP);
-				break;
-			case 2:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 1, NO_WRAP);
-				break;
-
-			case 3:
-				if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-					utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
-					break;
-				}
-				else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-					utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 0, 127, select_changed, 10, NO_WRAP);
-					break;
-			}
-		}
-
+	    handle_modify_change(timer4,  midi_modify_data, select_changed, current_select);
 	}
 
 
 	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-		switch (current_select) {
-		case 0:
-			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
-			break;
-		case 1:
-			utils_counter_change(timer4, &(midi_modify_data->split_midi_channel_2), 0, 16, select_changed, 1, NO_WRAP);
-			break;
-		case 2:
-			utils_counter_change(timer4, &(midi_modify_data->split_note), 0, 127, select_changed, 12, NO_WRAP);
-			break;
-		case 3:
-			utils_counter_change(timer4, &(midi_modify_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 12, NO_WRAP);
-			break;
-
-		case 4:
-			if (midi_modify_data->velocity_type == MIDI_MODIFY_CHANGED_VEL){
-				utils_counter_change_i32(timer4, &(midi_modify_data->velocity_plus_minus), -50, 50, select_changed, 10, NO_WRAP);
-				break;
-			}
-			else if (midi_modify_data->velocity_type == MIDI_MODIFY_FIXED_VEL){
-				utils_counter_change(timer4, &(midi_modify_data->velocity_absolute), 0, 127, select_changed, 10, NO_WRAP);
-				break;
-			}
-		}
-
+	    handle_modify_split(timer4, midi_modify_data, select_changed, current_select);
 	}
 
 	//The last line will always be velocity
 	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-	    uint8_t last_line = amount_of_settings - 1;
-
-	    if (current_select < last_line) {
+	    if (current_select < amount_of_settings - 1) {
 	        // any but the last → flip change_vs_split
 	        utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
 	    } else {
@@ -126,7 +130,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
     if (menu_check_for_updates(menu_changed, &old_modify_data,
                                midi_modify_data, sizeof *midi_modify_data,
-                               &current_select, &old_select)) {
+                               &old_select, &current_select)) {
         osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
     }
     old_select  = current_select;
