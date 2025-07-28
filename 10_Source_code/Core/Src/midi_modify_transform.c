@@ -151,10 +151,10 @@ void pipeline_start(midi_note *midi_msg) {
     // Send to appropriate pipeline
     if (midi_modify_data.currently_sending == 1) {
         pipeline_midi_modify(midi_msg);
+        return;
     } else if (midi_transpose_data.currently_sending == 1) {
         pipeline_midi_transpose(midi_msg);
-    } else {
-        pipeline_final(midi_msg, length); //Fallback case
+        return;
     }
 }
 
@@ -331,29 +331,31 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 
 
 void pipeline_midi_transpose(midi_note *midi_msg){
-	//Sendng the messages f midi transpose f off
-        if (midi_transpose_data.send_original == 1) {
-            midi_note pre_shift_msg = *midi_msg;
-
-            if (midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED) {
-                uint8_t mode = midi_transpose_data.transpose_scale % AMOUNT_OF_MODES;
-                uint8_t scale_intervals[7];
-                get_mode_scale(mode, scale_intervals);
-                pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note, scale_intervals, midi_transpose_data.transpose_base_note);
-            }
-
-            pipeline_final(&pre_shift_msg, 3);
-
-            midi_note shifted_msg = pre_shift_msg;
-            midi_pitch_shift(&shifted_msg);
-            pipeline_final(&shifted_msg, 3);
-        } else {
-            midi_pitch_shift(midi_msg);
-            pipeline_final(midi_msg, 3);
-        }
+	if (midi_transpose_data.currently_sending == 0){
+        pipeline_final(midi_msg, 3);
+        return;
+	}
 
 
+	if (midi_transpose_data.send_original == 1) {
+		midi_note pre_shift_msg = *midi_msg;
 
+		if (midi_transpose_data.transpose_type == MIDI_TRANSPOSE_SCALED) {
+			uint8_t mode = midi_transpose_data.transpose_scale % AMOUNT_OF_MODES;
+			uint8_t scale_intervals[7];
+			get_mode_scale(mode, scale_intervals);
+			pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note, scale_intervals, midi_transpose_data.transpose_base_note);
+		}
+
+		pipeline_final(&pre_shift_msg, 3);
+
+		midi_note shifted_msg = pre_shift_msg;
+		midi_pitch_shift(&shifted_msg);
+		pipeline_final(&shifted_msg, 3);
+	} else {
+		midi_pitch_shift(midi_msg);
+		pipeline_final(midi_msg, 3);
+	}
 }
 
 
