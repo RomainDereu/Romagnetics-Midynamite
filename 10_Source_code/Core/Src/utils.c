@@ -160,3 +160,48 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 
 }
 
+
+
+
+//
+
+typedef void (*menu_toggle_t)(void);
+uint8_t handle_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2, menu_toggle_t toggle){
+  static uint8_t prev = 1;
+  uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+  uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+  if (s1==0 && prev==1 && s2==1){
+    osDelay(100);
+    if (HAL_GPIO_ReadPin(port,pin1)==0 && HAL_GPIO_ReadPin(port,pin2)==1){
+      toggle();
+      prev = 0;
+      return 1;
+    }
+  }
+  prev = s1;
+  return 0;
+}
+
+uint8_t handle_menu_toggle(GPIO_TypeDef *port,
+                      uint16_t pin1,
+                      uint16_t pin2)
+{
+  static uint8_t prev = 1;
+  uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+  uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+  if (s1==0 && prev==1 && s2==1) {
+    osDelay(100);
+    if (HAL_GPIO_ReadPin(port,pin1)==0 && HAL_GPIO_ReadPin(port,pin2)==1) {
+      prev = 0;
+      return 1;
+    }
+  }
+  prev = s1;
+  return 0;
+}
+
+
+
+
+
+

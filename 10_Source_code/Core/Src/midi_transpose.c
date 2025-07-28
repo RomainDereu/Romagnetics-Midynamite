@@ -22,7 +22,7 @@
 
 static uint8_t current_select = 0;
 static uint8_t old_select = 0;
-static uint8_t select_states[3] = {0};
+static uint8_t select_states[4] = {0};
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -87,20 +87,11 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
-	static uint8_t Btn1PrevState = 1;
-    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-    uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-    if(Btn1State == 0 && Btn1PrevState == 1 && Btn2State == 1){
-    	osDelay(50);
-    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-        Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        if(Btn1State == 0 && Btn2State == 1){
-			utils_change_settings(&midi_transpose_data->transpose_type, 0, 1);
-			current_select = 0;
-        }
+	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+	    utils_change_settings(&midi_transpose_data->transpose_type, 0, 1);
+	    current_select = 0;
+	    }
 
-    }
-    Btn1PrevState = Btn1State;
 
 
 

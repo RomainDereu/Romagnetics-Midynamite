@@ -43,14 +43,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
 
 
-	static uint8_t Btn1PrevState = 1;
-    uint8_t Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-    uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-    if(Btn1State == 0 && Btn1PrevState == 1 && Btn2State == 1){
-    	osDelay(50);
-    	Btn1State = HAL_GPIO_ReadPin(GPIOB, Btn1_Pin);
-    	Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        if(Btn1State == 0 && Btn2State == 1){
+	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         	//Toggling the type based on the current select
         	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
         		switch (current_select) {
@@ -83,11 +76,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
         			}
         		}
         	current_select = 0;
-        }
-
-    }
-    Btn1PrevState = Btn1State;
-
+	   }
 
 	//The amount of values to be changed depends on the MIDI_MODIFY setting
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
