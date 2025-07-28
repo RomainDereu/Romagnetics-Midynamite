@@ -19,7 +19,8 @@
 #include "text.h"
 #include "utils.h"
 
-static uint8_t select_states[4] = {0};
+#define AMOUNT_OF_STATES 4
+static uint8_t select_states[AMOUNT_OF_STATES] = {0};
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -43,11 +44,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	uint8_t select_changed = (old_select != current_select);
 
-	// Finding current item being selected
-	for (uint8_t x=0; x < amount_of_settings; x++){
-		select_states[x] = 0;
-	}
-	select_states[current_select] = 1;
+
 
 	if (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT){
 		switch (current_select) {
@@ -87,10 +84,14 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
+
+
 	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
 	    utils_change_settings(&midi_transpose_data->transpose_type, 0, 1);
 	    current_select = 0;
 	    }
+
+	select_current_state(select_states, AMOUNT_OF_STATES, current_select);
 
 
 	if(menu_check_for_updates(menu_changed,

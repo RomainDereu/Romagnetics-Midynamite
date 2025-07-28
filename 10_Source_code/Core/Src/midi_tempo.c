@@ -146,21 +146,19 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
 	//Updating the select_states
-	select_states[0] = 0;
-	select_states[1] = 0;
-	select_states[current_select] = 1;
+	select_current_state(select_states, amount_of_settings, current_select);
 
 
 	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
+
 	if(old_midi_tempo_data.current_tempo != midi_tempo_data->current_tempo){
 		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
 	}
+
     if (menu_check_for_updates( menu_changed, &old_midi_tempo_data, midi_tempo_data, sizeof *midi_tempo_data,
           &current_select, &old_select  )) {
         osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
     }
     old_select  = current_select;
     *old_menu   = MIDI_TEMPO;
-
-
 }

@@ -154,6 +154,37 @@ void screen_update_settings_about(){
 	screen_driver_SetCursor_WriteString(message->about_version, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
 }
 
+
+// Save portion
+static void saving_settings_ui(){
+		// Saving the current configuration to the memory
+		screen_driver_SetCursor_WriteString(message->saving, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+
+		save_struct memory_to_be_saved = creating_save(&midi_tempo_data,
+		                                               &midi_modify_data,
+		                                               &midi_transpose_data,
+		                                               &settings_data);
+		store_settings(&memory_to_be_saved);
+
+		screen_driver_SetCursor_WriteString(message->saved, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+		osDelay(1000);
+		screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+}
+
+// Finds index from brightness value
+static uint8_t calculate_contrast_index(uint8_t brightness) {
+	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
+		if (contrast_values[i] == brightness) {
+			return i;
+		}
+	}
+	// Default to full brightness if not found
+	return 9;
+}
+
 // Settings update logic
 void settings_update_menu(TIM_HandleTypeDef * timer3,
                           TIM_HandleTypeDef * timer4,
@@ -219,12 +250,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	// Selecting the current item being selected
-	for (uint8_t x=0; x < AMOUNT_OF_SETTINGS; x++){
-		select_states[x] = 0;
-	}
-	select_states[current_select] = 1;
+	select_current_state(select_states, amount_of_settings, current_select);
 
-	saving_settings_ui();
+	if(debounce_button(GPIOB, Btn1_Pin, NULL, 10)){
+		saving_settings_ui();
+	}
 
     if (menu_check_for_updates(menu_changed,  &old_settings_data, &settings_data,
           sizeof settings_data, &current_select, &old_select)) {
@@ -234,35 +264,4 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
     *old_menu   = SETTINGS;
 }
 
-// Save portion
-void saving_settings_ui(){
 
-	if(debounce_button(GPIOB, Btn1_Pin, NULL, 10)){
-		// Saving the current configuration to the memory
-		screen_driver_SetCursor_WriteString(message->saving, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-		screen_driver_UpdateScreen();
-
-		save_struct memory_to_be_saved = creating_save(&midi_tempo_data,
-		                                               &midi_modify_data,
-		                                               &midi_transpose_data,
-		                                               &settings_data);
-		store_settings(&memory_to_be_saved);
-
-		screen_driver_SetCursor_WriteString(message->saved, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-		screen_driver_UpdateScreen();
-		osDelay(1000);
-		screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-		screen_driver_UpdateScreen();
-	}
-}
-
-// Finds index from brightness value
-uint8_t calculate_contrast_index(uint8_t brightness) {
-	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
-		if (contrast_values[i] == brightness) {
-			return i;
-		}
-	}
-	// Default to full brightness if not found
-	return 9;
-}

@@ -234,8 +234,8 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 
 //GUI function setting a flag on the currently selected item
 void select_current_state(uint8_t *select_states,
-                                        uint8_t  amount,
-                                        uint8_t  current_select)
+                          uint8_t  amount,
+                          uint8_t  current_select)
 {
     for (uint8_t i = 0; i < amount; i++) {
         select_states[i] = 0;

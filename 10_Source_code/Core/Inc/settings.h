@@ -23,8 +23,4 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 							 uint8_t * old_menu);
 
-void saving_settings_ui();
-
-uint8_t calculate_contrast_index(uint8_t brightness);
-
 #endif /* SETTINGS_H_ */
