@@ -42,7 +42,7 @@ static void handle_modify_change(
         utils_counter_change(timer4, &d->send_to_midi_channel_1, MIDI_CH_1, MIDI_CH_16, select_changed, NO_MULT, NO_WRAP);
         break;
       case 1:
-        utils_counter_change(timer4, &d->send_to_midi_channel_2, NO_MIDI_CH, OCT_MULT, select_changed, NO_MULT, NO_WRAP);
+        utils_counter_change(timer4, &d->send_to_midi_channel_2, NO_MIDI_CH, MIDI_CH_16, select_changed, NO_MULT, NO_WRAP);
         break;
       case 2:
         utils_counter_change(timer4, &d->send_to_midi_out, MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, NO_MULT, NO_WRAP);

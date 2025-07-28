@@ -31,7 +31,7 @@
 
 #define NO_MIDI_CH 0
 #define MIDI_CH_1 1
-#define MIDI_CH_16 1
+#define MIDI_CH_16 16
 
 #define MIDDLE_C 60
 
