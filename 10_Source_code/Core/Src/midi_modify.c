@@ -106,40 +106,21 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 	}
 
+	//The last line will always be velocity
 	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        	//Toggling the type based on the current select
-        	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
-        		switch (current_select) {
-        			case 0:
-        			case 1:
-        			case 2:
-        				utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
-        				break;
+	    uint8_t last_line = amount_of_settings - 1;
 
-        			case 3:
-        				utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
-        				break;
-        		}
-    		}
+	    if (current_select < last_line) {
+	        // any but the last → flip change_vs_split
+	        utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+	    } else {
+	        // last row → flip velocity type
+	        utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+	    }
 
-
-        	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-        		switch (current_select) {
-
-					case 0:
-					case 1:
-					case 2:
-					case 3:
-						utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
-						break;
-
-					case 4:
-						utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
-						break;
-        			}
-        		}
-        	current_select = 0;
-	   }
+	    // always go back to the first row
+	    current_select = 0;
+	}
 
 	select_current_state(select_states, amount_of_settings, current_select);
 

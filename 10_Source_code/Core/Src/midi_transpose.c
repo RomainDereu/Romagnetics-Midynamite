@@ -27,6 +27,43 @@ extern UART_HandleTypeDef huart2;
 extern osThreadId display_updateHandle;
 
 
+static void transpose_shift_build_select(
+    TIM_HandleTypeDef           *timer4,
+    midi_transpose_data_struct  *d,
+    uint8_t                      current_select,
+    uint8_t                      select_changed
+) {
+    if (current_select == 0) {
+        utils_counter_change_i32(timer4,
+                                 &d->midi_shift_value, -24, 24, select_changed, 12, NO_WRAP);
+    } else { // case 1
+        utils_counter_change(timer4, &d->send_original, 0, 1, select_changed, 1, WRAP);
+    }
+}
+
+static void transpose_scaled_build_select(
+    TIM_HandleTypeDef           *timer4,
+    midi_transpose_data_struct  *d,
+    uint8_t                      current_select,
+    uint8_t                      select_changed
+) {
+    switch (current_select) {
+    case 0:
+        utils_counter_change(timer4, &d->transpose_base_note, 0, 11, select_changed, 12, NO_WRAP);
+        break;
+    case 1:
+        utils_counter_change(timer4, &d->transpose_interval, OCTAVE_DOWN, OCTAVE_UP, select_changed, 1, NO_WRAP);
+        break;
+    case 2:
+        utils_counter_change(timer4, &d->transpose_scale,  IONIAN, LOCRIAN, select_changed, 1, WRAP);
+        break;
+    case 3:
+        utils_counter_change(timer4,  &d->send_original, 0, 1, select_changed, 1, WRAP);
+        break;
+    }
+}
+
+
 void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_transpose_data_struct * midi_transpose_data,
@@ -46,42 +83,10 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 
 
-	if (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT){
-		switch (current_select) {
-			case 0:
-				utils_counter_change_i32(timer4, &(midi_transpose_data->midi_shift_value), -24, 24, select_changed, 12, NO_WRAP);
-				break;
-
-			case 1:
-				utils_counter_change(timer4, &(midi_transpose_data->send_original), 0, 1, select_changed, 1, WRAP);
-				break;
-
-		}
-	}
-
-	else if (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED){
-		switch (current_select) {
-			case 0:
-				utils_counter_change(timer4, &(midi_transpose_data->transpose_base_note),
-																					0, 11, select_changed, 12, NO_WRAP);
-				break;
-
-			case 1:
-				utils_counter_change(timer4, &(midi_transpose_data->transpose_interval),
-																					OCTAVE_DOWN, OCTAVE_UP, select_changed, 1, NO_WRAP);
-				break;
-
-			case 2:
-				utils_counter_change(timer4, &(midi_transpose_data->transpose_scale),
-																					IONIAN, LOCRIAN, select_changed, 1, WRAP);
-				break;
-
-			case 3:
-				utils_counter_change(timer4, &(midi_transpose_data->send_original), 0, 1, select_changed, 1, WRAP);
-				break;
-
-		}
-
+	if (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT) {
+		transpose_shift_build_select(timer4, midi_transpose_data, current_select,  select_changed);
+	} else {
+	    transpose_scaled_build_select(timer4,  midi_transpose_data, current_select, select_changed);
 	}
 
 
@@ -94,12 +99,8 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	select_current_state(select_states, AMOUNT_OF_STATES, current_select);
 
 
-	if(menu_check_for_updates(menu_changed,
-						   &old_transpose_data,
-						   midi_transpose_data,
-						   sizeof *midi_transpose_data,
-						   &current_select,
-						   &old_select)){
+	if(menu_check_for_updates(menu_changed, &old_transpose_data,
+						   midi_transpose_data, sizeof *midi_transpose_data, &current_select, &old_select)){
 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 	}
 
