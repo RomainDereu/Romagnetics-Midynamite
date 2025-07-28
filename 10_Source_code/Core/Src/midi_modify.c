@@ -107,7 +107,7 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_1), 1, 16, select_changed, 1, NO_WRAP);
 				break;
 			case 1:
-				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_2), 1, 16, select_changed, 1, NO_WRAP);
+				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_channel_2), 0, 16, select_changed, 1, NO_WRAP);
 				break;
 			case 2:
 				utils_counter_change(timer4, &(midi_modify_data->send_to_midi_out), MIDI_OUT_1, MIDI_OUT_SPLIT, select_changed, 1, NO_WRAP);
@@ -154,11 +154,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		}
 
 	}
-
-
-
-
-
 
 
 	if (menu_changed == 1 || old_select != current_select ||
