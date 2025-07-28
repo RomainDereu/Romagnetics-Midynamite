@@ -114,7 +114,7 @@ void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_
 
 
 // Panic on a single UART
-void panic_midi_all_notes_off(UART_HandleTypeDef *huart) {
+void all_notes_off(UART_HandleTypeDef *huart) {
     uint8_t all_notes_off_msg[3];
     uint8_t reset_ctrl_msg[3];
 
@@ -137,9 +137,25 @@ void panic_midi_all_notes_off(UART_HandleTypeDef *huart) {
 }
 
 // Panic on both UART1 and UART2
-void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2) {
-    panic_midi_all_notes_off(huart1);
-    panic_midi_all_notes_off(huart2);
+void panic_midi(UART_HandleTypeDef *huart1,
+			    UART_HandleTypeDef *huart2,
+				GPIO_TypeDef *port,
+				uint16_t pin1,
+				uint16_t pin2) {
+
+	if (HAL_GPIO_ReadPin(port, pin1) == GPIO_PIN_RESET &&
+	    HAL_GPIO_ReadPin(port, pin2) == GPIO_PIN_RESET) {
+
+    osDelay(300); // Debounce delay
+
+    if (HAL_GPIO_ReadPin(port, pin1) == GPIO_PIN_RESET &&
+        HAL_GPIO_ReadPin(port, pin2) == GPIO_PIN_RESET) {
+
+    	all_notes_off(huart1);
+    	all_notes_off(huart2);
+    }
+}
+
 }
 
 
@@ -167,8 +183,8 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                                    uint16_t pin1,
-                                    uint16_t pin2)
+                           uint16_t pin1,
+                           uint16_t pin2)
 {
     static uint8_t prev_state = 1;
     uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);

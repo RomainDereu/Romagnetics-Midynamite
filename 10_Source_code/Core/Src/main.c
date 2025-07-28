@@ -653,17 +653,9 @@ void MediumTasks(void *argument)
 
 
 	// Check for panic button (both buttons held down)
-	if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == GPIO_PIN_RESET &&
-	    HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == GPIO_PIN_RESET) {
+	panic_midi(&huart1, &huart2, GPIOB, Btn1_Pin, Btn2_Pin);
 
-	    osDelay(300); // Debounce delay
 
-	    if (HAL_GPIO_ReadPin(GPIOB, Btn1_Pin) == GPIO_PIN_RESET &&
-	        HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == GPIO_PIN_RESET) {
-
-	        panic_midi_all_notes_off_both(&huart1, &huart2);
-	    }
-	}
 
 	//Let other tasks update
 	osDelay(10);

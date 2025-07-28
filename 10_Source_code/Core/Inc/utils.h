@@ -55,8 +55,11 @@ void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_
 
 
 
-void panic_midi_all_notes_off(UART_HandleTypeDef *huart);
-void panic_midi_all_notes_off_both(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2);
+void all_notes_off(UART_HandleTypeDef *huart);
+void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,
+				GPIO_TypeDef *port,
+				uint16_t pin1,
+				uint16_t pin2);
 
 
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
