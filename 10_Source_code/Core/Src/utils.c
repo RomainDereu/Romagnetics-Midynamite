@@ -183,23 +183,28 @@ uint8_t handle_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2, menu_tog
 }
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                      uint16_t pin1,
-                      uint16_t pin2)
+                                    uint16_t pin1,
+                                    uint16_t pin2)
 {
-  static uint8_t prev = 1;
-  uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-  uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
-  if (s1==0 && prev==1 && s2==1) {
-    osDelay(100);
-    if (HAL_GPIO_ReadPin(port,pin1)==0 && HAL_GPIO_ReadPin(port,pin2)==1) {
-      prev = 0;
-      return 1;
-    }
-  }
-  prev = s1;
-  return 0;
-}
+    static uint8_t prev_state = 1;
+    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
 
+    // detect a fresh press of pin1 while pin2 is held
+    if (s1 == 0 && prev_state == 1 && s2 == 1) {
+        osDelay(100);  // simple debounce
+        // re‐read to avoid chatter
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
+            HAL_GPIO_ReadPin(port, pin2) == 1)
+        {
+            prev_state = 0;
+            return 1;
+        }
+    }
+
+    prev_state = s1;
+    return 0;
+}
 
 
 
