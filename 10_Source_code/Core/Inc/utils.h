@@ -27,7 +27,7 @@
 #define VEL_MAX 127
 
 #define VOL_DEC_MAX -50
-#define VOL_INC_MAX -50
+#define VOL_INC_MAX 50
 
 #define NO_MIDI_CH 0
 #define MIDI_CH_1 1
