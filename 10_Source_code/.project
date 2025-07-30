@@ -31,6 +31,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>12_Tests</name>
+			<type>2</type>
+			<locationURI>PARENT-2-WORKSPACE_LOC/Desktop/Temp/Midynamite/12_Tests</locationURI>
+		</link>
+		<link>
 			<name>Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal.c</name>
 			<type>1</type>
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c</location>
