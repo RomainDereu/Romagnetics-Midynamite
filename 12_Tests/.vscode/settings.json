@@ -6,6 +6,8 @@
         "test_stubs.h": "c",
         "settings.h": "c",
         "midi_modify.h": "c",
-        "saving.h": "c"
+        "saving.h": "c",
+        "stm32f4xx_hal.h": "c",
+        "test_runner.h": "c"
     }
 }
