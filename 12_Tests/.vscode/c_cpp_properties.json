@@ -1,0 +1,19 @@
+{
+    "configurations": [
+      {
+        "name": "MinGW",
+        "includePath": [
+          "${workspaceFolder}/test_stubs",
+          "${workspaceFolder}/Unity",
+          "${workspaceFolder}/../10_Source_code/Core/Inc",
+          "${workspaceFolder}"
+        ],
+        "defines": ["UNIT_TEST"],
+        "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+        "cStandard": "c11",
+        "cppStandard": "c++17",
+        "intelliSenseMode": "windows-gcc-x64"
+      }
+    ],
+    "version": 4
+  }

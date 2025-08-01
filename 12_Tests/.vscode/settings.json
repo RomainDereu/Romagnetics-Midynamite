@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "stdint.h": "c",
+        "main.h": "c",
+        "unity.h": "c",
+        "test_stubs.h": "c",
+        "settings.h": "c"
+    }
+}
