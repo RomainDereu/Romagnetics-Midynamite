@@ -44,6 +44,7 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 	return this_save;
 }
 
+#ifndef UNIT_TEST
 HAL_StatusTypeDef store_settings(save_struct *data){
 	HAL_StatusTypeDef status;
 	uint32_t error_status = 0;
@@ -91,6 +92,8 @@ save_struct read_setting_memory(void){
 	    memcpy(&flash_data, (void*)FLASH_SECTOR7_ADDR, sizeof(flash_data));
 	    return flash_data;
 }
+
+#endif
 
 save_struct make_default_settings(void){
 

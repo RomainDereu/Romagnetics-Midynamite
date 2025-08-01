@@ -1,7 +1,11 @@
-#include "../10_Source_code/Core/Inc/midi_modify.h"
-#include "../10_Source_code/Core/Inc/settings.h"
+#include "../10_Source_code/Core/Inc/main.h"
+#include "../10_Source_code/Core/Inc/saving.h"
+#include <string.h>
+#include "stm32f4xx_hal.h"
+
 
 // Definitions (must match typedefs in main.h). 
+midi_tempo_data_struct midi_tempo_data = {0};
 midi_modify_data_struct midi_modify_data = {0};
 midi_transpose_data_struct midi_transpose_data = {0};
 settings_data_struct settings_data = {0};

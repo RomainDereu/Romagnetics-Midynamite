@@ -369,7 +369,7 @@ void pipeline_final(midi_note *midi_msg, uint8_t length){
 
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
-    if (midi_message_raw->status < 0x80 || midi_message_raw->status > 0xFF)
+    if (midi_message_raw->status < 0x80)
         return;
 
     uint8_t midi_bytes[3] = {0};

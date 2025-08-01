@@ -102,20 +102,6 @@ void DisplayUpdate(void *argument);
 
 /* USER CODE BEGIN PFP */
 
-#ifdef UNIT_TEST
-#include "test_runner.h"
-UART_HandleTypeDef huart6;
-static void MX_USART6_UART_Init(void);
-extern void unity_run_all_tests(void);
-
-
-int __io_putchar(int ch)
-{
-    HAL_UART_Transmit(&huart6, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
-    return ch;
-}
-
-#endif
 
 /* USER CODE END PFP */
 
@@ -183,14 +169,6 @@ int main(void)
 
   HAL_UART_Receive_IT(&huart2, &midi_uart_rx_byte, 1);
 
-
-
-  #ifdef UNIT_TEST
-  MX_USART6_UART_Init();
-  printf("\n[UNIT TEST MODE]\n");
-  //unity_run_all_tests();
-  while (1);
-  #endif
 
   /* USER CODE END 2 */
 
@@ -577,25 +555,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   	}
 
 }
-
-#ifdef UNIT_TEST
-static void MX_USART6_UART_Init(void)
-{
-    huart6.Instance = USART6;
-    huart6.Init.BaudRate = 115200;
-    huart6.Init.WordLength = UART_WORDLENGTH_8B;
-    huart6.Init.StopBits = UART_STOPBITS_1;
-    huart6.Init.Parity = UART_PARITY_NONE;
-    huart6.Init.Mode = UART_MODE_TX_RX;
-    huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-    huart6.Init.OverSampling = UART_OVERSAMPLING_16;
-
-    if (HAL_UART_Init(&huart6) != HAL_OK)
-    {
-        Error_Handler();  // Or your own test-friendly error handler
-    }
-}
-#endif
 
 /* USER CODE END 4 */
 
