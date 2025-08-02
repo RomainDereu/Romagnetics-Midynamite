@@ -1,7 +1,7 @@
 # Midynamite  
 *The Open Source MIDI Multi-Effects Pedal*
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg "Romagnetics Midynamite")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg "Romagnetics Midynamite" | width=100)
 
 Midynamite is a compact, battery-powered MIDI multi-effects pedal with three physical MIDI DIN 5-pin connectors and USB MIDI device support.  
 It can function as a standalone pedal or as a USB MIDI interface for a computer.
@@ -18,7 +18,7 @@ Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamit
 
 ### 🎵 MIDI Tempo
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Tempo.png "Midynamite MIDI Tempo")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Tempo.png "Midynamite MIDI Tempo" | width=100)
 
 Send a MIDI clock signal to:
 
@@ -36,7 +36,7 @@ Send a MIDI clock signal to:
 
 ### 🎚 MIDI Modify
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png "Midynamite MIDI Modify")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png "Midynamite MIDI Modify" | width=100)
 
 Modify incoming MIDI messages in two main ways:
 
@@ -78,7 +78,7 @@ Modify incoming MIDI messages in two main ways:
 
 ### 🎼 MIDI Transpose
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Transpose.png "Midynamite MIDI Transpose")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Transpose.png "Midynamite MIDI Transpose" | width=100)
 
 
 Apply real-time note transformations to incoming MIDI notes.
@@ -101,7 +101,7 @@ Apply real-time note transformations to incoming MIDI notes.
 
 ## ⚙️ Settings
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Settings.png "Midynamite Settings")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Settings.png "Midynamite Settings" | width=100)
 
 Accessible in the **Settings** menu:
 - **Start Menu**  
