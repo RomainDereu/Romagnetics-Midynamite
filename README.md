@@ -1,9 +1,9 @@
-# Midynamite  
+# Romagnetics Midynamite  
 *The Open Source MIDI Multi-Effects Pedal*
 
 ![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg "Romagnetics Midynamite")
 
-Midynamite is a compact, battery-powered MIDI multi-effects pedal with three physical MIDI DIN 5-pin connectors and USB MIDI device support.  
+The Romagnetics Midynamite is a compact, battery-powered MIDI multi-effects pedal with three physical MIDI DIN 5-pin connectors and USB MIDI device support.  
 It can function as a standalone pedal or as a USB MIDI interface for a computer.
 
 All effects can be toggled independently and configured via the onboard screen and encoder.
@@ -36,7 +36,7 @@ Send a MIDI clock signal to:
 
 ### 🎚 MIDI Modify
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png "Midynamite MIDI Modify")
+![alt text](https://github.com/RomainDereu//blob/main/02_Photos/MIDI_Modify.png " MIDI Modify")
 
 Modify incoming MIDI messages in two main ways:
 
@@ -78,7 +78,7 @@ Modify incoming MIDI messages in two main ways:
 
 ### 🎼 MIDI Transpose
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Transpose.png "Midynamite MIDI Transpose")
+![alt text](https://github.com/RomainDereu//blob/main/02_Photos/MIDI_Transpose.png " MIDI Transpose")
 
 
 Apply real-time note transformations to incoming MIDI notes.
