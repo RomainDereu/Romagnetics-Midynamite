@@ -1,7 +1,7 @@
 # Midynamite  
 *The Open Source MIDI Multi-Effects Pedal*
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.png "Romagnetics Midynamite")
+![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg "Romagnetics Midynamite")
 
 Midynamite is a compact, battery-powered MIDI multi-effects pedal with three physical MIDI DIN 5-pin connectors and USB MIDI device support.  
 It can function as a standalone pedal or as a USB MIDI interface for a computer.
