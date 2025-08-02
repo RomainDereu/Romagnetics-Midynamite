@@ -6,6 +6,8 @@ It can function as a standalone pedal or as a USB MIDI interface for a computer.
 
 All effects can be toggled independently and configured via the onboard screen and encoder.
 
+Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamite/
+
 ---
 
 ## 🎛 Features Overview
