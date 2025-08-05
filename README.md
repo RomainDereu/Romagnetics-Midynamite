@@ -36,7 +36,7 @@ Send a MIDI clock signal to:
 
 ### 🎚 MIDI Modify
 
-![MIDI_Modify](https://github.com/RomainDereu//blob/main/02_Photos/MIDI_Modify.png " MIDI Modify")
+![MIDI_Modify](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png " MIDI Modify")
 
 Modify incoming MIDI messages in two main ways:
 
