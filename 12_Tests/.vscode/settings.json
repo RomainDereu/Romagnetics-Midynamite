@@ -8,6 +8,7 @@
         "midi_modify.h": "c",
         "saving.h": "c",
         "stm32f4xx_hal.h": "c",
-        "test_runner.h": "c"
+        "test_runner.h": "c",
+        "test_utils.h": "c"
     }
 }

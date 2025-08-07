@@ -15,6 +15,7 @@ SRC = \
   test_midi_logic.c \
   test_stubs/globals.c \
   test_stubs/flash.c \
+  test_utils.c\
   ../10_Source_code/Core/Src/midi_modify_transform.c \
   ../10_Source_code/Core/Src/saving.c
 

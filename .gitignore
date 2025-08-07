@@ -11,3 +11,34 @@
 **/[Tt]est
 /
 12_Tests/test_runner.exe
+
+
+# User-specific files
+*.log
+*.user
+*.swp
+*.swo
+*.DS_Store
+*.orig
+
+
+# VSCode support 
+.vscode/
+out/
+*.i
+*.o
+*.d
+
+# Windows/macOS artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+
+
+# Backup files
+*~
+*.bak
+*.tmp
