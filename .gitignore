@@ -9,6 +9,7 @@
 **/[Dd]ebug/
 **/[Rr]elease/
 **/[Tt]est
+**/99_Tests
 /
 12_Tests/test_runner.exe
 
