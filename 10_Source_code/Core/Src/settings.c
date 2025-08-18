@@ -7,25 +7,7 @@
 
 
 
-// List of current select
-typedef enum {
 
-
-	SETT_START_MENU = 0,
-    SETT_SEND_TO_USB,
-    SETT_BRIGHTNESS,
-
-	SETT_MIDI_THRU,
-    SETT_USB_THRU,
-    CHANNEL_FILTER,
-
-	FT1, FT2, FT3, FT4, FT5, FT6, FT7, FT8,
-	FT9, FT10, FT11, FT12, FT13, FT14, FT15, FT16,
-
-
-    ABOUT,
-    AMOUNT_OF_SETTINGS
-} current_select_list_t;
 
 
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3
@@ -52,15 +34,15 @@ extern settings_data_struct settings_data;
 extern const Message *message;
 
 // Array with all the possible select values. Is being used to update the UI
-static uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
+uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
 
 // Contrast value list
-static uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
+uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
 
 // Contrast index and current/old selection tracking
-static uint8_t contrast_index;
-static uint8_t current_select = 0;
-static uint8_t old_select = 0;
+uint8_t contrast_index;
+uint8_t current_select = 0;
+uint8_t old_select = 0;
 
 // The current selected menu part
 void screen_update_settings(){
