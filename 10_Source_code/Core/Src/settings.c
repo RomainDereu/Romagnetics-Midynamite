@@ -4,12 +4,6 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-
-
-
-
-
-
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3
 
 #include <string.h>
@@ -24,7 +18,7 @@
 #include "settings.h"
 #include "text.h"
 
-extern osThreadId display_updateHandle;
+extern osThreadId_t display_updateHandle;
 
 extern midi_tempo_data_struct midi_tempo_data;
 extern midi_modify_data_struct midi_modify_data;
@@ -33,20 +27,21 @@ extern settings_data_struct settings_data;
 
 extern const Message *message;
 
-// Array with all the possible select values. Is being used to update the UI
-uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
 
-// Contrast value list
-uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
-
-// Contrast index and current/old selection tracking
-uint8_t contrast_index;
-uint8_t current_select = 0;
-uint8_t old_select = 0;
+static uint8_t calculate_contrast_index(uint8_t brightness) {
+	uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
+	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
+		if (contrast_values[i] == brightness) {
+			return i;
+		}
+	}
+	// Default to full brightness if not found
+	return 9;
+}
 
 
 // Settings Section
-static void screen_update_global_settings1(){
+static void screen_update_global_settings1(uint8_t *select_states){
 	menu_display(&Font_6x8, message->global_settings_1);
 
 	// Start Menu
@@ -65,11 +60,12 @@ static void screen_update_global_settings1(){
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	screen_driver_underline_WriteString(message->contrast_levels[contrast_index], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
+	uint8_t idx = calculate_contrast_index(settings_data.brightness);
+	screen_driver_underline_WriteString(message->contrast_levels[idx], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
 
-static void screen_update_global_settings2(){
+static void screen_update_global_settings2(uint8_t *select_states){
 	menu_display(&Font_6x8, message->global_settings_2);
 
 	// MIDI THRU
@@ -85,7 +81,7 @@ static void screen_update_global_settings2(){
 	screen_driver_underline_WriteString(message->choices.off_on[settings_data.channel_filter], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
 }
 
-static void screen_update_midi_filter(){
+static void screen_update_midi_filter(uint8_t *select_states){
 	menu_display(&Font_6x8, message->USB_Thru);
 	screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
@@ -118,16 +114,19 @@ static void screen_update_settings_about(){
 }
 
 // The current selected menu part
-void screen_update_settings(){
+void screen_update_settings(uint8_t current_select){
+    uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
+    select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
+
 	screen_driver_Fill(Black);
 	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
-		screen_update_global_settings1();
+		screen_update_global_settings1(select_states);
 	}
 	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
-		screen_update_global_settings2();
+		screen_update_global_settings2(select_states);
 	}
 	else if (current_select >= FT1 && current_select <= FT16){
-		screen_update_midi_filter();
+		screen_update_midi_filter(select_states);
 	}
 	else if (current_select == ABOUT){
 		screen_update_settings_about();
@@ -160,18 +159,11 @@ static void saving_settings_ui(){
 }
 
 
-static uint8_t calculate_contrast_index(uint8_t brightness) {
-	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
-		if (contrast_values[i] == brightness) {
-			return i;
-		}
-	}
-	// Default to full brightness if not found
-	return 9;
-}
+
 
 static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
                                     uint16_t *filtered_channels,
+									uint8_t current_select,
                                     uint8_t select_changed)
 {
     uint8_t channel_index = (uint8_t)(current_select - FT1);
@@ -186,20 +178,22 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
 
 
 
-// Settings update logic
 void settings_update_menu(TIM_HandleTypeDef * timer3,
                           TIM_HandleTypeDef * timer4,
-                          uint8_t * old_menu){
+                          uint8_t * old_menu,
+						  uint8_t * current_select){
 
-	contrast_index = calculate_contrast_index(settings_data.brightness);
+	static uint8_t old_select = 0;
+	uint8_t contrast_index = calculate_contrast_index(settings_data.brightness);
 	settings_data_struct old_settings_data = settings_data;
 
+
 	uint8_t menu_changed = (*old_menu != SETTINGS);
-	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed, 1, WRAP);
+	utils_counter_change(timer3, current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed, 1, WRAP);
 
 	// Compute whether the selection changed before the switch
-	uint8_t select_changed = (old_select != current_select);
-	switch (current_select) {
+	uint8_t select_changed = (old_select != * current_select);
+	switch (* current_select) {
 		// Global section
 		case SETT_START_MENU:
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
@@ -210,12 +204,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 
 		case SETT_BRIGHTNESS:
-			utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
-			if (contrast_index < 10) {
-				settings_data.brightness = contrast_values[contrast_index];
-				if (old_settings_data.brightness != settings_data.brightness) {
-					screen_driver_SetContrast(settings_data.brightness);
-				}
+		   utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
+			static const uint8_t contrast_values[10] = {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
+			settings_data.brightness = contrast_values[contrast_index];
+			if (old_settings_data.brightness != settings_data.brightness) {
+				screen_driver_SetContrast(settings_data.brightness);
 			}
 			break;
 		case SETT_MIDI_THRU:
@@ -232,25 +225,22 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-			midi_filter_update_menu(timer4, &settings_data.filtered_channels, select_changed);
+			midi_filter_update_menu(timer4, &settings_data.filtered_channels, *current_select, select_changed);
 		    break;
 		}
 	}
 
 
-	// Selecting the current item being selected
-	select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
 
 	if(debounce_button(GPIOB, Btn1_Pin, NULL, 10)){
 		saving_settings_ui();
 	}
 
     if (menu_check_for_updates(menu_changed,  &old_settings_data, &settings_data,
-          sizeof settings_data, &current_select, &old_select)) {
+          sizeof settings_data, current_select, &old_select)) {
         osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
     }
-    old_select  = current_select;
-
+    old_select  = *current_select;
     *old_menu   = SETTINGS;
 }
 

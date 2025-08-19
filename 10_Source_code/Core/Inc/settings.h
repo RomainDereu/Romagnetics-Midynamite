@@ -30,18 +30,12 @@ typedef enum {
     AMOUNT_OF_SETTINGS
 } current_select_list_t;
 
-extern uint8_t select_states[];
-extern uint8_t contrast_values[];
-
-extern uint8_t contrast_index;
-extern uint8_t current_select;
-extern uint8_t old_select;
-
-void screen_update_settings();
+void screen_update_settings(uint8_t current_select);
 
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
-							 uint8_t * old_menu);
+							 uint8_t * old_menu,
+							 uint8_t * current_select);
 
 #endif /* SETTINGS_H_ */

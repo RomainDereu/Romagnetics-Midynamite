@@ -79,7 +79,15 @@ midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
 settings_data_struct settings_data;
 
-uint8_t current_menu;
+
+
+
+typedef struct {
+    uint8_t settings_current_select;
+    uint8_t current_menu;
+} ui_state_t;
+
+static ui_state_t ui_state = {0};
 
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
@@ -152,7 +160,7 @@ int main(void)
 
 
   load_settings();
-  current_menu = settings_data.start_menu;
+  ui_state.current_menu = settings_data.start_menu;
   screen_driver_SetContrast(settings_data.brightness);
 
   if(midi_tempo_data.currently_sending == 1){
@@ -599,10 +607,10 @@ void MediumTasks(void *argument)
 
 	 //Romagnetics code
 	static uint8_t old_menu = 99;
-	menu_change_check(&current_menu);
+	menu_change_check(&ui_state.current_menu);
 
 
-	switch(current_menu) {
+	switch(ui_state.current_menu) {
 		case MIDI_TEMPO:
 			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu);
 			break;
@@ -616,7 +624,7 @@ void MediumTasks(void *argument)
 			break;
 
 		case SETTINGS:
-			settings_update_menu(&htim3, &htim4, &old_menu);
+			settings_update_menu(&htim3, &htim4, &old_menu, &ui_state.settings_current_select);
 			break;
 
 		default:
@@ -624,14 +632,14 @@ void MediumTasks(void *argument)
 			break;
 	}
 
-	old_menu = current_menu;
+	old_menu = ui_state.current_menu;
 
 
 
 
 	static uint8_t OldBtn3State = 1;
 	if(debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)){
-		 switch (current_menu) {
+		 switch (ui_state.current_menu) {
 		 	case MIDI_TEMPO:
 		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
 		 		mt_start_stop(&htim2, &midi_tempo_data);
@@ -679,7 +687,7 @@ void DisplayUpdate(void *argument)
   {
 	  uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
 
-	  switch (current_menu) {
+	  switch (ui_state.current_menu) {
 	  	case MIDI_TEMPO:
 	  		if (displayFlags & FLAG_TEMPO) {
 	  			screen_update_midi_tempo(&midi_tempo_data);
@@ -700,7 +708,7 @@ void DisplayUpdate(void *argument)
 
 	  	case SETTINGS:
 	  		if (displayFlags & FLAG_SETTINGS) {
-	  			screen_update_settings();
+	  			screen_update_settings(ui_state.settings_current_select);
 	  		}
 	  		break;
 
