@@ -170,19 +170,17 @@ static uint8_t calculate_contrast_index(uint8_t brightness) {
 	return 9;
 }
 
-static void midi_filter_update_menu(TIM_HandleTypeDef * timer, uint8_t filtered_channels, uint8_t select_changed){
-    uint8_t channel_index = current_select - FT1;
-
-    // Current value of that channel's filter bit (1 = blocked)
-    uint8_t bit_value = (filtered_channels >> channel_index) & 1;
-
-    // Change the bit value (toggle via encoder)
+static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
+                                    uint16_t *filtered_channels,
+                                    uint8_t select_changed)
+{
+    uint8_t channel_index = (uint8_t)(current_select - FT1);
+    uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
     utils_counter_change(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
-
     if (bit_value)
-    	filtered_channels |= (1U << channel_index);  // Set bit → block channel
+        *filtered_channels |=  (uint16_t)(1U << channel_index);
     else
-    	filtered_channels &= ~(1U << channel_index); // Clear bit → allow channel
+        *filtered_channels &= ~(uint16_t)(1U << channel_index);
 }
 
 
@@ -234,7 +232,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-			midi_filter_update_menu(timer4, settings_data.channel_filter, select_changed);
+			midi_filter_update_menu(timer4, &settings_data.filtered_channels, select_changed);
 		    break;
 		}
 	}
