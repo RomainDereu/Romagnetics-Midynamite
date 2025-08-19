@@ -80,13 +80,6 @@ midi_transpose_data_struct midi_transpose_data;
 settings_data_struct settings_data;
 
 
-
-
-typedef struct {
-    uint8_t settings_current_select;
-    uint8_t current_menu;
-} ui_state_t;
-
 static ui_state_t ui_state = {0};
 
 //midi receive
