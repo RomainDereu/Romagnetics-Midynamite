@@ -44,28 +44,9 @@ uint8_t contrast_index;
 uint8_t current_select = 0;
 uint8_t old_select = 0;
 
-// The current selected menu part
-void screen_update_settings(){
-	screen_driver_Fill(Black);
-	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
-		screen_update_global_settings1();
-	}
-	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
-		screen_update_global_settings2();
-	}
-	else if (current_select >= FT1 && current_select <= FT16){
-		screen_update_midi_filter();
-	}
-	else if (current_select == ABOUT){
-		screen_update_settings_about();
-	}
-	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
-	screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-	screen_driver_UpdateScreen();
-}
 
 // Settings Section
-void screen_update_global_settings1(){
+static void screen_update_global_settings1(){
 	menu_display(&Font_6x8, message->global_settings_1);
 
 	// Start Menu
@@ -88,7 +69,7 @@ void screen_update_global_settings1(){
 }
 
 
-void screen_update_global_settings2(){
+static void screen_update_global_settings2(){
 	menu_display(&Font_6x8, message->global_settings_2);
 
 	// MIDI THRU
@@ -104,7 +85,7 @@ void screen_update_global_settings2(){
 	screen_driver_underline_WriteString(message->choices.off_on[settings_data.channel_filter], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
 }
 
-void screen_update_midi_filter(){
+static void screen_update_midi_filter(){
 	menu_display(&Font_6x8, message->USB_Thru);
 	screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
@@ -129,12 +110,34 @@ void screen_update_midi_filter(){
 }
 
 // About Section
-void screen_update_settings_about(){
+static void screen_update_settings_about(){
 	menu_display(&Font_6x8, message->about);
 	screen_driver_SetCursor_WriteString(message->about_brand, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 	screen_driver_SetCursor_WriteString(message->about_product, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
 	screen_driver_SetCursor_WriteString(message->about_version, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
 }
+
+// The current selected menu part
+void screen_update_settings(){
+	screen_driver_Fill(Black);
+	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
+		screen_update_global_settings1();
+	}
+	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
+		screen_update_global_settings2();
+	}
+	else if (current_select >= FT1 && current_select <= FT16){
+		screen_update_midi_filter();
+	}
+	else if (current_select == ABOUT){
+		screen_update_settings_about();
+	}
+	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
+	screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+	screen_driver_UpdateScreen();
+}
+
+
 
 
 // Save portion
@@ -156,7 +159,7 @@ static void saving_settings_ui(){
 		screen_driver_UpdateScreen();
 }
 
-// Finds index from brightness value
+
 static uint8_t calculate_contrast_index(uint8_t brightness) {
 	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
 		if (contrast_values[i] == brightness) {
@@ -166,6 +169,24 @@ static uint8_t calculate_contrast_index(uint8_t brightness) {
 	// Default to full brightness if not found
 	return 9;
 }
+
+static void midi_filter_update_menu(TIM_HandleTypeDef * timer, uint8_t filtered_channels, uint8_t select_changed){
+    uint8_t channel_index = current_select - FT1;
+
+    // Current value of that channel's filter bit (1 = blocked)
+    uint8_t bit_value = (filtered_channels >> channel_index) & 1;
+
+    // Change the bit value (toggle via encoder)
+    utils_counter_change(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
+
+    if (bit_value)
+    	filtered_channels |= (1U << channel_index);  // Set bit → block channel
+    else
+    	filtered_channels &= ~(1U << channel_index); // Clear bit → allow channel
+}
+
+
+
 
 // Settings update logic
 void settings_update_menu(TIM_HandleTypeDef * timer3,
@@ -213,19 +234,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-		    uint8_t channel_index = current_select - FT1;
-
-		    // Current value of that channel's filter bit (1 = blocked)
-		    uint8_t bit_value = (settings_data.filtered_channels >> channel_index) & 1;
-
-		    // Change the bit value (toggle via encoder)
-		    utils_counter_change(timer4, &bit_value, 0, 1, select_changed, 1, WRAP);
-
-		    if (bit_value)
-		        settings_data.filtered_channels |= (1U << channel_index);  // Set bit → block channel
-		    else
-		        settings_data.filtered_channels &= ~(1U << channel_index); // Clear bit → allow channel
-
+			midi_filter_update_menu(timer4, settings_data.channel_filter, select_changed);
 		    break;
 		}
 	}
@@ -243,6 +252,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
         osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
     }
     old_select  = current_select;
+
     *old_menu   = SETTINGS;
 }
 

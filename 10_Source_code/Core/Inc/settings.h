@@ -39,12 +39,6 @@ extern uint8_t old_select;
 
 void screen_update_settings();
 
-//Different pages of the settings
-void screen_update_global_settings1();
-void screen_update_global_settings2();
-void screen_update_midi_filter();
-void screen_update_settings_about();
-
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
