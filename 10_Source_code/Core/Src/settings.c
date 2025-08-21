@@ -115,8 +115,8 @@ static void screen_update_settings_about(){
 
 // The current selected menu part
 void screen_update_settings(uint8_t current_select){
-    uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
-    select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
+    uint8_t select_states[AMOUNT_OF_SETTINGS_ITEMS] = {0};
+    select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, current_select);
 
 	screen_driver_Fill(Black);
 	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
@@ -189,7 +189,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
-	utils_counter_change(timer3, current_select, 0, AMOUNT_OF_SETTINGS-1, menu_changed, 1, WRAP);
+	utils_counter_change(timer3, current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
 
 	// Compute whether the selection changed before the switch
 	uint8_t select_changed = (old_select != * current_select);

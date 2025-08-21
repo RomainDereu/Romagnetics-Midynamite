@@ -27,8 +27,8 @@ typedef enum {
 
 
     ABOUT,
-    AMOUNT_OF_SETTINGS
-} current_select_list_t;
+    AMOUNT_OF_SETTINGS_ITEMS
+} settings_select_list_t;
 
 void screen_update_settings(uint8_t current_select);
 

@@ -20,27 +20,18 @@
 #include "text.h"
 #include "utils.h"
 
-extern const Message * message;
 
+extern const Message * message;
 extern osThreadId display_updateHandle;
 
 static UART_HandleTypeDef *UART_list_tempo[2];
 
 
-typedef enum {
-	TEMPO_PRINT = 0,
-	MIDI_OUT_PRINT,
-	AMOUNT_OF_SETTINGS
-} current_select_list_t;
+static uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
 
-static uint8_t select_states[AMOUNT_OF_SETTINGS] = {0};
-static uint8_t current_select = 0;
-static uint8_t old_select = 0;
 
-//Midi messages constants
-static uint8_t clock_tick = 0xF8;
-static uint8_t clock_start = 0xFA;
-static uint8_t clock_stop  = 0xfC;
+
+
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
@@ -103,6 +94,7 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 
 
 void send_midi_tempo_out(int32_t tempo_click_rate){
+	uint8_t clock_tick = 0xF8;
     send_usb_midi_message(&clock_tick, 1);
     for (int i = 0; i < 2; i++) {
         if (UART_list_tempo[i] != NULL) {
@@ -113,6 +105,8 @@ void send_midi_tempo_out(int32_t tempo_click_rate){
     }
 
 void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_data) {
+	uint8_t clock_start = 0xFA;
+	uint8_t clock_stop  = 0xfC;
     // Stop clock
     if (midi_tempo_data->currently_sending == 0) {
         HAL_TIM_Base_Stop_IT(timer);
@@ -142,14 +136,13 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu){
-
+	static uint8_t current_select = 0;
+	static uint8_t old_select = 0;
+	uint8_t select_changed = (old_select != current_select);
 	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
 	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 
 	utils_counter_change(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
-
-	// Compute whether the selection changed before the switch
-	uint8_t select_changed = (old_select != current_select);
 	switch (current_select) {
 		case 0:
 			utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, select_changed, 10, NO_WRAP);
@@ -160,11 +153,8 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
 	//Updating the select_states
-	select_current_state(select_states, AMOUNT_OF_SETTINGS, current_select);
-
-
+	select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
 	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
-
 	if(old_midi_tempo_data.current_tempo != midi_tempo_data->current_tempo){
 		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
 	}

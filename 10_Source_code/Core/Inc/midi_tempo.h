@@ -11,6 +11,12 @@
 #include "main.h"
 #include "screen_driver.h"
 
+typedef enum {
+	TEMPO_PRINT = 0,
+	MIDI_OUT_PRINT,
+	AMOUNT_OF_TEMPO_ITEMS
+} midi_tempo_select_list_t;
+
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
 
 void send_midi_tempo_out(int32_t tempo_click_rate);
