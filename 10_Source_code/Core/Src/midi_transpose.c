@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 
-#include "cmsis_os.h"
 #include "main.h"
 #include "menu.h"
 #include "midi_modify.h"
@@ -22,17 +21,13 @@
 #define AMOUNT_OF_STATES 4
 static uint8_t select_states[AMOUNT_OF_STATES] = {0};
 
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
-extern osThreadId display_updateHandle;
 
 
-static void transpose_shift_build_select(
-    TIM_HandleTypeDef           *timer4,
-    midi_transpose_data_struct  *d,
-    uint8_t                      current_select,
-    uint8_t                      select_changed
-) {
+static void transpose_shift_build_select(TIM_HandleTypeDef           *timer4,
+									   	midi_transpose_data_struct  *d,
+										uint8_t                      current_select,
+										uint8_t                      select_changed)
+{
     if (current_select == 0) {
         utils_counter_change_i32(timer4,
                                  &d->midi_shift_value, -24, 24, select_changed, 12, NO_WRAP);
@@ -64,7 +59,8 @@ static void transpose_scaled_build_select(
 void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_transpose_data_struct * midi_transpose_data,
-							 uint8_t * old_menu){
+							 uint8_t * old_menu,
+							 osThreadId_t * display_updateHandle){
 
 	static uint8_t current_select = 0;
 	static uint8_t old_select = 0;

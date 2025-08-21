@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "cmsis_os.h"
 #include "midi_tempo.h"
 #include "menu.h"
 #include "main.h"
@@ -22,17 +21,9 @@
 
 
 extern const Message * message;
-extern osThreadId display_updateHandle;
 
 
-static uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
-
-
-
-
-
-
-void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
+void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data, uint8_t * current_select){
    	  screen_driver_Fill(Black);
 	  //Menu
 	  menu_display(&Font_6x8, message->send_midi_tempo);
@@ -40,6 +31,9 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  screen_driver_Line(64, 10, 64, 64, White);
 	  //Horizontal line
 	  screen_driver_Line(0, 40, 64, 40, White);
+
+	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
+	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, *current_select);
 
 
  	  //Tempo
@@ -142,8 +136,9 @@ void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_
 void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
-							uint8_t * old_menu){
-	static uint8_t current_select = 0;
+							uint8_t * old_menu,
+							uint8_t current_select,
+							osThreadId_t * display_updateHandle){
 	static uint8_t old_select = 0;
 	uint8_t select_changed = (old_select != current_select);
 	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
@@ -159,8 +154,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 	}
 
-	//Updating the select_states
-	select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
+
 	if(old_midi_tempo_data.current_tempo != midi_tempo_data->current_tempo){
 		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
 	}

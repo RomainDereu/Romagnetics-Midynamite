@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include "cmsis_os.h"
 #include "main.h"
 #include "menu.h"
 #include "midi_modify.h"
@@ -21,7 +20,6 @@
 #define BOTTOM_LINE_VERT LINE_4_VERT + 3
 
 
-extern osThreadId display_updateHandle;
 extern const Message * message;
 
 
@@ -91,7 +89,8 @@ static void handle_modify_split(
 void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_modify_data_struct * midi_modify_data,
-							 uint8_t * old_menu){
+							 uint8_t * old_menu,
+							 osThreadId_t * display_updateHandle){
 
 	midi_modify_data_struct old_modify_data = * midi_modify_data;
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);

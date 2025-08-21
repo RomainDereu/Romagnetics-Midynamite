@@ -99,6 +99,7 @@ typedef struct {
 } midi_modify_circular_buffer;
 
 typedef struct {
+    uint8_t midi_tempo_current_select;
     uint8_t settings_current_select;
     uint8_t current_menu;
 } ui_state_t;

@@ -8,6 +8,7 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+#include "cmsis_os.h"
 #include "main.h"
 
 // List of current select
@@ -34,8 +35,9 @@ void screen_update_settings(uint8_t current_select);
 
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-							 uint8_t * old_menu,
-							 uint8_t * current_select);
+		                  TIM_HandleTypeDef * timer4,
+					      uint8_t * old_menu,
+						  uint8_t current_select,
+						  osThreadId_t * display_updateHandle);
 
 #endif /* SETTINGS_H_ */
