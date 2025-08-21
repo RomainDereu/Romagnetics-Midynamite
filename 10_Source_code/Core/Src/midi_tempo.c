@@ -24,8 +24,6 @@
 extern const Message * message;
 extern osThreadId display_updateHandle;
 
-static UART_HandleTypeDef *UART_list_tempo[2];
-
 
 static uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
 
@@ -93,8 +91,13 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 }
 
 
-void send_midi_tempo_out(int32_t tempo_click_rate){
+void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
 	uint8_t clock_tick = 0xF8;
+
+	static UART_HandleTypeDef *UART_list_tempo[2];
+	list_of_UART_to_send_to(send_to_midi_out, UART_list_tempo);
+
+
     send_usb_midi_message(&clock_tick, 1);
     for (int i = 0; i < 2; i++) {
         if (UART_list_tempo[i] != NULL) {
@@ -107,6 +110,10 @@ void send_midi_tempo_out(int32_t tempo_click_rate){
 void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_data) {
 	uint8_t clock_start = 0xFA;
 	uint8_t clock_stop  = 0xfC;
+
+	static UART_HandleTypeDef *UART_list_tempo[2];
+	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
+
     // Stop clock
     if (midi_tempo_data->currently_sending == 0) {
         HAL_TIM_Base_Stop_IT(timer);
@@ -154,7 +161,6 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 
 	//Updating the select_states
 	select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
-	list_of_UART_to_send_to(midi_tempo_data->send_to_midi_out, UART_list_tempo);
 	if(old_midi_tempo_data.current_tempo != midi_tempo_data->current_tempo){
 		midi_tempo_data->tempo_click_rate = 6000000 / (midi_tempo_data->current_tempo * 24);
 	}

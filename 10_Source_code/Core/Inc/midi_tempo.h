@@ -19,7 +19,7 @@ typedef enum {
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
 
-void send_midi_tempo_out(int32_t tempo_click_rate);
+void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out);
 
 void mt_start_stop(TIM_HandleTypeDef * timer,
 				   midi_tempo_data_struct * midi_tempo_data);

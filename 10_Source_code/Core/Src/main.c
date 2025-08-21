@@ -734,7 +734,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-	  send_midi_tempo_out(midi_tempo_data.tempo_click_rate);
+	  send_midi_tempo_out(midi_tempo_data.tempo_click_rate, midi_tempo_data.send_to_midi_out);
   }
 
 
