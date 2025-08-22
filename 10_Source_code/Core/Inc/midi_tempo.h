@@ -30,7 +30,7 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 						    TIM_HandleTypeDef * timer4,
 							midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu,
-							uint8_t current_select,
+							uint8_t * current_select,
 							osThreadId_t * display_updateHandle);
 
 #endif /* INC_DEBUG_H_ */

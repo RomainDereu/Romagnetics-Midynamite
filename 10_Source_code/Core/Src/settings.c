@@ -112,21 +112,21 @@ static void screen_update_settings_about(){
 }
 
 // The current selected menu part
-void screen_update_settings(uint8_t current_select){
+void screen_update_settings(uint8_t * current_select){
     uint8_t select_states[AMOUNT_OF_SETTINGS_ITEMS] = {0};
-    select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, current_select);
+    select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, * current_select);
 
 	screen_driver_Fill(Black);
-	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
+	if (* current_select >= SETT_START_MENU && * current_select <= SETT_BRIGHTNESS){
 		screen_update_global_settings1(select_states);
 	}
-	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
+	else if (* current_select >= SETT_MIDI_THRU && * current_select <= CHANNEL_FILTER){
 		screen_update_global_settings2(select_states);
 	}
-	else if (current_select >= FT1 && current_select <= FT16){
+	else if (* current_select >= FT1 && * current_select <= FT16){
 		screen_update_midi_filter(select_states);
 	}
-	else if (current_select == ABOUT){
+	else if (* current_select == ABOUT){
 		screen_update_settings_about();
 	}
 	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
@@ -161,10 +161,10 @@ static void saving_settings_ui(){
 
 static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
                                     uint16_t *filtered_channels,
-									uint8_t current_select,
+									uint8_t * current_select,
                                     uint8_t select_changed)
 {
-    uint8_t channel_index = (uint8_t)(current_select - FT1);
+    uint8_t channel_index = (uint8_t)(* current_select - FT1);
     uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
     utils_counter_change(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
     if (bit_value)
@@ -179,7 +179,7 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
 void settings_update_menu(TIM_HandleTypeDef * timer3,
                           TIM_HandleTypeDef * timer4,
                           uint8_t * old_menu,
-						  uint8_t current_select,
+						  uint8_t * current_select,
 						  osThreadId_t * display_updateHandle){
 
 	static uint8_t old_select = 0;
@@ -188,11 +188,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 
 	uint8_t menu_changed = (*old_menu != SETTINGS);
-	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
+	utils_counter_change(timer3, current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
 
 	// Compute whether the selection changed before the switch
-	uint8_t select_changed = (old_select != current_select);
-	switch (current_select) {
+	uint8_t select_changed = (old_select != * current_select);
+	switch (* current_select) {
 		// Global section
 		case SETT_START_MENU:
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
@@ -233,10 +233,10 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
     if (menu_check_for_updates(menu_changed,  &old_settings_data, &settings_data,
-          sizeof settings_data, &current_select, &old_select)) {
-        osThreadFlagsSet(&display_updateHandle, FLAG_SETTINGS);
+          sizeof settings_data, current_select, &old_select)) {
+        osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
     }
-    old_select  = current_select;
+    old_select  = * current_select;
     *old_menu   = SETTINGS;
 }
 

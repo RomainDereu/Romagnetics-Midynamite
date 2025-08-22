@@ -18,17 +18,13 @@
 #include "text.h"
 #include "utils.h"
 
-#define AMOUNT_OF_STATES 4
-static uint8_t select_states[AMOUNT_OF_STATES] = {0};
-
-
 
 static void transpose_shift_build_select(TIM_HandleTypeDef           *timer4,
 									   	midi_transpose_data_struct  *d,
-										uint8_t                      current_select,
+										uint8_t                     * current_select,
 										uint8_t                      select_changed)
 {
-    if (current_select == 0) {
+    if (* current_select == 0) {
         utils_counter_change_i32(timer4,
                                  &d->midi_shift_value, -24, 24, select_changed, 12, NO_WRAP);
     } else { // case 1
@@ -38,10 +34,10 @@ static void transpose_shift_build_select(TIM_HandleTypeDef           *timer4,
 
 static void transpose_scaled_build_select(
     TIM_HandleTypeDef *timer4, midi_transpose_data_struct  *d,
-    uint8_t current_select, uint8_t select_changed) {
-    switch (current_select) {
+    uint8_t * current_select, uint8_t select_changed) {
+    switch (* current_select) {
     case 0:
-        utils_counter_change(timer4, &d->transpose_base_note, 0, 11, select_changed, 12, NO_WRAP);
+        utils_counter_change(timer4, &d->transpose_base_note, 0, 11, select_changed, 1, NO_WRAP);
         break;
     case 1:
         utils_counter_change(timer4, &d->transpose_interval, OCTAVE_DOWN, OCTAVE_UP, select_changed, 1, NO_WRAP);
@@ -60,9 +56,8 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_transpose_data_struct * midi_transpose_data,
 							 uint8_t * old_menu,
+							 uint8_t * current_select,
 							 osThreadId_t * display_updateHandle){
-
-	static uint8_t current_select = 0;
 	static uint8_t old_select = 0;
 
 	midi_transpose_data_struct old_transpose_data = * midi_transpose_data;
@@ -71,8 +66,8 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	//The amount of values to be changed depends on the transpose_type setting
     uint8_t amount_of_settings = (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 
-	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
-	uint8_t select_changed = (old_select != current_select);
+	utils_counter_change(timer3, current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
+	uint8_t select_changed = (old_select != * current_select);
 
 
 
@@ -89,21 +84,23 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	    current_select = 0;
 	    }
 
-	select_current_state(select_states, AMOUNT_OF_STATES, current_select);
+	#define AMOUNT_OF_STATES 4
+	uint8_t select_states[AMOUNT_OF_STATES] = {0};
+	select_current_state(select_states, AMOUNT_OF_STATES, * current_select);
 
 
 	if(menu_check_for_updates(menu_changed, &old_transpose_data,
-						   midi_transpose_data, sizeof *midi_transpose_data, &current_select, &old_select)){
+						   midi_transpose_data, sizeof *midi_transpose_data, current_select, &old_select)){
 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 	}
 
-	old_select = current_select;
+	old_select = * current_select;
 	*old_menu = MIDI_TRANSPOSE;
 }
 
 
 
-static void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data){
+static void midi_transpose_shift_display(midi_transpose_data_struct * midi_transpose_data, uint8_t * select_states){
 
 	screen_driver_SetCursor_WriteString(message->shift_by, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     char modify_value[5];
@@ -120,7 +117,7 @@ static void midi_transpose_shift_display(midi_transpose_data_struct * midi_trans
 }
 
 
-static void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data){
+static void midi_transpose_scaled_display(midi_transpose_data_struct * midi_transpose_data, uint8_t * select_states){
 
 
 	//Base Note
@@ -149,16 +146,21 @@ static void midi_transpose_scaled_display(midi_transpose_data_struct * midi_tran
 
 
 
-void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data){
+void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data, uint8_t * current_select){
+
+	#define AMOUNT_OF_STATES 4
+	uint8_t select_states[AMOUNT_OF_STATES] = {0};
+	select_current_state(select_states, AMOUNT_OF_STATES, * current_select);
+
 
 	screen_driver_Fill(Black);
 	menu_display(&Font_6x8, message->midi_transpose);
 
 	if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SHIFT){
-		midi_transpose_shift_display(midi_transpose_data);
+		midi_transpose_shift_display(midi_transpose_data, select_states);
 	}
 	else if(midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED){
-		midi_transpose_scaled_display(midi_transpose_data);
+		midi_transpose_scaled_display(midi_transpose_data, select_states);
 	}
 
 	midi_display_on_off(midi_transpose_data->currently_sending, 63);

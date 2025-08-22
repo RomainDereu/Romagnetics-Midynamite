@@ -605,7 +605,7 @@ void MediumTasks(void *argument)
 
 	switch(ui_state.current_menu) {
 		case MIDI_TEMPO:
-			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, ui_state.midi_tempo_current_select, display_updateHandle);
+			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, &ui_state.midi_tempo_current_select, display_updateHandle);
 			break;
 
 		case MIDI_MODIFY:
@@ -613,11 +613,11 @@ void MediumTasks(void *argument)
 			break;
 
 		case MIDI_TRANSPOSE:
-			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, &old_menu, display_updateHandle);
+			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, &old_menu, &ui_state.midi_transpose_current_select, display_updateHandle);
 			break;
 
 		case SETTINGS:
-			settings_update_menu(&htim3, &htim4, &old_menu, ui_state.settings_current_select, display_updateHandle);
+			settings_update_menu(&htim3, &htim4, &old_menu, &ui_state.settings_current_select, display_updateHandle);
 			break;
 
 		default:
@@ -695,13 +695,13 @@ void DisplayUpdate(void *argument)
 
 	  	case MIDI_TRANSPOSE:
 	  		if (displayFlags & FLAG_TRANSPOSE) {
-	  			screen_update_midi_transpose(&midi_transpose_data);
+	  			screen_update_midi_transpose(&midi_transpose_data, &ui_state.midi_transpose_current_select);
 	  		}
 	  		break;
 
 	  	case SETTINGS:
 	  		if (displayFlags & FLAG_SETTINGS) {
-	  			screen_update_settings(ui_state.settings_current_select);
+	  			screen_update_settings(&ui_state.settings_current_select);
 	  		}
 	  		break;
 
