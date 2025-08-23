@@ -114,21 +114,23 @@ static void screen_update_settings_about(){
 }
 
 // The current selected menu part
-void screen_update_settings(uint8_t * current_select){
+void screen_update_settings(){
+
     uint8_t select_states[AMOUNT_OF_SETTINGS_ITEMS] = {0};
-    select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, * current_select);
+	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
+    select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, current_select);
 
 	screen_driver_Fill(Black);
-	if (* current_select >= SETT_START_MENU && * current_select <= SETT_BRIGHTNESS){
+	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
 		screen_update_global_settings1(select_states);
 	}
-	else if (* current_select >= SETT_MIDI_THRU && * current_select <= CHANNEL_FILTER){
+	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
 		screen_update_global_settings2(select_states);
 	}
-	else if (* current_select >= FT1 && * current_select <= FT16){
+	else if (current_select >= FT1 && current_select <= FT16){
 		screen_update_midi_filter(select_states);
 	}
-	else if (* current_select == ABOUT){
+	else if (current_select == ABOUT){
 		screen_update_settings_about();
 	}
 	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
@@ -181,20 +183,20 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
 void settings_update_menu(TIM_HandleTypeDef * timer3,
                           TIM_HandleTypeDef * timer4,
                           uint8_t * old_menu,
-						  uint8_t * current_select,
 						  osThreadId_t * display_updateHandle){
-
-	static uint8_t old_select = 0;
-	uint8_t contrast_index = calculate_contrast_index(settings_data.brightness);
 	settings_data_struct old_settings_data = settings_data;
 
 
-	uint8_t menu_changed = (*old_menu != SETTINGS);
-	utils_counter_change(timer3, current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
+	static uint8_t old_select = 0;
 
-	// Compute whether the selection changed before the switch
-	uint8_t select_changed = (old_select != * current_select);
-	switch (* current_select) {
+	uint8_t current_select = ui_state_get(UI_CURRENT_MENU);
+	uint8_t select_changed = (old_select != current_select);
+	uint8_t menu_changed = (*old_menu != SETTINGS);
+	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
+	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET ,current_select);
+
+
+	switch (current_select) {
 		// Global section
 		case SETT_START_MENU:
 			utils_counter_change(timer4, &settings_data.start_menu, 0, AMOUNT_OF_MENUS-1, select_changed, 1, WRAP);
@@ -205,7 +207,8 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 
 		case SETT_BRIGHTNESS:
-		   utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
+			uint8_t contrast_index = calculate_contrast_index(settings_data.brightness);
+		    utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
 			static const uint8_t contrast_values[10] = {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
 			settings_data.brightness = contrast_values[contrast_index];
 			if (old_settings_data.brightness != settings_data.brightness) {
@@ -226,7 +229,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-			midi_filter_update_menu(timer4, &settings_data.filtered_channels, current_select, select_changed);
+			midi_filter_update_menu(timer4, &settings_data.filtered_channels, &current_select, select_changed);
 		    break;
 		}
 	}
@@ -235,10 +238,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
     if (menu_check_for_updates(menu_changed,  &old_settings_data, &settings_data,
-          sizeof settings_data, current_select, &old_select)) {
+          sizeof settings_data, &current_select, &old_select)) {
         osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
     }
-    old_select  = * current_select;
+
+    old_select  = current_select;
     *old_menu   = SETTINGS;
 }
 

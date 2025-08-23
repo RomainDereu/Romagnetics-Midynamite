@@ -81,9 +81,6 @@ midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
 settings_data_struct settings_data;
 
-
-static ui_state_t ui_state = {0};
-
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
@@ -604,11 +601,9 @@ void MediumTasks(void *argument)
 	static uint8_t old_menu = 99;
 	menu_change_check();
 
-	//Setting the ui_state_t.menu to the correct value
-	//Will be deleted later
-	ui_state.current_menu = ui_state_get(UI_CURRENT_MENU);
 
 	uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+
 	switch(current_menu) {
 		case MIDI_TEMPO:
 			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, display_updateHandle);
@@ -623,7 +618,7 @@ void MediumTasks(void *argument)
 			break;
 
 		case SETTINGS:
-			settings_update_menu(&htim3, &htim4, &old_menu, &ui_state.settings_current_select, display_updateHandle);
+			settings_update_menu(&htim3, &htim4, &old_menu, display_updateHandle);
 			break;
 
 		default:
@@ -631,14 +626,15 @@ void MediumTasks(void *argument)
 			break;
 	}
 
-	old_menu = ui_state.current_menu;
+	old_menu = current_menu;
 
 
 
 
 	static uint8_t OldBtn3State = 1;
 	if(debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)){
-		 switch (ui_state.current_menu) {
+		uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+		 switch (current_menu) {
 		 	case MIDI_TEMPO:
 		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
 		 		mt_start_stop(&htim2, &midi_tempo_data);
@@ -686,7 +682,8 @@ void DisplayUpdate(void *argument)
   {
 	  uint32_t displayFlags = osThreadFlagsWait(0x0F, osFlagsWaitAny, osWaitForever);
 
-	  switch (ui_state.current_menu) {
+	  uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+	  switch (current_menu) {
 	  	case MIDI_TEMPO:
 	  		if (displayFlags & FLAG_TEMPO) {
 	  			screen_update_midi_tempo(&midi_tempo_data);
@@ -707,7 +704,7 @@ void DisplayUpdate(void *argument)
 
 	  	case SETTINGS:
 	  		if (displayFlags & FLAG_SETTINGS) {
-	  			screen_update_settings(&ui_state.settings_current_select);
+	  			screen_update_settings();
 	  		}
 	  		break;
 
