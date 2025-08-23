@@ -17,6 +17,7 @@
 #define LINE_2_VERT 25
 #define LINE_3_VERT 35
 #define LINE_4_VERT 45
+#define BOTTOM_LINE_VERT LINE_4_VERT + 3
 
 
 #define NO_MULT 1

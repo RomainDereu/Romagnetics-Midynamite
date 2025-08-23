@@ -4,8 +4,6 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-#define BOTTOM_LINE_VERT LINE_4_VERT + 3
-
 #include <string.h>
 
 #include "screen_driver.h"
