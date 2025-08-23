@@ -80,7 +80,7 @@ typedef struct {
 // Generic return if busy
 // ---------------------
 #define SAVE_STATE_BUSY 0xFF
-#define DATA_VALIDITY_CHECKSUM 0xA5A5A5A5
+#define DATA_VALIDITY_CHECKSUM 0xA5A5A5A4
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 
@@ -155,5 +155,11 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
                           midi_modify_data_struct * midi_modify_data_to_save,
                           midi_transpose_data_struct * midi_transpose_data_to_save,
                           settings_data_struct *settings_data_to_save);
+
+midi_tempo_data_struct save_snapshot_tempo(void);
+midi_modify_data_struct save_snapshot_modify(void);
+midi_transpose_data_struct save_snapshot_transpose(void);
+settings_data_struct save_snapshot_settings(void);
+
 
 #endif /* MEMORY_SAVE_H_ */

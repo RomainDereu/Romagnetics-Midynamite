@@ -157,8 +157,8 @@ int main(void)
   uint8_t brightness = (uint8_t)save_get_u8(SAVE_SETTINGS_BRIGHTNESS);
   screen_driver_SetContrast(brightness);
 
-  if(midi_tempo_data.currently_sending == 1){
-	  mt_start_stop(&htim2, &midi_tempo_data);
+  if(save_get_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING) == 1){
+	  mt_start_stop(&htim2);
   }
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -596,7 +596,7 @@ void MediumTasks(void *argument)
 {
   /* USER CODE BEGIN MediumTasks */
 	//Old menu needs to be set up to a different value than current_menu to trigger drawing
-	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, settings_data.start_menu);
+	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get_u8(SAVE_SETTINGS_START_MENU));
 	ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET,99);
 
 	/* Infinite loop */
@@ -609,7 +609,7 @@ void MediumTasks(void *argument)
 
 	switch(current_menu) {
 		case MIDI_TEMPO:
-			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, display_updateHandle);
+			midi_tempo_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case MIDI_MODIFY:
@@ -640,8 +640,8 @@ void MediumTasks(void *argument)
 		uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
 		 switch (current_menu) {
 		 	case MIDI_TEMPO:
-		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
-		 		mt_start_stop(&htim2, &midi_tempo_data);
+		 		save_modify_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
+		 		mt_start_stop(&htim2);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
 		 		break;
 
@@ -690,7 +690,7 @@ void DisplayUpdate(void *argument)
 	  switch (current_menu) {
 	  	case MIDI_TEMPO:
 	  		if (displayFlags & FLAG_TEMPO) {
-	  			screen_update_midi_tempo(&midi_tempo_data);
+	  			screen_update_midi_tempo();
 	  		}
 	  		break;
 
@@ -741,7 +741,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-	  send_midi_tempo_out(midi_tempo_data.tempo_click_rate, midi_tempo_data.send_to_midi_out);
+	  uint8_t send_to_out     = save_get_u8(SAVE_MIDI_TEMPO_SEND_TO_OUT);
+	  uint32_t tempo_click_rate = save_get_u32(SAVE_MIDI_TEMPO_CLICK_RATE);
+	  send_midi_tempo_out(tempo_click_rate, send_to_out);
   }
 
 

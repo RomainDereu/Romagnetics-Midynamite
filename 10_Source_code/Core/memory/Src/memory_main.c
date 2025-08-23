@@ -5,8 +5,9 @@
  *      Author: Romain Dereu
  */
 
-#include "memory_main.h"
 #include <string.h>
+
+#include "memory_main.h"
 #include "stm32f4xx_hal.h"
 #include "utils.h"
 
@@ -322,3 +323,35 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
     this_save.check_data_validity  = DATA_VALIDITY_CHECKSUM;
     return this_save;
 }
+
+
+
+#include <string.h>  // for memcpy
+
+// ---------------------
+// Snapshot helpers
+// ---------------------
+midi_tempo_data_struct save_snapshot_tempo(void) {
+    midi_tempo_data_struct copy;
+    memcpy(&copy, &save_data.midi_tempo_data, sizeof(copy));
+    return copy;
+}
+
+midi_modify_data_struct save_snapshot_modify(void) {
+    midi_modify_data_struct copy;
+    memcpy(&copy, &save_data.midi_modify_data, sizeof(copy));
+    return copy;
+}
+
+midi_transpose_data_struct save_snapshot_transpose(void) {
+    midi_transpose_data_struct copy;
+    memcpy(&copy, &save_data.midi_transpose_data, sizeof(copy));
+    return copy;
+}
+
+settings_data_struct save_snapshot_settings(void) {
+    settings_data_struct copy;
+    memcpy(&copy, &save_data.settings_data, sizeof(copy));
+    return copy;
+}
+

@@ -9,7 +9,7 @@
 #define SRC_UTILS_H_
 
 #include "stdio.h"
-#include "main.h"
+#include "memory_main.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
@@ -50,6 +50,24 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
+
+
+void update_counter_32(TIM_HandleTypeDef *timer,
+                       save_field_t field,
+                       uint8_t menu_changed,
+                       uint8_t multiplier);
+
+void update_counter(TIM_HandleTypeDef *timer,
+                    save_field_t field,
+                    uint8_t menu_changed,
+                    uint8_t multiplier);
+
+
+
+
+
+
+//Roro the bottom two functions will be deleted after the refactoring
 void utils_counter_change_i32(TIM_HandleTypeDef * timer,
                               int32_t * data_to_change,
                               int32_t bottom_value,

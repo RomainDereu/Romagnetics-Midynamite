@@ -16,16 +16,14 @@
 
 
 
-void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data);
+void screen_update_midi_tempo();
 
 void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out);
 
-void mt_start_stop(TIM_HandleTypeDef * timer,
-				   midi_tempo_data_struct * midi_tempo_data);
+void mt_start_stop(TIM_HandleTypeDef * timer);
 
 void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 						    TIM_HandleTypeDef * timer4,
-							midi_tempo_data_struct * midi_tempo_data,
 							osThreadId_t * display_updateHandle);
 
 #endif /* INC_DEBUG_H_ */

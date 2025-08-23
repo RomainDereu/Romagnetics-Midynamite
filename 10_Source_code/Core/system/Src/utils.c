@@ -49,6 +49,77 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 
+
+
+void update_counter_32(TIM_HandleTypeDef *timer,
+                       save_field_t field,
+                       uint8_t menu_changed,
+                       uint8_t multiplier)
+{
+    if (menu_changed == 0) {
+        int32_t current_value = save_get_u32(field);
+        if (current_value == SAVE_STATE_BUSY) return;
+
+        uint8_t active_multiplier = 1;
+        if (multiplier != 1) {
+            uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+            active_multiplier = (Btn2State == 0) ? multiplier : 1;
+        }
+
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+
+        if (delta >= ENCODER_THRESHOLD) {
+            save_modify_u32(field, SAVE_MODIFY_SET, current_value + active_multiplier);
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+        else if (delta <= -ENCODER_THRESHOLD) {
+            save_modify_u32(field, SAVE_MODIFY_SET, current_value - active_multiplier);
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+    }
+
+    if (menu_changed == 1) {
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+    }
+}
+
+void update_counter(TIM_HandleTypeDef *timer,
+                    save_field_t field,
+                    uint8_t menu_changed,
+                    uint8_t multiplier)
+{
+    if (menu_changed == 0) {
+        uint8_t current_value = save_get_u8(field);
+        if (current_value == SAVE_STATE_BUSY) return;
+
+        uint8_t active_multiplier = 1;
+        if (multiplier != 1) {
+            uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+            active_multiplier = (Btn2State == 0) ? multiplier : 1;
+        }
+
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+
+        if (delta >= ENCODER_THRESHOLD) {
+            save_modify_u8(field, SAVE_MODIFY_SET, current_value + active_multiplier);
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+        else if (delta <= -ENCODER_THRESHOLD) {
+            save_modify_u8(field, SAVE_MODIFY_SET, current_value - active_multiplier);
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        }
+    }
+
+    if (menu_changed == 1) {
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+    }
+}
+
+
+
+
+
+//Roro both functions will be deleted once the refactoring is over
 void utils_counter_change_i32(TIM_HandleTypeDef * timer,
 		                       int32_t * data_to_change,
 							   int32_t bottom_value,
@@ -100,6 +171,17 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
     utils_counter_change_i32(timer, &temp_data, bottom_value, max_value, menu_changed, multiplier, wrap_or_not);
     *data_to_change = (uint8_t)temp_data;
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_t max_value){
