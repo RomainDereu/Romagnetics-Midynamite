@@ -14,6 +14,9 @@
 
 #include <string.h>
 
+#include "memory.h"
+
+//under_here_header_checks
 #include "cmsis_os.h"
 #include "saving.h"
 #include "main.h"

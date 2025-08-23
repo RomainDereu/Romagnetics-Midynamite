@@ -10,6 +10,9 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "memory.h"
+
+//under_here_header_checks
 #include "midi_tempo.h"
 #include "menu.h"
 #include "main.h"

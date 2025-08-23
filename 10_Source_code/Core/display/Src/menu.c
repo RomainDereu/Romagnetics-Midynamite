@@ -6,7 +6,9 @@
  */
 
 
+#include "memory.h"
 
+//under_here_header_checks
 #include "cmsis_os.h"
 #include "menu.h"
 #include "main.h"
@@ -20,12 +22,12 @@ void menu_display(const screen_driver_Font_t * font, const char * menu_message){
 
 
 
-void menu_change_check(uint8_t * current_menu){
+void menu_change_check(){
 	 static uint8_t button_pressed = 0;
 	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
-          *current_menu+=1;
-		  if(*current_menu > AMOUNT_OF_MENUS-1){
-			  *current_menu = MIDI_TEMPO;
-		  }
+
+
+		  ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
+
 	  }
 }

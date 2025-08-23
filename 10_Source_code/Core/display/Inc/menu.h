@@ -13,7 +13,7 @@
 
 void menu_display(const screen_driver_Font_t * font, const char * menu_message);
 
-void menu_change_check(uint8_t * current_menu);
+void menu_change_check();
 
 
 #endif /* INC_MENU_H_ */

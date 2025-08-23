@@ -25,6 +25,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
+#include "memory.h"
 #include "menu.h"
 #include "midi_tempo.h"
 #include "midi_modify.h"
@@ -74,6 +75,7 @@ const osThreadAttr_t display_update_attributes = {
 /* USER CODE BEGIN PV */
 //Romagnetics code
 //structs containing the informaiton for each mode
+//Roro will be deleted once memory has been moved
 midi_tempo_data_struct midi_tempo_data;
 midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
@@ -153,7 +155,7 @@ int main(void)
 
 
   load_settings();
-  ui_state.current_menu = settings_data.start_menu;
+  ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, settings_data.start_menu);
   screen_driver_SetContrast(settings_data.brightness);
 
   if(midi_tempo_data.currently_sending == 1){
@@ -600,10 +602,14 @@ void MediumTasks(void *argument)
 
 	 //Romagnetics code
 	static uint8_t old_menu = 99;
-	menu_change_check(&ui_state.current_menu);
+	menu_change_check();
 
+	//Setting the ui_state_t.menu to the correct value
+	//Will be deleted later
+	ui_state.current_menu = ui_state_get(UI_CURRENT_MENU);
 
-	switch(ui_state.current_menu) {
+	uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+	switch(current_menu) {
 		case MIDI_TEMPO:
 			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, &ui_state.midi_tempo_current_select, display_updateHandle);
 			break;

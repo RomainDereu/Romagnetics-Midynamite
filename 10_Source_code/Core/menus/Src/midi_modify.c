@@ -8,6 +8,9 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+#include "memory.h"
+
+//under_here_header_checks
 #include "main.h"
 #include "menu.h"
 #include "midi_modify.h"

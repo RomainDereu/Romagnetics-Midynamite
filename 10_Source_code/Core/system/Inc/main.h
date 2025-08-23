@@ -21,7 +21,7 @@ extern "C" {
 
 
 
-
+//Roro: all the typedefs will need to be deleted
 typedef struct {
 	//Modified in the tempo menu
 	int32_t current_tempo;
@@ -90,6 +90,15 @@ typedef struct {
 	uint32_t check_data_validity;
 }save_struct;
 
+
+
+
+
+
+
+
+
+
 #define MIDI_MODIFY_BUFFER_SIZE 256
 
 typedef struct {
@@ -98,13 +107,6 @@ typedef struct {
     volatile uint16_t tail;
 } midi_modify_circular_buffer;
 
-typedef struct {
-    uint8_t midi_tempo_current_select;
-    uint8_t midi_modify_current_select;
-    uint8_t midi_transpose_current_select;
-    uint8_t settings_current_select;
-    uint8_t current_menu;
-} ui_state_t;
 
 
 
@@ -146,14 +148,7 @@ void Error_Handler(void);
 #define DATA_VALIDITY_CHECKSUM 17491
 #define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
-//Menu list
-typedef enum {
-    MIDI_TEMPO = 0,
-    MIDI_MODIFY,
-    MIDI_TRANSPOSE,
-    SETTINGS,
-    AMOUNT_OF_MENUS
-} menu_list_t;
+
 
 
 typedef enum {

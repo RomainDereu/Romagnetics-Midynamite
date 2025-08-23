@@ -6,6 +6,10 @@
  */
 #include <string.h>
 
+
+#include "memory.h"
+
+//under_here_header_checks
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "saving.h"
