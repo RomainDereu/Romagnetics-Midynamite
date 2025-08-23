@@ -26,7 +26,7 @@
 extern const Message * message;
 
 
-void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data, uint8_t * current_select){
+void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
    	  screen_driver_Fill(Black);
 	  //Menu
 	  menu_display(&Font_6x8, message->send_midi_tempo);
@@ -36,7 +36,8 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data, uint8_t 
 	  screen_driver_Line(0, 40, 64, 40, White);
 
 	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
-	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, *current_select);
+	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
 
 
  	  //Tempo
@@ -140,15 +141,21 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
 							uint8_t * old_menu,
-							uint8_t * current_select,
 							osThreadId_t * display_updateHandle){
 	static uint8_t old_select = 0;
-	uint8_t select_changed = (old_select != * current_select);
+	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+	uint8_t select_changed = (old_select != current_select);
+
 	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
 	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
 
-	utils_counter_change(timer3, current_select, 0, 1, menu_changed, 1, WRAP);
-	switch (* current_select) {
+
+	utils_counter_change(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
+
+	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
+
+
+	switch (current_select) {
 		case 0:
 			utils_counter_change_i32(timer4, &(midi_tempo_data->current_tempo), 30, 300, select_changed, 10, NO_WRAP);
 			break;
@@ -163,9 +170,9 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
     if (menu_check_for_updates( menu_changed, &old_midi_tempo_data, midi_tempo_data, sizeof *midi_tempo_data,
-          current_select, &old_select  )) {
+          &current_select, &old_select  )) {
         osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
     }
-    old_select  = * current_select;
+    old_select  = current_select;
     *old_menu   = MIDI_TEMPO;
 }

@@ -611,7 +611,7 @@ void MediumTasks(void *argument)
 	uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
 	switch(current_menu) {
 		case MIDI_TEMPO:
-			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, &ui_state.midi_tempo_current_select, display_updateHandle);
+			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, display_updateHandle);
 			break;
 
 		case MIDI_MODIFY:
@@ -689,7 +689,7 @@ void DisplayUpdate(void *argument)
 	  switch (ui_state.current_menu) {
 	  	case MIDI_TEMPO:
 	  		if (displayFlags & FLAG_TEMPO) {
-	  			screen_update_midi_tempo(&midi_tempo_data, &ui_state.midi_tempo_current_select);
+	  			screen_update_midi_tempo(&midi_tempo_data);
 	  		}
 	  		break;
 
