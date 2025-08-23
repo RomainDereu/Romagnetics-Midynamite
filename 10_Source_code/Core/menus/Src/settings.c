@@ -7,13 +7,14 @@
 #include <string.h>
 
 
-#include "memory.h"
+#include "memory_ui_state.h"
+#include "memory_main.h"
 
 //under_here_header_checks
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
-#include "saving.h"
-#include "main.h"
+
+
 #include "menu.h"
 #include "utils.h"
 #include "settings.h"

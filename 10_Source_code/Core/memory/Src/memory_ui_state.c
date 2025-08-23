@@ -4,7 +4,7 @@
  *  Created on: Aug 23, 2025
  *      Author: Astaa
  */
-#include "memory.h"
+#include "memory_ui_state.h"
 
 
 typedef struct {
@@ -100,10 +100,6 @@ static uint8_t ui_state_increment(ui_state_field_t field) {
 
     return ui_state_set(field, value);
 }
-
-
-
-
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set) {
     switch(op) {

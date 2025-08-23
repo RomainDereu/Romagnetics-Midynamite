@@ -7,7 +7,7 @@
 
 
 #include "usbd_midi.h"
-#include "main.h"
+#include "memory_main.h"
 
 extern USBD_HandleTypeDef hUsbDeviceFS;
 extern settings_data_struct settings_data;

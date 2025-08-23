@@ -9,8 +9,9 @@
 #ifndef INC_MIDI_TEMPO_H_
 #define INC_MIDI_TEMO_H_
 
+#include "memory_main.h"
+
 #include "cmsis_os.h"
-#include "main.h"
 #include "screen_driver.h"
 
 

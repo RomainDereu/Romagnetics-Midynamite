@@ -10,12 +10,12 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "memory.h"
+#include "memory_ui_state.h"
+#include "memory_main.h"
 
 //under_here_header_checks
 #include "midi_tempo.h"
 #include "menu.h"
-#include "main.h"
 #include "midi_usb.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
@@ -143,7 +143,6 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							osThreadId_t * display_updateHandle){
 
 	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
-
 
 	static uint8_t old_select = 0;
 

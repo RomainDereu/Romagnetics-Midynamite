@@ -25,11 +25,11 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
-#include "memory.h"
+#include "memory_ui_state.h"
 #include "menu.h"
 #include "midi_tempo.h"
 #include "midi_modify.h"
-#include "saving.h"
+#include "memory_main.h"
 #include "settings.h"
 #include "utils.h"
 
@@ -151,8 +151,9 @@ int main(void)
   screen_driver_Init();
 
 
-  load_settings();
-  screen_driver_SetContrast(settings_data.brightness);
+  save_load_from_flash();
+  uint8_t brightness = (uint8_t)save_get_u32(SAVE_SETTINGS_BRIGHTNESS);
+  screen_driver_SetContrast(brightness);
 
   if(midi_tempo_data.currently_sending == 1){
 	  mt_start_stop(&htim2, &midi_tempo_data);

@@ -9,7 +9,7 @@
 #define INC_MIDI_MODIFY_H_
 
 #include "cmsis_os.h"
-#include "main.h"
+#include "memory_main.h"
 #include "screen_driver.h"
 
 #define MIDI_NOTE_ORIGINAL 0

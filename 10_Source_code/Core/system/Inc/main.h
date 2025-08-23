@@ -19,86 +19,6 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
-
-
-//Roro: all the typedefs will need to be deleted
-typedef struct {
-	//Modified in the tempo menu
-	int32_t current_tempo;
-	int32_t tempo_click_rate;
-	uint8_t currently_sending;
-	uint8_t send_to_midi_out;
-}midi_tempo_data_struct;
-
-
-typedef struct {
-	//Modified in the settings
-	uint8_t change_or_split;
-	uint8_t velocity_type;
-	uint8_t send_to_midi_out;
-
-	//Modified in the menu
-	uint8_t send_to_midi_channel_1;
-	uint8_t send_to_midi_channel_2;
-
-
-	uint8_t split_note;
-	uint8_t split_midi_channel_1;
-	uint8_t split_midi_channel_2;
-
-	int32_t velocity_plus_minus;
-	uint8_t velocity_absolute;
-
-	uint8_t currently_sending;
-
-
-}midi_modify_data_struct;
-
-typedef struct {
-	uint8_t transpose_type;
-
-	int32_t midi_shift_value;
-	uint8_t send_original;
-
-	uint8_t transpose_base_note;
-	uint8_t transpose_interval;
-	uint8_t transpose_scale;
-
-	uint8_t currently_sending;
-
-}midi_transpose_data_struct;
-
-
-typedef struct {
-	uint8_t start_menu;
-	uint8_t send_to_usb;
-	uint8_t brightness;
-	uint8_t channel_filter;
-
-	uint8_t midi_thru;
-	uint8_t usb_thru;
-	uint16_t filtered_channels;
-
-}settings_data_struct;
-
-
-typedef struct {
-	midi_tempo_data_struct midi_tempo_data;
-	midi_modify_data_struct midi_modify_data;
-	midi_transpose_data_struct midi_transpose_data;
-	settings_data_struct settings_data;
-	uint32_t check_data_validity;
-}save_struct;
-
-
-
-
-
-
-
-
-
-
 #define MIDI_MODIFY_BUFFER_SIZE 256
 
 typedef struct {
@@ -145,8 +65,6 @@ void Error_Handler(void);
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
 
-#define DATA_VALIDITY_CHECKSUM 17491
-#define FLASH_SECTOR7_ADDR  ((uint32_t)0x08060000)
 
 
 
