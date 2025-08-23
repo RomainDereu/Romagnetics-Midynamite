@@ -53,7 +53,7 @@ void screen_update_midi_tempo(){
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
       char message_midi_out[10];
-      switch (save_get_u8(SAVE_MIDI_TEMPO_SEND_TO_OUT)) {
+      switch (save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT)) {
         case MIDI_OUT_1:
           strcpy(message_midi_out, message->midi_channel_1);
           break;
@@ -76,7 +76,7 @@ void screen_update_midi_tempo(){
 
       //Stop/Sending status
       screen_driver_SetCursor(15, 42);
-      uint8_t currently_sending = save_get_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
+      uint8_t currently_sending = save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
 
       if(currently_sending == 0){
     	  screen_driver_WriteString(message->off, Font_11x18 , White);
@@ -111,10 +111,10 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
 	uint8_t clock_stop  = 0xfC;
 
 	static UART_HandleTypeDef *UART_list_tempo[2];
-	uint8_t send_out_to = save_get_u8(SAVE_MIDI_TEMPO_SEND_TO_OUT);
+	uint8_t send_out_to = save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT);
 	list_of_UART_to_send_to(send_out_to, UART_list_tempo);
 
-	uint8_t clock_sending = save_get_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
+	uint8_t clock_sending = save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
 
     // Stop clock
     if (clock_sending == 0) {

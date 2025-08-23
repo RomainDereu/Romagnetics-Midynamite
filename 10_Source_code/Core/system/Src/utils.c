@@ -89,7 +89,7 @@ void update_counter(TIM_HandleTypeDef *timer,
                     uint8_t multiplier)
 {
     if (menu_changed == 0) {
-        uint8_t current_value = save_get_u8(field);
+        uint8_t current_value = save_get(field);
         if (current_value == SAVE_STATE_BUSY) return;
 
         uint8_t active_multiplier = 1;

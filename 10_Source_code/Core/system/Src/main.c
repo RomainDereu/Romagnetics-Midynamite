@@ -154,10 +154,10 @@ int main(void)
 
 
   save_load_from_flash();
-  uint8_t brightness = (uint8_t)save_get_u8(SAVE_SETTINGS_BRIGHTNESS);
+  uint8_t brightness = (uint8_t)save_get(SAVE_SETTINGS_BRIGHTNESS);
   screen_driver_SetContrast(brightness);
 
-  if(save_get_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING) == 1){
+  if(save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING) == 1){
 	  mt_start_stop(&htim2);
   }
 
@@ -596,7 +596,7 @@ void MediumTasks(void *argument)
 {
   /* USER CODE BEGIN MediumTasks */
 	//Old menu needs to be set up to a different value than current_menu to trigger drawing
-	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get_u8(SAVE_SETTINGS_START_MENU));
+	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get(SAVE_SETTINGS_START_MENU));
 	ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET,99);
 
 	/* Infinite loop */
@@ -741,7 +741,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-	  uint8_t send_to_out     = save_get_u8(SAVE_MIDI_TEMPO_SEND_TO_OUT);
+	  uint8_t send_to_out     = save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT);
 	  uint32_t tempo_click_rate = save_get_u32(SAVE_MIDI_TEMPO_CLICK_RATE);
 	  send_midi_tempo_out(tempo_click_rate, send_to_out);
   }

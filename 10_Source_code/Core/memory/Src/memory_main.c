@@ -126,7 +126,7 @@ uint32_t save_get_u32(save_field_t field) {
     return val;
 }
 
-uint8_t save_get_u8(save_field_t field) {
+uint8_t save_get(save_field_t field) {
     if (!save_try_lock()) return SAVE_STATE_BUSY;
     uint8_t val = 0;
     if (u8_fields[field]) val = *u8_fields[field];
@@ -175,7 +175,7 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
 
 uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if_set) {
     switch(op) {
-        case SAVE_MODIFY_INCREMENT: return save_set_u8(field, save_get_u8(field)+1);
+        case SAVE_MODIFY_INCREMENT: return save_set_u8(field, save_get(field)+1);
         case SAVE_MODIFY_SET:       return save_set_u8(field, value_if_set);
         default: return 0;
     }
