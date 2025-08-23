@@ -615,7 +615,7 @@ void MediumTasks(void *argument)
 			break;
 
 		case MIDI_MODIFY:
-			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu, &ui_state.midi_modify_current_select, display_updateHandle);
+			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu, display_updateHandle);
 			break;
 
 		case MIDI_TRANSPOSE:
@@ -695,7 +695,7 @@ void DisplayUpdate(void *argument)
 
 	  	case MIDI_MODIFY:
 	  		if (displayFlags & FLAG_MODIFY) {
-	  			screen_update_midi_modify(&midi_modify_data, &ui_state.midi_modify_current_select);
+	  			screen_update_midi_modify(&midi_modify_data);
 	  		}
 	  		break;
 

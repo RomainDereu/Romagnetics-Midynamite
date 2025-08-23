@@ -84,34 +84,35 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_modify_data_struct * midi_modify_data,
 							 uint8_t * old_menu,
-							 uint8_t * current_select,
 							 osThreadId_t * display_updateHandle){
+
+	midi_modify_data_struct old_modify_data = * midi_modify_data;
+
 
 	static uint8_t old_select = 0;
 
-
-	midi_modify_data_struct old_modify_data = * midi_modify_data;
+	uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
+	uint8_t select_changed = (old_select != current_select);
 	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
-
-	//The amount of values to be changed depends on the MIDI_MODIFY setting
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
+	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
+	ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET , current_select);
 
-	//Updating the selected item and see if it has changed
-	utils_counter_change(timer3, current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
-	uint8_t select_changed = (old_select != * current_select);
+
+
 
 	if (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE){
-	    handle_modify_change(timer4,  midi_modify_data, select_changed, * current_select);
+	    handle_modify_change(timer4,  midi_modify_data, select_changed, current_select);
 	}
 
 
 	else if (midi_modify_data->change_or_split == MIDI_MODIFY_SPLIT){
-	    handle_modify_split(timer4, midi_modify_data, select_changed, * current_select);
+	    handle_modify_split(timer4, midi_modify_data, select_changed, current_select);
 	}
 
 	//The last line will always be velocity
 	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-	    if (* current_select < amount_of_settings - 1) {
+	    if (current_select < amount_of_settings - 1) {
 	        // any but the last → flip change_vs_split
 	        utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
 	    } else {
@@ -120,18 +121,17 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	    }
 
 	    // always go back to the first row
-	    * current_select = 0;
 	}
 
 	static uint8_t select_states[5] = {0};
-	select_current_state(select_states, amount_of_settings, * current_select);
+	select_current_state(select_states, amount_of_settings, current_select);
 
     if (menu_check_for_updates(menu_changed, &old_modify_data,
                                midi_modify_data, sizeof *midi_modify_data,
-                               &old_select, current_select)) {
+                               &old_select, &current_select)) {
         osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
     }
-    old_select  = * current_select;
+    old_select  = current_select;
     *old_menu   = MIDI_MODIFY;
 }
 
@@ -201,10 +201,11 @@ static void screen_update_velocity_fixed(midi_modify_data_struct * midi_modify_d
 }
 
 
-void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data,  uint8_t * current_select){
+void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data){
 	static uint8_t select_states[5] = {0};
 	uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
-	select_current_state(select_states, amount_of_settings, * current_select);
+	uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
+	select_current_state(select_states, amount_of_settings, current_select);
 
 	screen_driver_Fill(Black);
 	menu_display(&Font_6x8, message->midi_modify);
