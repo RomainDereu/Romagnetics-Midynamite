@@ -85,6 +85,8 @@ settings_data_struct settings_data;
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
 
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -152,7 +154,7 @@ int main(void)
 
 
   save_load_from_flash();
-  uint8_t brightness = (uint8_t)save_get_u32(SAVE_SETTINGS_BRIGHTNESS);
+  uint8_t brightness = (uint8_t)save_get_u8(SAVE_SETTINGS_BRIGHTNESS);
   screen_driver_SetContrast(brightness);
 
   if(midi_tempo_data.currently_sending == 1){

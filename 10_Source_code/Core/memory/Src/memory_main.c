@@ -65,7 +65,7 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [SAVE_SETTINGS_START_MENU]         = {0,3,0},
     [SAVE_SETTINGS_SEND_USB]           = {0,1,0},
-    [SAVE_SETTINGS_BRIGHTNESS]         = {1,15,0},
+    [SAVE_SETTINGS_BRIGHTNESS]         = {0,100,0},
     [SAVE_SETTINGS_CHANNEL_FILTER]     = {0,15,0},
     [SAVE_SETTINGS_MIDI_THRU]          = {0,1,0},
     [SAVE_SETTINGS_USB_THRU]           = {0,1,0},
@@ -297,7 +297,7 @@ save_struct make_default_settings(void) {
     // ---------------------
     s.settings_data.start_menu = 0;
     s.settings_data.send_to_usb = 0;
-    s.settings_data.brightness = 8;
+    s.settings_data.brightness = 100;
     s.settings_data.channel_filter = 0;
     s.settings_data.midi_thru = 0;
     s.settings_data.usb_thru = 0;
