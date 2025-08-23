@@ -106,7 +106,8 @@ typedef enum {
     UI_MIDI_MODIFY_SELECT,
     UI_MIDI_TRANSPOSE_SELECT,
     UI_SETTINGS_SELECT,
-    UI_CURRENT_MENU
+    UI_CURRENT_MENU,
+	UI_OLD_MENU
 } ui_state_field_t;
 
 
@@ -128,18 +129,6 @@ typedef enum {
     UI_MODIFY_INCREMENT = 0,
 	UI_MODIFY_SET,
 } ui_modify_op_t;
-
-
-
-typedef struct {
-    uint8_t midi_tempo_current_select;
-    uint8_t midi_modify_current_select;
-    uint8_t midi_transpose_current_select;
-    uint8_t settings_current_select;
-    uint8_t current_menu;
-} ui_state_t;
-
-
 
 
 static volatile uint8_t ui_state_busy = 0;

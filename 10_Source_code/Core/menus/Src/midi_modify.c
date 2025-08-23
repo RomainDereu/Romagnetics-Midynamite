@@ -83,7 +83,6 @@ static void handle_modify_split(
 void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_modify_data_struct * midi_modify_data,
-							 uint8_t * old_menu,
 							 osThreadId_t * display_updateHandle){
 
 	midi_modify_data_struct old_modify_data = * midi_modify_data;
@@ -93,7 +92,8 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 	uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
 	uint8_t select_changed = (old_select != current_select);
-	uint8_t menu_changed = (*old_menu != MIDI_MODIFY);
+	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
+	uint8_t menu_changed = (old_menu != MIDI_MODIFY);
     uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET , current_select);
@@ -132,7 +132,6 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
         osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
     }
     old_select  = current_select;
-    *old_menu   = MIDI_MODIFY;
 }
 
 

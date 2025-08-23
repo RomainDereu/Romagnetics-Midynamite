@@ -57,7 +57,6 @@ static void transpose_scaled_build_select(
 void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_transpose_data_struct * midi_transpose_data,
-							 uint8_t * old_menu,
 							 osThreadId_t * display_updateHandle){
 
 	midi_transpose_data_struct old_transpose_data = * midi_transpose_data;
@@ -66,7 +65,8 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 
 	uint8_t current_select = ui_state_get(UI_MIDI_TRANSPOSE_SELECT);
 	uint8_t select_changed = (old_select != current_select);
-	uint8_t menu_changed = (*old_menu != MIDI_TRANSPOSE);
+	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
+	uint8_t menu_changed = (old_menu != MIDI_TRANSPOSE);
     uint8_t amount_of_settings = (midi_transpose_data->transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_TRANSPOSE_SELECT, UI_MODIFY_SET , current_select);
@@ -95,7 +95,6 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	}
 
 	old_select = current_select;
-	*old_menu = MIDI_TRANSPOSE;
 }
 
 

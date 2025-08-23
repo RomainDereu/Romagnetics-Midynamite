@@ -182,7 +182,6 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
 
 void settings_update_menu(TIM_HandleTypeDef * timer3,
                           TIM_HandleTypeDef * timer4,
-                          uint8_t * old_menu,
 						  osThreadId_t * display_updateHandle){
 	settings_data_struct old_settings_data = settings_data;
 
@@ -191,7 +190,8 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 	uint8_t current_select = ui_state_get(UI_CURRENT_MENU);
 	uint8_t select_changed = (old_select != current_select);
-	uint8_t menu_changed = (*old_menu != SETTINGS);
+	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
+	uint8_t menu_changed = (old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET ,current_select);
 
@@ -243,7 +243,6 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
     }
 
     old_select  = current_select;
-    *old_menu   = SETTINGS;
 }
 
 

@@ -152,7 +152,6 @@ int main(void)
 
 
   load_settings();
-  ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, settings_data.start_menu);
   screen_driver_SetContrast(settings_data.brightness);
 
   if(midi_tempo_data.currently_sending == 1){
@@ -593,12 +592,13 @@ void MidiCore(void *argument)
 void MediumTasks(void *argument)
 {
   /* USER CODE BEGIN MediumTasks */
-  /* Infinite loop */
+	//Old menu needs to be set up to a different value than current_menu to trigger drawing
+	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, settings_data.start_menu);
+	ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET,99);
+
+	/* Infinite loop */
   for(;;)
   {
-
-	 //Romagnetics code
-	static uint8_t old_menu = 99;
 	menu_change_check();
 
 
@@ -606,19 +606,19 @@ void MediumTasks(void *argument)
 
 	switch(current_menu) {
 		case MIDI_TEMPO:
-			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, &old_menu, display_updateHandle);
+			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, display_updateHandle);
 			break;
 
 		case MIDI_MODIFY:
-			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, &old_menu, display_updateHandle);
+			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, display_updateHandle);
 			break;
 
 		case MIDI_TRANSPOSE:
-			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, &old_menu, display_updateHandle);
+			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, display_updateHandle);
 			break;
 
 		case SETTINGS:
-			settings_update_menu(&htim3, &htim4, &old_menu, display_updateHandle);
+			settings_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		default:
@@ -626,7 +626,8 @@ void MediumTasks(void *argument)
 			break;
 	}
 
-	old_menu = current_menu;
+	current_menu = ui_state_get(UI_CURRENT_MENU);
+	ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET,current_menu);
 
 
 

@@ -140,7 +140,6 @@ void mt_start_stop(TIM_HandleTypeDef *timer, midi_tempo_data_struct *midi_tempo_
 void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 							TIM_HandleTypeDef * timer4,
                             midi_tempo_data_struct * midi_tempo_data,
-							uint8_t * old_menu,
 							osThreadId_t * display_updateHandle){
 
 	midi_tempo_data_struct old_midi_tempo_data = * midi_tempo_data;
@@ -150,7 +149,8 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 
 	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 	uint8_t select_changed = (old_select != current_select);
-	uint8_t menu_changed = (*old_menu != MIDI_TEMPO);
+	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
+	uint8_t menu_changed = (old_menu != MIDI_TEMPO);
 	utils_counter_change(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
 
@@ -175,5 +175,4 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
         osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
     }
     old_select  = current_select;
-    *old_menu   = MIDI_TEMPO;
 }
