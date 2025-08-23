@@ -74,12 +74,9 @@ const osThreadAttr_t display_update_attributes = {
 };
 /* USER CODE BEGIN PV */
 //Romagnetics code
-//structs containing the informaiton for each mode
-//Roro will be deleted once memory has been moved
-midi_tempo_data_struct midi_tempo_data;
 midi_modify_data_struct midi_modify_data;
 midi_transpose_data_struct midi_transpose_data;
-settings_data_struct settings_data;
+
 
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
