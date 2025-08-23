@@ -35,13 +35,11 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 //midi transpose menu
-void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data,
-								  uint8_t * current_select);
+void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
 void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
 						     midi_transpose_data_struct * midi_transpose_data,
 							 uint8_t * old_menu,
-							 uint8_t * current_select,
 							 osThreadId_t * display_updateHandle);
 
 

@@ -27,6 +27,11 @@ extern const Message * message;
 
 
 void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
+
+	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
+	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
+
    	  screen_driver_Fill(Black);
 	  //Menu
 	  menu_display(&Font_6x8, message->send_midi_tempo);
@@ -34,11 +39,6 @@ void screen_update_midi_tempo(midi_tempo_data_struct * midi_tempo_data){
 	  screen_driver_Line(64, 10, 64, 64, White);
 	  //Horizontal line
 	  screen_driver_Line(0, 40, 64, 40, White);
-
-	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
-	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
-	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
-
 
  	  //Tempo
 	  char tempo_print[4];
