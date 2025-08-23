@@ -325,9 +325,6 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 }
 
 
-
-#include <string.h>  // for memcpy
-
 // ---------------------
 // Snapshot helpers
 // ---------------------
