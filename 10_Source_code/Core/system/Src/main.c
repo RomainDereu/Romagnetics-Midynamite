@@ -622,7 +622,6 @@ void MediumTasks(void *argument)
 			break;
 
 		default:
-			// Optional: handle unknown menu case
 			break;
 	}
 
