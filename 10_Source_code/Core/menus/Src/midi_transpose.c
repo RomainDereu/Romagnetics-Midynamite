@@ -10,9 +10,9 @@
 #include <stdint.h>
 
 #include "memory_ui_state.h"
+#include "memory_main.h"
 
 //under_here_header_checks
-#include "main.h"
 #include "menu.h"
 #include "midi_modify.h"
 #include "screen_driver.h"
