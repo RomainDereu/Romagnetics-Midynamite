@@ -39,8 +39,8 @@
 #define TEXT_LEFT_START 5
 
 
-#define WRAP 0
-#define NO_WRAP 1
+#define WRAP     1
+#define NO_WRAP  0
 
 
 
@@ -64,25 +64,13 @@ void update_counter(TIM_HandleTypeDef *timer,
 
 
 
-
-
-
-//Roro the bottom two functions will be deleted after the refactoring
-void utils_counter_change_i32(TIM_HandleTypeDef * timer,
-                              int32_t * data_to_change,
-                              int32_t bottom_value,
-                              int32_t max_value,
-                              uint8_t menu_changed,
-                              uint8_t multiplier,
-                              uint8_t wrap_or_not);
-
-void utils_counter_change(TIM_HandleTypeDef * timer,
-		                   uint8_t * data_to_change,
-						   int32_t bottom_value,
-						   int32_t max_value,
-						   uint8_t menu_changed,
-						   uint8_t multiplier,
-						   uint8_t wrap_or_not);
+void update_select(TIM_HandleTypeDef *timer,
+                   uint8_t *value,
+                   int32_t min,
+                   int32_t max,
+                   uint8_t menu_changed,
+                   uint8_t multiplier,
+                   uint8_t wrap);
 
 
 void all_notes_off(UART_HandleTypeDef *huart);
