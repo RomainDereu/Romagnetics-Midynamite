@@ -65,6 +65,16 @@ static void DisplayUpdateThread(void *arg) {
   }
 }
 
+static void screen_refresh(void) {
+    switch (ui_state_get(UI_CURRENT_MENU)) {
+      case MIDI_TEMPO:     threads_display_notify(FLAG_TEMPO);     break;
+      case MIDI_MODIFY:    threads_display_notify(FLAG_MODIFY);    break;
+      case MIDI_TRANSPOSE: threads_display_notify(FLAG_TRANSPOSE); break;
+      case SETTINGS:       threads_display_notify(FLAG_SETTINGS); break;
+      default: break;
+    }
+}
+
 // -------------------------
 // MIDI core thread
 // -------------------------
@@ -88,11 +98,29 @@ static void MediumTasksThread(void *argument)
   // Initial menu draw trigger
   ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get(SAVE_SETTINGS_START_MENU));
   ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET, 99);
+  screen_refresh();
+
+  switch (ui_state_get(UI_CURRENT_MENU)) {
+    case MIDI_TEMPO:     threads_display_notify(FLAG_TEMPO); break;
+    case MIDI_MODIFY:    threads_display_notify(FLAG_MODIFY); break;
+    case MIDI_TRANSPOSE: threads_display_notify(FLAG_TRANSPOSE); break;
+    case SETTINGS:       threads_display_notify(FLAG_SETTINGS); break;
+  }
 
   for (;;) {
     menu_change_check();
 
+    uint8_t old_menu    = ui_state_get(UI_OLD_MENU);
     uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+
+    if (old_menu != current_menu) {
+        screen_refresh();
+    }
+
+    if (old_menu != current_menu) {
+        screen_refresh();
+    }
+
     switch (current_menu) {
       case MIDI_TEMPO:
         midi_tempo_update_menu();

@@ -12,6 +12,7 @@
 #include "cmsis_os.h"
 #include "menu.h"
 #include "main.h"
+#include "threads.h"
 #include "utils.h"
 
 void menu_display(const screen_driver_Font_t * font, const char * menu_message){

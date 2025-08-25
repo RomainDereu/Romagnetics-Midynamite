@@ -23,28 +23,28 @@
 #include "utils.h"
 
 
-static void transpose_shift_build_select(uint8_t current_select, uint8_t select_changed)
+static void transpose_shift_build_select(uint8_t current_select)
 {
     if (current_select == 0) {
-    	update_value(SAVE_TRANSPOSE_SHIFT_VALUE, select_changed, 12);
+    	update_value(SAVE_TRANSPOSE_SHIFT_VALUE, 12);
     } else {
-    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, 1);
     }
 }
 
-static void transpose_scaled_build_select(uint8_t current_select, uint8_t select_changed) {
+static void transpose_scaled_build_select(uint8_t current_select) {
     switch (current_select) {
     case 0:
-    	update_value(SAVE_TRANSPOSE_BASE_NOTE, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_BASE_NOTE, 1);
         break;
     case 1:
-    	update_value(SAVE_TRANSPOSE_INTERVAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_INTERVAL, 1);
         break;
     case 2:
-    	update_value(SAVE_TRANSPOSE_SCALE, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SCALE, 1);
         break;
     case 3:
-    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, 1);
         break;
     }
 }
@@ -61,21 +61,17 @@ void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
 	static uint8_t old_select = 0;
 
 	uint8_t current_select = ui_state_get(UI_MIDI_TRANSPOSE_SELECT);
-	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
-	uint8_t menu_changed = (old_menu != MIDI_TRANSPOSE);
-
 	uint8_t transpose_type = save_get(SAVE_TRANSPOSE_TYPE);
     uint8_t amount_of_settings = (transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 
-    update_select(&current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
+    update_select(&current_select, 0, amount_of_settings - 1, 1, WRAP);
 	ui_state_modify(UI_MIDI_TRANSPOSE_SELECT, UI_MODIFY_SET , current_select);
 
-	uint8_t select_changed = (old_select != current_select);
 
 	if (transpose_type == MIDI_TRANSPOSE_SHIFT) {
-		transpose_shift_build_select(current_select,  select_changed);
+		transpose_shift_build_select(current_select);
 	} else {
-	    transpose_scaled_build_select(current_select, select_changed);
+	    transpose_scaled_build_select(current_select);
 	}
 
 
@@ -84,8 +80,7 @@ void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
 	uint8_t select_states[AMOUNT_OF_STATES] = {0};
 	select_current_state(select_states, AMOUNT_OF_STATES, current_select);
 	midi_transpose_data_struct new_transpose_data = save_snapshot_transpose();
-	if(menu_check_for_updates(menu_changed,
-							  &old_transpose_data,
+	if(menu_check_for_updates(&old_transpose_data,
 							  &new_transpose_data,
 							  sizeof new_transpose_data,
 							  &current_select,

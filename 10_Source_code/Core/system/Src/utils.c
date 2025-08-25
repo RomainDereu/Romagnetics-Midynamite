@@ -59,25 +59,15 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 /* ---------------------------
  * Encoder helpers (refactored)
- * ---------------------------
- * - update_select(...) uses TIM3 and edits a local UI selector (uint8_t*)
- * - update_value(...)  uses TIM4 and writes to save fields (u8 or u32)
- */
+ * --------------------------- */
 
-// Selection (TIM3)
 void update_select(uint8_t *value,
                    int32_t  min,
                    int32_t  max,
-                   uint8_t  menu_changed,
                    uint8_t  multiplier,
                    uint8_t  wrap)
 {
     TIM_HandleTypeDef *timer = &htim3;
-
-    if (menu_changed) {
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        return;
-    }
 
     uint8_t active_mult = 1;
     if (multiplier != 1) {
@@ -98,17 +88,10 @@ void update_select(uint8_t *value,
     }
 }
 
-// Value (TIM4). Works for u32 and u8 fields.
 void update_value(save_field_t field,
-                  uint8_t      menu_changed,
                   uint8_t      multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
-
-    if (menu_changed) {
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        return;
-    }
 
     uint8_t active_mult = 1;
     if (multiplier != 1) {
@@ -122,7 +105,6 @@ void update_value(save_field_t field,
 
         int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
 
-        // Try treating the field as u32 first
         int32_t cur32  = (int32_t)save_get_u32(field);
         int32_t next32 = cur32 + step * active_mult;
 
@@ -131,12 +113,8 @@ void update_value(save_field_t field,
             continue;
         }
 
-        // If not u32, fall back to u8
         uint8_t cur8 = save_get(field);
-        if (cur8 == SAVE_STATE_BUSY) {
-            // a writer is in progress; abort this tick peacefully
-            break;
-        }
+        if (cur8 == SAVE_STATE_BUSY) break;
 
         int32_t next8 = (int32_t)cur8 + step * active_mult;
         (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
@@ -144,6 +122,7 @@ void update_value(save_field_t field,
         __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
     }
 }
+
 
 
 
@@ -276,7 +255,6 @@ void select_current_state(uint8_t *select_states,
 
 //Checks for updates to a menu and refreshes the screen if needed
 uint8_t menu_check_for_updates(
-    uint8_t   menu_changed,
     const void *old_data,
     const void *data_ptr,
     size_t    sz,
@@ -284,8 +262,7 @@ uint8_t menu_check_for_updates(
     uint8_t   *current_select)
 {
     uint8_t changed =
-        ( menu_changed
-       || (*old_select != *current_select)
+        ((*old_select != *current_select)
        || memcmp(old_data, data_ptr, sz) != 0
         );
     return changed;

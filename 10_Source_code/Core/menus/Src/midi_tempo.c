@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 
 #include "memory_ui_state.h"
 #include "memory_main.h"
@@ -43,9 +42,8 @@ void screen_update_midi_tempo(){
 
  	  //Tempo
 	  char tempo_print[4];
-	  char tempo_number[4];
-	  itoa(save_get_u32(SAVE_MIDI_TEMPO_CURRENT), tempo_number, 10);
-	  sprintf(tempo_print, tempo_number);
+	  snprintf(tempo_print, sizeof tempo_print, "%lu",
+	           (unsigned long)save_get_u32(SAVE_MIDI_TEMPO_CURRENT));
 	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[TEMPO_PRINT]);
 	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 48);
 
@@ -138,7 +136,6 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
         send_usb_midi_message(&clock_start, 1);
 
         HAL_TIM_Base_Start_IT(timer);
-        list_of_UART_to_send_to(send_out_to, UART_list_tempo);
     }
 }
 
@@ -147,21 +144,17 @@ void midi_tempo_update_menu(){
 
 
 	static uint8_t old_select = 0;
-
 	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
-	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
-	uint8_t menu_changed = (old_menu != MIDI_TEMPO);
-	update_select(&current_select, 0, 1, menu_changed, 1, WRAP);
+	update_select(&current_select, 0, 1, 1, WRAP);
 	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
-	uint8_t select_changed = (old_select != current_select);
 
 
 	switch (current_select) {
 		case 0:
-			update_value(SAVE_MIDI_TEMPO_CURRENT, select_changed, 10);
+			update_value(SAVE_MIDI_TEMPO_CURRENT, 10);
 			break;
 		case 1:
-			update_value(SAVE_MIDI_TEMPO_SEND_TO_OUT, select_changed, 1);
+			update_value(SAVE_MIDI_TEMPO_SEND_TO_OUT, 1);
 			break;
 	}
 
@@ -171,8 +164,7 @@ void midi_tempo_update_menu(){
 	save_modify_u32(SAVE_MIDI_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
 
 	midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
-	uint8_t tempo_has_changed = menu_check_for_updates( menu_changed,
-														&old_midi_tempo_data,
+	uint8_t tempo_has_changed = menu_check_for_updates( &old_midi_tempo_data,
 														&new_midi_tempo_data,
 														sizeof new_midi_tempo_data,
 														&current_select,

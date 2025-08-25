@@ -51,7 +51,6 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 void update_value(save_field_t field,
-                  uint8_t menu_changed,
                   uint8_t multiplier);
 
 
@@ -59,7 +58,6 @@ void update_value(save_field_t field,
 void update_select(uint8_t *value,
                    int32_t min,
                    int32_t max,
-                   uint8_t menu_changed,
                    uint8_t multiplier,
                    uint8_t wrap);
 
@@ -89,8 +87,7 @@ void select_current_state(uint8_t *select_states,
                           uint8_t  current_select);
 
 
-uint8_t menu_check_for_updates(uint8_t menu_changed, const void *old_data,
-		                       const void *data_ptr, size_t sz,
+uint8_t menu_check_for_updates(const void *old_data, const void *data_ptr, size_t sz,
 							   uint8_t *old_select, uint8_t *current_select);
 
 int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);

@@ -24,25 +24,24 @@
 extern const Message * message;
 
 static void handle_modify_change(
-    uint8_t            select_changed,
     uint8_t            current_select
 ) {
     switch (current_select) {
       case 0:
-    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_1, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_1, 1);
         break;
       case 1:
-    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_2, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_2, 1);
         break;
       case 2:
-    	  update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, 1);
         break;
       case 3: {
         uint8_t vel_type = save_get(SAVE_MIDI_MODIFY_VELOCITY_TYPE);
         if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, 10);
         } else {
-            update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
+            update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, 10);
         }
         break;
       }
@@ -50,28 +49,27 @@ static void handle_modify_change(
 }
 
 static void handle_modify_split(
-    uint8_t            select_changed,
     uint8_t            current_select
 ) {
     switch (current_select) {
       case 0:
-    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH1, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH1, 1);
         break;
       case 1:
-    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH2, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH2, 1);
         break;
       case 2:
-    	update_value(SAVE_MIDI_MODIFY_SPLIT_NOTE, select_changed, 12);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_NOTE, 12);
         break;
       case 3:
-    	update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, 1);
         break;
       case 4: {
         uint8_t vel_type = save_get(SAVE_MIDI_MODIFY_VELOCITY_TYPE);
         if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, 10);
         } else {
-        	update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, 10);
         }
         break;
       }
@@ -82,24 +80,20 @@ static void handle_modify_split(
 void midi_modify_update_menu()
 {
     midi_modify_data_struct old_modify_data = save_snapshot_modify();
-
     static uint8_t old_select = 0;
-
     uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-    uint8_t old_menu       = ui_state_get(UI_OLD_MENU);
-    uint8_t menu_changed   = (old_menu != MIDI_MODIFY);
     uint8_t mode           = save_get(SAVE_MIDI_MODIFY_CHANGE_OR_SPLIT);
     uint8_t amount_of_settings = (mode == MIDI_MODIFY_CHANGE) ? 4 : 5;
 
-    update_select(&current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
+    update_select(&current_select, 0, amount_of_settings - 1, 1, WRAP);
     ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, current_select);
 
-    uint8_t select_changed = (old_select != current_select);
+
 
     if (mode == MIDI_MODIFY_CHANGE) {
-        handle_modify_change(select_changed, current_select);
+        handle_modify_change(current_select);
     } else {
-        handle_modify_split(select_changed, current_select);
+        handle_modify_split(current_select);
     }
 
     // Mode toggle: last row toggles velocity type, others toggle change/split
@@ -121,7 +115,7 @@ void midi_modify_update_menu()
 
     midi_modify_data_struct new_modify_data = save_snapshot_modify();
 
-    if (menu_check_for_updates(menu_changed, &old_modify_data,
+    if (menu_check_for_updates(&old_modify_data,
                                &new_modify_data, sizeof new_modify_data,
                                &current_select, &old_select)) {
     	threads_display_notify(FLAG_MODIFY);
