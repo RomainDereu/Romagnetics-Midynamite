@@ -58,28 +58,25 @@ void update_counter_32(TIM_HandleTypeDef *timer,
                        uint8_t menu_changed,
                        uint8_t multiplier)
 {
-    if (menu_changed == 0) {
-        // Do NOT compare to SAVE_STATE_BUSY here (ambiguous for u32)
-        int32_t current_value = (int32_t)save_get_u32(field);
+    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
 
-        uint8_t active_multiplier = 1;
-        if (multiplier != 1) {
-            uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-            active_multiplier = (Btn2State == 0) ? multiplier : 1;
-        }
-
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-
-        if (delta >= ENCODER_THRESHOLD) {
-            save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)(current_value + active_multiplier));
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        } else if (delta <= -ENCODER_THRESHOLD) {
-            save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)(current_value - active_multiplier));
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
+    uint8_t active_mult = 1;
+    if (multiplier != 1) {
+        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
-    if (menu_changed == 1) {
+    // Consume as many steps as the encoder moved
+    for (;;) {
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+
+        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
+        int32_t cur  = (int32_t)save_get_u32(field);
+        int32_t next = cur + step * active_mult;
+        // limits are enforced inside save_modify_u32 via save_norm()
+        save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next);
+
         __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
     }
 }
@@ -89,41 +86,7 @@ void update_counter(TIM_HandleTypeDef *timer,
                     uint8_t menu_changed,
                     uint8_t multiplier)
 {
-    if (menu_changed == 0) {
-        uint8_t current_value = save_get(field);
-        if (current_value == SAVE_STATE_BUSY) return;  // safe for u8 only
-
-        uint8_t active_multiplier = 1;
-        if (multiplier != 1) {
-            uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-            active_multiplier = (Btn2State == 0) ? multiplier : 1;
-        }
-
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-
-        if (delta >= ENCODER_THRESHOLD) {
-            save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)(current_value + active_multiplier));
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        } else if (delta <= -ENCODER_THRESHOLD) {
-            save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)(current_value - active_multiplier));
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-        }
-    }
-
-    if (menu_changed == 1) {
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-    }
-}
-
-void utils_counter_change(TIM_HandleTypeDef *timer,
-                          uint8_t *value,
-                          int32_t min,
-                          int32_t max,
-                          uint8_t menu_changed,
-                          uint8_t multiplier,
-                          uint8_t wrap)
-{
-    if (menu_changed != 0) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
+    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
 
     uint8_t active_mult = 1;
     if (multiplier != 1) {
@@ -131,52 +94,50 @@ void utils_counter_change(TIM_HandleTypeDef *timer,
         active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
-    int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-    // Process multiple steps
-    while (delta >= ENCODER_THRESHOLD || delta <= -ENCODER_THRESHOLD) {
+    for (;;) {
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+
         int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
-        int32_t next = (int32_t)(*value) + (int32_t)step * (int32_t)active_mult;
-        next = wrap_or_clamp_i32(next, min, max, wrap);
-        *value = (uint8_t)next;
+        uint8_t cur  = save_get(field);
+        if (cur == SAVE_STATE_BUSY) break;  // u8 only
 
-        // consume one threshold worth of delta
-        delta -= step * ENCODER_THRESHOLD;
+        int32_t next = (int32_t)cur + step * active_mult;
+        save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
+
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
     }
-
-    // recentre after consuming
-    __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
 }
 
-void utils_counter_change_i32(TIM_HandleTypeDef *timer,
-                              int32_t *value,
-                              int32_t min,
-                              int32_t max,
-                              uint8_t menu_changed,
-                              uint8_t multiplier,
-                              uint8_t wrap)
-{
-    if (menu_changed != 0) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
 
-    int32_t active_mult = 1;
+void update_select(TIM_HandleTypeDef *timer,
+                   uint8_t *value,
+                   int32_t min,
+                   int32_t max,
+                   uint8_t menu_changed,
+                   uint8_t multiplier,
+                   uint8_t wrap)
+{
+    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
+
+    uint8_t active_mult = 1;
     if (multiplier != 1) {
         uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
         active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
-    int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-    while (delta >= ENCODER_THRESHOLD || delta <= -ENCODER_THRESHOLD) {
+    for (;;) {
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+
         int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
-        int32_t next = *value + step * active_mult;
+        int32_t next = (int32_t)(*value) + step * active_mult;
         next = wrap_or_clamp_i32(next, min, max, wrap);
-        *value = next;
-        delta -= step * ENCODER_THRESHOLD;
+        *value = (uint8_t)next;
+
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
     }
-    __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
 }
-
-
-
-
 
 
 

@@ -165,7 +165,7 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
     uint8_t channel_index = (uint8_t)(*current_select - FT1);
     uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
 
-    utils_counter_change(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
+    update_select(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
 
     if (bit_value)
         *filtered_channels |=  (uint32_t)(1UL << channel_index);
@@ -189,7 +189,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != SETTINGS);
-	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
+	update_select(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS - 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_SETTINGS_SELECT, UI_MODIFY_SET, current_select);
 	uint8_t select_changed = (old_select != current_select);
 

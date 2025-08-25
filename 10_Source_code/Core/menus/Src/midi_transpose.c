@@ -68,7 +68,7 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t transpose_type = save_get(SAVE_TRANSPOSE_TYPE);
     uint8_t amount_of_settings = (transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 
-    utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
+    update_select(timer3, &current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_TRANSPOSE_SELECT, UI_MODIFY_SET , current_select);
 
 	uint8_t select_changed = (old_select != current_select);
