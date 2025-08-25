@@ -47,7 +47,7 @@ static void screen_update_global_settings1(uint8_t *select_states){
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
 	uint8_t idx = save_get(SAVE_SETTINGS_BRIGHTNESS);
-	if (idx == SAVE_STATE_BUSY || idx > 9) idx = 9;    // clamp 0..9
+	if (idx > 9) idx = 9;
 	screen_driver_underline_WriteString(message->contrast_levels[idx],
 	                                    Font_6x8, White, 70, LINE_3_VERT,
 	                                    select_states[SETT_BRIGHTNESS]);
@@ -113,7 +113,7 @@ void screen_update_settings(){
     select_current_state(select_states, AMOUNT_OF_SETTINGS_ITEMS, current_select);
 
 	screen_driver_Fill(Black);
-	if (current_select >= SETT_START_MENU && current_select <= SETT_BRIGHTNESS){
+	if (current_select <= SETT_BRIGHTNESS){
 		screen_update_global_settings1(select_states);
 	}
 	else if (current_select >= SETT_MIDI_THRU && current_select <= CHANNEL_FILTER){
@@ -204,7 +204,7 @@ void settings_update_menu(){
 
 			    // Read back the updated index and apply to hardware
 			    uint8_t idx2 = save_get(SAVE_SETTINGS_BRIGHTNESS);
-			    if (idx2 == SAVE_STATE_BUSY || idx2 > 9) idx2 = 9;
+			    if (idx2 > 9) idx2 = 9;
 
 			    static const uint8_t contrast_values[10] =
 			        {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};

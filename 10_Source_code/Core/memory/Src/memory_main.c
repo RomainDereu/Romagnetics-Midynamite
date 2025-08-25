@@ -82,11 +82,11 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [SAVE_SETTINGS_START_MENU]           = {   0,         3, WRAP,   0},
     [SAVE_SETTINGS_SEND_USB]             = {   0,         1, WRAP,   0},
-    [SAVE_SETTINGS_BRIGHTNESS]           = {   0,         9, NO_WRAP,   9},
-    [SAVE_SETTINGS_CHANNEL_FILTER]       = {   0,        15, WRAP,   0},
+	[SAVE_SETTINGS_BRIGHTNESS]           = {   0,         9, NO_WRAP,   0},
+    [SAVE_SETTINGS_CHANNEL_FILTER]       = {   0,         1, WRAP,   0},
     [SAVE_SETTINGS_MIDI_THRU]            = {   0,         1, WRAP,   0},
     [SAVE_SETTINGS_USB_THRU]             = {   0,         1, WRAP,   0},
-    [SAVE_SETTINGS_FILTERED_CHANNELS]    = {   0,  0x0000FFFF, WRAP, 0x0000FFFF},
+	[SAVE_SETTINGS_FILTERED_CHANNELS]  = {   0,  0x0000FFFF, WRAP, 0},
 
     [SAVE_DATA_VALIDITY]                 = {   0,  0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM}
 };
@@ -145,19 +145,25 @@ static inline void save_busy_wait_short(void) {
     while (spin--) { /* no-op */ }
 }
 
+static inline int32_t clamp_i32(int32_t v, int32_t lo, int32_t hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
 int32_t save_get_u32(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     int32_t *p = u32_fields[field];
     if (!p) return 0;
 
-    // Try a few quick waits for ongoing write to finish
     for (int i = 0; i < 5; ++i) {
-        if (!save_busy) return *p;     // fast path
-        save_busy_wait_short();        // short backoff
+        if (!save_busy) break;
+        save_busy_wait_short();
     }
 
-    // Best-effort read (32-bit aligned writes on Cortex-M are atomic)
-    return *p;
+    int32_t v = *p;
+    const save_field_limits_t lim = save_limits[field];
+    return clamp_i32(v, lim.min, lim.max);
 }
 
 uint8_t save_get(save_field_t field) {
@@ -166,13 +172,15 @@ uint8_t save_get(save_field_t field) {
     if (!p) return 0;
 
     for (int i = 0; i < 5; ++i) {
-        if (!save_busy) return *p;
+        if (!save_busy) break;
         save_busy_wait_short();
     }
 
-    // Best-effort read (8-bit writes are atomic on Cortex-M)
-    return *p;
+    int32_t v = (int32_t)(*p);
+    const save_field_limits_t lim = save_limits[field];
+    return (uint8_t)clamp_i32(v, lim.min, lim.max);
 }
+
 
 
 

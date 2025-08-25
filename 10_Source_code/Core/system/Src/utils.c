@@ -114,7 +114,6 @@ void update_value(save_field_t field,
         }
 
         uint8_t cur8 = save_get(field);
-        if (cur8 == SAVE_STATE_BUSY) break;
 
         int32_t next8 = (int32_t)cur8 + step * active_mult;
         (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
