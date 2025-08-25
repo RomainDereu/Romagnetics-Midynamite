@@ -197,4 +197,12 @@ midi_modify_data_struct    save_snapshot_modify(void);
 midi_transpose_data_struct save_snapshot_transpose(void);
 settings_data_struct       save_snapshot_settings(void);
 
+#ifdef UNIT_TEST
+void memory_init_defaults(void);
+
+void memory_overwrite_modify(const midi_modify_data_struct *src);
+
+void memory_set_midi_thru(uint8_t v);
+#endif
+
 #endif /* MEMORY_SAVE_H_ */

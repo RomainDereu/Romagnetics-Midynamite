@@ -21,7 +21,7 @@
 #include "memory_main.h"
 #include "settings.h"
 #include "utils.h"
-#include "threads.h"  // <-- new single thread module
+#include "threads.h"
 
 I2C_HandleTypeDef hi2c1;
 

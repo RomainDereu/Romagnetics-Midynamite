@@ -391,3 +391,24 @@ settings_data_struct save_snapshot_settings(void) {
     memcpy(&copy, &save_data.settings_data, sizeof(copy));
     return copy;
 }
+
+#ifdef UNIT_TEST
+void memory_init_defaults(void) {
+    save_data = make_default_settings();
+    save_init_field_pointers();
+}
+
+void memory_overwrite_modify(const midi_modify_data_struct *src) {
+    if (!src) return;
+    if (!save_lock_with_retries()) return;
+    save_data.midi_modify_data = *src;
+    save_unlock();
+}
+
+void memory_set_midi_thru(uint8_t v) {
+    if (!save_lock_with_retries()) return;
+    save_data.settings_data.midi_thru = v ? 1 : 0;
+    save_unlock();
+}
+#endif
+
