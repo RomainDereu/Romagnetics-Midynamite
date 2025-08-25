@@ -120,7 +120,7 @@ static void midi_transpose_scaled_display(uint8_t * select_states){
 
 	//Base Note
 	screen_driver_SetCursor_WriteString(message->root_note, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	const char * base_note_text = message->twelve_notes_names[(uint8_t)(save_get(SAVE_TRANSPOSE_BASE_NOTE) % 12)];
+	const char * base_note_text = message->twelve_notes_names[save_get(SAVE_TRANSPOSE_BASE_NOTE)];
 	screen_driver_underline_WriteString(base_note_text, Font_6x8, White, 62, LINE_1_VERT, select_states[0]);
 
 

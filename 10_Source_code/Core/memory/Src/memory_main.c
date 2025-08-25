@@ -21,9 +21,12 @@ static volatile uint8_t save_busy = 0;
 // Lock helpers
 // ---------------------
 static int save_try_lock(void) {
-    if (save_busy) return 0;
-    save_busy = 1;
-    return 1;
+    for (int i = 0; i < 5; ++i) {
+        if (!save_busy) { save_busy = 1; return 1; }
+        // optional: tiny backoff if you want
+        // __NOP();
+    }
+    return 0;
 }
 static void save_unlock(void) { save_busy = 0; }
 
@@ -64,13 +67,13 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SAVE_TRANSPOSE_SCALE]             = {0,6,1},
     [SAVE_TRANSPOSE_CURRENTLY_SENDING] = {0,1,0},
 
-    [SAVE_SETTINGS_START_MENU]         = {0,3,0},
-    [SAVE_SETTINGS_SEND_USB]           = {0,1,0},
-    [SAVE_SETTINGS_BRIGHTNESS]         = {0,100,0},
-    [SAVE_SETTINGS_CHANNEL_FILTER]     = {0,15,0},
-    [SAVE_SETTINGS_MIDI_THRU]          = {0,1,0},
-    [SAVE_SETTINGS_USB_THRU]           = {0,1,0},
-    [SAVE_SETTINGS_FILTERED_CHANNELS]  = {0, (int32_t)0xFFFF, 0},
+    [SAVE_SETTINGS_START_MENU]         = {0,3,1},
+    [SAVE_SETTINGS_SEND_USB]           = {0,1,1},
+    [SAVE_SETTINGS_BRIGHTNESS]         = {0,9,1},
+    [SAVE_SETTINGS_CHANNEL_FILTER]     = {0,15,1},
+    [SAVE_SETTINGS_MIDI_THRU]          = {0,1,1},
+    [SAVE_SETTINGS_USB_THRU]           = {0,1,1},
+    [SAVE_SETTINGS_FILTERED_CHANNELS]  = {0, (int32_t)0xFFFF, 1},
 
     [SAVE_DATA_VALIDITY]               = {0,0xFFFFFFFF,0}
 };
@@ -120,16 +123,16 @@ static void save_init_field_pointers(void) {
 // ---------------------
 uint32_t save_get_u32(save_field_t field) {
     if (!save_try_lock()) return SAVE_STATE_BUSY;
-    uint32_t val = 0;
-    if (u32_fields[field]) val = (uint32_t)(*u32_fields[field]);
+    if (!u32_fields[field]) { save_unlock(); return SAVE_STATE_BUSY; }
+    uint32_t val = (uint32_t)(*u32_fields[field]);
     save_unlock();
     return val;
 }
 
 uint8_t save_get(save_field_t field) {
     if (!save_try_lock()) return SAVE_STATE_BUSY;
-    uint8_t val = 0;
-    if (u8_fields[field]) val = *u8_fields[field];
+    if (!u8_fields[field]) { save_unlock(); return SAVE_STATE_BUSY; }
+    uint8_t val = *u8_fields[field];
     save_unlock();
     return val;
 }
@@ -137,49 +140,72 @@ uint8_t save_get(save_field_t field) {
 // ---------------------
 // Setters with boundaries
 // ---------------------
-static uint8_t save_set_u32(save_field_t field, uint32_t value) {
-    if (!save_try_lock()) return 0;
-    int32_t val_signed = (int32_t)value;
-    if (val_signed < save_limits[field].min) val_signed = save_limits[field].min;
-    if (val_signed > save_limits[field].max) {
-        if (save_limits[field].wrap) val_signed = save_limits[field].min;
-        else val_signed = save_limits[field].max;
+static inline int32_t save_norm(int32_t v, const save_field_limits_t lim)
+{
+    if (!lim.wrap) {
+        // Underflow guard for small-range u8 writes:
+        // If a caller underflows an 8-bit value (e.g., 0 -> -1),
+        // it arrives here as 255. For fields with max <= 127,
+        // treat 128..255 as a negative underflow and clamp to MIN.
+        if (lim.max <= 127 && v > lim.max && v >= 128) {
+            return lim.min;
+        }
+
+        if (v < lim.min) return lim.min;
+        if (v > lim.max) return lim.max;
+        return v;
     }
-    if (u32_fields[field]) *u32_fields[field] = val_signed;
-    save_unlock();
-    return 1;
+
+    int32_t span = lim.max - lim.min + 1;
+    if (span <= 0) return lim.min;
+    int32_t off = v - lim.min;
+    int32_t mod = off % span;
+    if (mod < 0) mod += span;
+    return lim.min + mod;
 }
 
-static uint8_t save_set_u8(save_field_t field, uint8_t value) {
-    if (!save_try_lock()) return 0;
-    if (value < save_limits[field].min) value = save_limits[field].min;
-    if (value > save_limits[field].max) {
-        if (save_limits[field].wrap) value = save_limits[field].min;
-        else value = save_limits[field].max;
-    }
-    if (u8_fields[field]) *u8_fields[field] = value;
-    save_unlock();
-    return 1;
-}
 
 // ---------------------
 // Increment / set
 // ---------------------
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set) {
-    switch(op) {
-        case SAVE_MODIFY_INCREMENT: return save_set_u32(field, save_get_u32(field)+1);
-        case SAVE_MODIFY_SET:       return save_set_u32(field, value_if_set);
-        default: return 0;
+    if (!save_try_lock()) return 0;
+    if (!u32_fields[field]) { save_unlock(); return 0; }
+
+    const save_field_limits_t lim = save_limits[field];
+    int32_t v = *u32_fields[field];    // read as signed
+
+    switch (op) {
+        case SAVE_MODIFY_INCREMENT: v += 1; break;
+        case SAVE_MODIFY_SET:       v  = (int32_t)value_if_set; break;
+        default: save_unlock(); return 0;
     }
+
+    v = save_norm(v, lim);
+    *u32_fields[field] = v;
+    save_unlock();
+    return 1;
 }
 
 uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if_set) {
-    switch(op) {
-        case SAVE_MODIFY_INCREMENT: return save_set_u8(field, save_get(field)+1);
-        case SAVE_MODIFY_SET:       return save_set_u8(field, value_if_set);
-        default: return 0;
+    if (!save_try_lock()) return 0;
+    if (!u8_fields[field]) { save_unlock(); return 0; }
+
+    const save_field_limits_t lim = save_limits[field];
+    int32_t v = *u8_fields[field];  // read current as int32 for math
+
+    switch (op) {
+        case SAVE_MODIFY_INCREMENT: v += 1; break;
+        case SAVE_MODIFY_SET:       v  = (int32_t)value_if_set; break;
+        default: save_unlock(); return 0;
     }
+
+    v = save_norm(v, lim);
+    *u8_fields[field] = (uint8_t)v;
+    save_unlock();
+    return 1;
 }
+
 
 // ---------------------
 // Load / store from flash
@@ -288,7 +314,7 @@ save_struct make_default_settings(void) {
     s.midi_transpose_data.transpose_type = 0;
     s.midi_transpose_data.midi_shift_value = 0;
     s.midi_transpose_data.send_original = 0;
-    s.midi_transpose_data.transpose_base_note = 60;
+    s.midi_transpose_data.transpose_base_note = 0;
     s.midi_transpose_data.transpose_interval = 0;
     s.midi_transpose_data.transpose_scale = 0;
     s.midi_transpose_data.currently_sending = 0;
@@ -298,7 +324,7 @@ save_struct make_default_settings(void) {
     // ---------------------
     s.settings_data.start_menu = 0;
     s.settings_data.send_to_usb = 0;
-    s.settings_data.brightness = 100;
+    s.settings_data.brightness = 9;
     s.settings_data.channel_filter = 0;
     s.settings_data.midi_thru = 0;
     s.settings_data.usb_thru = 0;

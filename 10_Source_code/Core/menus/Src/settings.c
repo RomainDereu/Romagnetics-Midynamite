@@ -24,18 +24,6 @@
 extern const Message *message;
 
 
-static uint8_t calculate_contrast_index(uint8_t brightness) {
-	uint8_t contrast_values[10] = {0x39, 0x53, 0x6D, 0x87, 0xA1, 0xBB, 0xD5, 0xEF, 0xF9, 0xFF};
-	for (uint8_t i = 0; i < sizeof(contrast_values); i++) {
-		if (contrast_values[i] == brightness) {
-			return i;
-		}
-	}
-	// Default to full brightness if not found
-	return 9;
-}
-
-
 // Settings Section
 static void screen_update_global_settings1(uint8_t *select_states){
 	menu_display(&Font_6x8, message->global_settings_1);
@@ -56,7 +44,11 @@ static void screen_update_global_settings1(uint8_t *select_states){
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	uint8_t idx = calculate_contrast_index(save_get(SAVE_SETTINGS_BRIGHTNESS));
+	uint8_t idx = save_get(SAVE_SETTINGS_BRIGHTNESS);
+	if (idx == SAVE_STATE_BUSY || idx > 9) idx = 9;    // clamp 0..9
+	screen_driver_underline_WriteString(message->contrast_levels[idx],
+	                                    Font_6x8, White, 70, LINE_3_VERT,
+	                                    select_states[SETT_BRIGHTNESS]);
 	screen_driver_underline_WriteString(message->contrast_levels[idx], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
@@ -78,28 +70,30 @@ static void screen_update_global_settings2(uint8_t *select_states){
 }
 
 static void screen_update_midi_filter(uint8_t *select_states){
-	menu_display(&Font_6x8, message->USB_Thru);
-	screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+    menu_display(&Font_6x8, message->USB_Thru);
+    screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
+    // Read the 16-bit mask correctly
+    uint32_t m32 = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
+    uint16_t mask = (m32 == SAVE_STATE_BUSY) ? 0 : (uint16_t)m32;  // defensive
 
-	for (uint8_t i = 0; i < 16; i++) {
-	    char label[3];  // Enough for "16" or "X"
+    for (uint8_t i = 0; i < 16; i++) {
+        char label[3];  // Enough for "16" or "X"
 
-	    // Show "X" if bit is cleared, else show channel number
-	    if ((save_get(SAVE_SETTINGS_FILTERED_CHANNELS) & (1U << i)) != 0) {
-	        strcpy(label, "X");  // Bit = 1 → channel is blocked
-	    } else {
-	        snprintf(label, sizeof(label), "%u", i + 1);  // Bit = 0 → channel allowed
-	    }
+        // Show "X" if bit is 1 (blocked), else show channel number (allowed)
+        if ((mask & (1U << i)) != 0) {
+            strcpy(label, "X");
+        } else {
+            snprintf(label, sizeof(label), "%u", i + 1);
+        }
 
-	    uint8_t x = 5 + 15 * (i % 8);
-	    uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
+        uint8_t x = 5 + 15 * (i % 8);
+        uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
 
-	    screen_driver_underline_WriteString(label, Font_6x8, White, x, y, select_states[FT1 + i]);
-	}
-
-
+        screen_driver_underline_WriteString(label, Font_6x8, White, x, y, select_states[FT1 + i]);
+    }
 }
+
 
 // About Section
 static void screen_update_settings_about(){
@@ -188,11 +182,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 
 	static uint8_t old_select = 0;
 
-	uint8_t current_select = ui_state_get(UI_CURRENT_MENU);
+	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
-	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET ,current_select);
+	ui_state_modify(UI_SETTINGS_SELECT, UI_MODIFY_SET, current_select);
 	uint8_t select_changed = (old_select != current_select);
 
 
@@ -207,17 +201,21 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			break;
 
 		case SETT_BRIGHTNESS:
-			uint8_t contrast_index = calculate_contrast_index(save_get(SAVE_SETTINGS_BRIGHTNESS));
-		    utils_counter_change(timer4, &contrast_index, 0, 9, select_changed, 1, NO_WRAP);
+			   // Let the helper update the stored index in memory
+			    update_counter(timer4, SAVE_SETTINGS_BRIGHTNESS, select_changed, 1);
 
-			static const uint8_t contrast_values[10] = {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
-		    uint8_t brightness = contrast_values[contrast_index];
-		    save_modify_u8(SAVE_SETTINGS_BRIGHTNESS, SAVE_MODIFY_SET, brightness);
+			    // Read back the updated index and apply to hardware
+			    uint8_t idx2 = save_get(SAVE_SETTINGS_BRIGHTNESS);
+			    if (idx2 == SAVE_STATE_BUSY || idx2 > 9) idx2 = 9;
 
-		    if (old_settings_data.brightness != brightness) {
-		        screen_driver_SetContrast(brightness);
-		    }
-			break;
+			    static const uint8_t contrast_values[10] =
+			        {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
+			    uint8_t new_contrast = contrast_values[idx2];
+
+			    if (old_settings_data.brightness != idx2) {
+			        screen_driver_SetContrast(new_contrast);
+			    }
+			    break;
 		case SETT_MIDI_THRU:
 			update_counter(timer4, SAVE_SETTINGS_MIDI_THRU, select_changed, 1);
 			break;
@@ -234,6 +232,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT13: case FT14: case FT15: case FT16: {
 			uint16_t filtered_channels = (uint16_t)save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
 			midi_filter_update_menu(timer4, &filtered_channels , &current_select, select_changed);
+			save_modify_u32(SAVE_SETTINGS_FILTERED_CHANNELS, SAVE_MODIFY_SET, filtered_channels);
 		    break;
 		}
 	}
