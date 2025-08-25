@@ -32,8 +32,6 @@ typedef enum {
 } settings_select_list_t;
 
 void screen_update_settings();
-
-
-void settings_update_menu(osThreadId_t * display_updateHandle);
+void settings_update_menu();
 
 #endif /* SETTINGS_H_ */

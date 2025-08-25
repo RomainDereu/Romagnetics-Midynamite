@@ -22,6 +22,9 @@ static osThreadId_t s_display_handle      = NULL;
 static osThreadId_t s_midi_core_handle    = NULL;
 static osThreadId_t s_medium_tasks_handle = NULL;
 
+static osEventFlagsId_t s_display_flags;
+static const osEventFlagsAttr_t s_flags_attrs = { .name = "display_flags" };
+
 #ifndef DISPLAY_FLAG_MASK
 #define DISPLAY_FLAG_MASK (FLAG_TEMPO | FLAG_MODIFY | FLAG_TRANSPOSE | FLAG_SETTINGS)
 #endif
@@ -48,29 +51,16 @@ static const osThreadAttr_t s_medium_tasks_attrs = {
 // -------------------------
 // Display thread
 // -------------------------
-static void DisplayUpdateThread(void *argument)
-{
-  (void)argument;
+static void DisplayUpdateThread(void *arg) {
+  (void)arg;
   for (;;) {
-    uint32_t displayFlags = osThreadFlagsWait(DISPLAY_FLAG_MASK, osFlagsWaitAny, osWaitForever);
-
-    uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
-    switch (current_menu) {
-      case MIDI_TEMPO:
-        if (displayFlags & FLAG_TEMPO)     screen_update_midi_tempo();
-        break;
-      case MIDI_MODIFY:
-        if (displayFlags & FLAG_MODIFY)    screen_update_midi_modify();
-        break;
-      case MIDI_TRANSPOSE:
-        if (displayFlags & FLAG_TRANSPOSE) screen_update_midi_transpose();
-        break;
-      case SETTINGS:
-        if (displayFlags & FLAG_SETTINGS)  screen_update_settings();
-        break;
-      default:
-        break;
-    }
+    uint32_t f = osEventFlagsWait(s_display_flags, DISPLAY_FLAG_MASK,
+                                  osFlagsWaitAny, osWaitForever);
+    uint8_t current = ui_state_get(UI_CURRENT_MENU);
+    if ((f & FLAG_TEMPO)     && current == MIDI_TEMPO)     screen_update_midi_tempo();
+    if ((f & FLAG_MODIFY)    && current == MIDI_MODIFY)    screen_update_midi_modify();
+    if ((f & FLAG_TRANSPOSE) && current == MIDI_TRANSPOSE) screen_update_midi_transpose();
+    if ((f & FLAG_SETTINGS)  && current == SETTINGS)       screen_update_settings();
     osDelay(30);
   }
 }
@@ -105,16 +95,16 @@ static void MediumTasksThread(void *argument)
     uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
     switch (current_menu) {
       case MIDI_TEMPO:
-        midi_tempo_update_menu(threads_display_handle());
+        midi_tempo_update_menu();
         break;
       case MIDI_MODIFY:
-        midi_modify_update_menu(threads_display_handle());
+        midi_modify_update_menu();
         break;
       case MIDI_TRANSPOSE:
-        midi_transpose_update_menu(threads_display_handle());
+        midi_transpose_update_menu();
         break;
       case SETTINGS:
-        settings_update_menu(threads_display_handle());
+        settings_update_menu();
         break;
       default:
         break;
@@ -156,17 +146,17 @@ static void MediumTasksThread(void *argument)
 // -------------------------
 // Public API
 // -------------------------
-void threads_start(void)
-{
-  // Start display first so others can signal it
-  s_display_handle      = osThreadNew(DisplayUpdateThread, NULL, &s_display_attrs);
-  s_midi_core_handle    = osThreadNew(MidiCoreThread,       NULL, &s_midi_core_attrs);
-  s_medium_tasks_handle = osThreadNew(MediumTasksThread,    NULL, &s_medium_tasks_attrs);
+
+
+void threads_start(void) {
+  s_display_flags      = osEventFlagsNew(&s_flags_attrs);
+  s_display_handle     = osThreadNew(DisplayUpdateThread, NULL, &s_display_attrs);
+  s_midi_core_handle   = osThreadNew(MidiCoreThread,       NULL, &s_midi_core_attrs);
+  s_medium_tasks_handle= osThreadNew(MediumTasksThread,    NULL, &s_medium_tasks_attrs);
 }
 
-void threads_display_notify(uint32_t flags)
-{
-  if (s_display_handle) osThreadFlagsSet(s_display_handle, flags);
+void threads_display_notify(uint32_t flags) {
+  if (s_display_flags) osEventFlagsSet(s_display_flags, flags);
 }
 
 osThreadId_t threads_display_handle(void)

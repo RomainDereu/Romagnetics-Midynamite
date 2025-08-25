@@ -11,13 +11,14 @@
 #include "memory_ui_state.h"
 #include "memory_main.h"
 
+
 //under_here_header_checks
-#include "main.h"
 #include "menu.h"
 #include "midi_modify.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
+#include "threads.h"
 #include "utils.h"
 
 extern const Message * message;
@@ -78,7 +79,7 @@ static void handle_modify_split(
 }
 
 // midi modify menu
-void midi_modify_update_menu(osThreadId_t * display_updateHandle)
+void midi_modify_update_menu()
 {
     midi_modify_data_struct old_modify_data = save_snapshot_modify();
 
@@ -123,7 +124,7 @@ void midi_modify_update_menu(osThreadId_t * display_updateHandle)
     if (menu_check_for_updates(menu_changed, &old_modify_data,
                                &new_modify_data, sizeof new_modify_data,
                                &current_select, &old_select)) {
-        osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
+    	threads_display_notify(FLAG_MODIFY);
     }
     old_select = current_select;
 }

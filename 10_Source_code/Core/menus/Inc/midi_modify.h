@@ -21,12 +21,12 @@ typedef struct {
 
 //midi_modify_menu
 void screen_update_midi_modify();
-void midi_modify_update_menu(osThreadId_t * display_updateHandle);
+void midi_modify_update_menu();
 
 
 //midi transpose menu
 void screen_update_midi_transpose();
-void midi_transpose_update_menu(osThreadId_t * display_updateHandle);
+void midi_transpose_update_menu();
 
 
 //midi_modify_transform

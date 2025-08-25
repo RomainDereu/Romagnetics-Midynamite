@@ -14,9 +14,7 @@ typedef struct {
 
 // Start all application threads (display, midi_core, medium_tasks)
 void threads_start();
-
-// Convenience (optional): notify display thread and/or fetch its handle
-void        threads_display_notify(uint32_t flags);
+void threads_display_notify(uint32_t flags);
 osThreadId_t threads_display_handle(void);
 
 

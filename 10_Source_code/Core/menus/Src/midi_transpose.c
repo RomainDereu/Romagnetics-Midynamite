@@ -19,6 +19,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
+#include "threads.h"
 #include "utils.h"
 
 
@@ -89,7 +90,7 @@ void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
 							  sizeof new_transpose_data,
 							  &current_select,
 							  &old_select)){
-		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
+		threads_display_notify(FLAG_TRANSPOSE);
 	}
 	old_select = current_select;
 }

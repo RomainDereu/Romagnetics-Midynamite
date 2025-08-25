@@ -20,6 +20,7 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"
+#include "threads.h"
 #include "utils.h"
 
 
@@ -141,7 +142,7 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
     }
 }
 
-void midi_tempo_update_menu(osThreadId_t * display_updateHandle){
+void midi_tempo_update_menu(){
 	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
 
 
@@ -178,7 +179,7 @@ void midi_tempo_update_menu(osThreadId_t * display_updateHandle){
 														&old_select );
 
     if (tempo_has_changed) {
-        osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
+    	threads_display_notify(FLAG_TEMPO);
     }
     old_select  = current_select;
 }

@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "settings.h"
 #include "text.h"
+#include "threads.h"
 
 
 extern const Message *message;
@@ -176,7 +177,7 @@ static void midi_filter_update_menu(uint32_t *filtered_channels,
 
 
 
-void settings_update_menu(osThreadId_t * display_updateHandle){
+void settings_update_menu(){
 
 	settings_data_struct old_settings_data = save_snapshot_settings();
 
@@ -247,7 +248,7 @@ void settings_update_menu(osThreadId_t * display_updateHandle){
 	settings_data_struct new_settings_data = save_snapshot_settings();
     if (menu_check_for_updates(menu_changed,  &old_settings_data, &new_settings_data,
           sizeof new_settings_data, &current_select, &old_select)) {
-        osThreadFlagsSet(display_updateHandle, FLAG_SETTINGS);
+    	threads_display_notify(FLAG_SETTINGS);
     }
 
     old_select  = current_select;
