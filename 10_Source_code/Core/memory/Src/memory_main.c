@@ -69,7 +69,7 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [SAVE_SETTINGS_START_MENU]         = {0,3,1},
     [SAVE_SETTINGS_SEND_USB]           = {0,1,1},
-    [SAVE_SETTINGS_BRIGHTNESS]         = {0,9,1},
+    [SAVE_SETTINGS_BRIGHTNESS]         = {0,9,0},
     [SAVE_SETTINGS_CHANNEL_FILTER]     = {0,15,1},
     [SAVE_SETTINGS_MIDI_THRU]          = {0,1,1},
     [SAVE_SETTINGS_USB_THRU]           = {0,1,1},

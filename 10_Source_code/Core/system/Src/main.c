@@ -1,30 +1,20 @@
-/* USER CODE BEGIN Header */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "cmsis_os.h"
-#include "usb_device.h"
+/*
+ * main.c
+ *
+ *      Author: Romain Dereu
+ */
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
+#include "main.h"
+#include "cmsis_os.h"
+#include "usb_device.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
-
 #include "memory_ui_state.h"
 #include "menu.h"
 #include "midi_tempo.h"
@@ -33,15 +23,6 @@
 #include "settings.h"
 #include "utils.h"
 
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
@@ -74,9 +55,6 @@ const osThreadAttr_t display_update_attributes = {
 };
 /* USER CODE BEGIN PV */
 //Romagnetics code
-
-midi_modify_data_struct midi_modify_data;
-
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
@@ -613,7 +591,7 @@ void MediumTasks(void *argument)
 			break;
 
 		case MIDI_MODIFY:
-			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, display_updateHandle);
+			midi_modify_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case MIDI_TRANSPOSE:
@@ -645,7 +623,7 @@ void MediumTasks(void *argument)
 		 		break;
 
 		 	case MIDI_MODIFY:
-		 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+		 		save_modify_u8(SAVE_MIDI_MODIFY_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
 		 		break;
 
@@ -695,7 +673,7 @@ void DisplayUpdate(void *argument)
 
 	  	case MIDI_MODIFY:
 	  		if (displayFlags & FLAG_MODIFY) {
-	  			screen_update_midi_modify(&midi_modify_data);
+	  			screen_update_midi_modify();
 	  		}
 	  		break;
 

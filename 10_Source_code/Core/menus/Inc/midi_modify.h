@@ -26,10 +26,9 @@ typedef struct {
 
 
 //midi_modify_menu
-void screen_update_midi_modify(midi_modify_data_struct * midi_modify_data);
+void screen_update_midi_modify();
 void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
-						     midi_modify_data_struct * midi_modify_data,
 							 osThreadId_t * display_updateHandle);
 
 
