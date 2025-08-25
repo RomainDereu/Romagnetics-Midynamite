@@ -154,28 +154,6 @@ int32_t save_get(save_field_t field) {
     return (int32_t)(*p);
 }
 
-// ---------------------
-// Normalization (clamp or wrap per field limits)
-// ---------------------
-static inline int32_t save_norm(int32_t v, const save_field_limits_t lim)
-{
-    if (!lim.wrap) {
-        // Special guard for 8-bit underflow showing up as 128..255 when casted to int
-        if (lim.max <= 127 && v > lim.max && v >= 128) {
-            return lim.min;
-        }
-        if (v < lim.min) return lim.min;
-        if (v > lim.max) return lim.max;
-        return v;
-    }
-
-    int32_t span = lim.max - lim.min + 1;
-    if (span <= 0) return lim.min;
-    int32_t off = v - lim.min;
-    int32_t mod = off % span;
-    if (mod < 0) mod += span;
-    return lim.min + mod;
-}
 
 // ---------------------
 // Increment / set (u32 / u8)
@@ -194,7 +172,7 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
         default: save_unlock(); return 0;
     }
 
-    v = save_norm(v, lim);
+    v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
     *u32_fields[field] = v;
 
     save_unlock();
@@ -215,7 +193,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
         default: save_unlock(); return 0;
     }
 
-    v = save_norm(v, lim);
+    v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
     *u8_fields[field] = (uint8_t)v;
 
     save_unlock();
@@ -348,6 +326,7 @@ save_struct make_default_settings(void) {
     }
     return s;
 }
+
 
 
 save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
