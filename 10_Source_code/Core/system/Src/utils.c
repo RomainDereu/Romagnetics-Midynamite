@@ -179,26 +179,6 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 
 
 
-
-
-
-
-
-
-
-void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_t max_value){
-	(*data_to_change)++;
-	if(*data_to_change > max_value){
-		*data_to_change = bottom_value;
-	}
-
-}
-
-
-
-
-
-
 // Panic on a single UART
 void all_notes_off(UART_HandleTypeDef *huart) {
     uint8_t all_notes_off_msg[3];

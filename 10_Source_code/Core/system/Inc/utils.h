@@ -84,12 +84,6 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 						   uint8_t multiplier,
 						   uint8_t wrap_or_not);
 
-void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_t max_value);
-
-
-
-
-
 
 void all_notes_off(UART_HandleTypeDef *huart);
 void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,

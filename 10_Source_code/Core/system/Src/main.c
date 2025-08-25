@@ -74,11 +74,8 @@ const osThreadAttr_t display_update_attributes = {
 };
 /* USER CODE BEGIN PV */
 //Romagnetics code
-//structs containing the informaiton for each mode
-//Roro will be deleted once memory has been moved
-midi_tempo_data_struct midi_tempo_data;
+
 midi_modify_data_struct midi_modify_data;
-midi_transpose_data_struct midi_transpose_data;
 
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
@@ -616,7 +613,7 @@ void MediumTasks(void *argument)
 			break;
 
 		case MIDI_TRANSPOSE:
-			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, display_updateHandle);
+			midi_transpose_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case SETTINGS:
@@ -649,7 +646,7 @@ void MediumTasks(void *argument)
 		 		break;
 
 		 	case MIDI_TRANSPOSE:
-		 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
+		 		save_modify_u8(SAVE_TRANSPOSE_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 		 		break;
 
@@ -700,7 +697,7 @@ void DisplayUpdate(void *argument)
 
 	  	case MIDI_TRANSPOSE:
 	  		if (displayFlags & FLAG_TRANSPOSE) {
-	  			screen_update_midi_transpose(&midi_transpose_data);
+	  			screen_update_midi_transpose();
 	  		}
 	  		break;
 

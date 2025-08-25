@@ -189,11 +189,11 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	static uint8_t old_select = 0;
 
 	uint8_t current_select = ui_state_get(UI_CURRENT_MENU);
-	uint8_t select_changed = (old_select != current_select);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != SETTINGS);
 	utils_counter_change(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS-1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET ,current_select);
+	uint8_t select_changed = (old_select != current_select);
 
 
 	switch (current_select) {
@@ -232,7 +232,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-			uint16_t filtered_channels = save_get(SAVE_SETTINGS_FILTERED_CHANNELS);
+			uint16_t filtered_channels = (uint16_t)save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
 			midi_filter_update_menu(timer4, &filtered_channels , &current_select, select_changed);
 		    break;
 		}

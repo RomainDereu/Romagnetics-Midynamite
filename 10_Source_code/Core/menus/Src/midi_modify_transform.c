@@ -12,7 +12,7 @@
 #include "midi_modify.h"
 #include "main.h"
 #include "midi_usb.h"
-#include "memory_main.h"   // <-- for save_get / save_get_u32
+#include "memory_main.h"
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;

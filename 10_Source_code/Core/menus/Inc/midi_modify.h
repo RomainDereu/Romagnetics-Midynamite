@@ -34,10 +34,9 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 
 
 //midi transpose menu
-void screen_update_midi_transpose(midi_transpose_data_struct * midi_transpose_data);
+void screen_update_midi_transpose();
 void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 		                     TIM_HandleTypeDef * timer4,
-						     midi_transpose_data_struct * midi_transpose_data,
 							 osThreadId_t * display_updateHandle);
 
 

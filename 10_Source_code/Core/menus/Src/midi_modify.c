@@ -91,13 +91,12 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	static uint8_t old_select = 0;
 
 	uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-	uint8_t select_changed = (old_select != current_select);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != MIDI_MODIFY);
-    uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
+	uint8_t amount_of_settings = (midi_modify_data->change_or_split == MIDI_MODIFY_CHANGE) ? 4 : 5;
 	utils_counter_change(timer3, &current_select, 0, amount_of_settings-1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET , current_select);
-
+	uint8_t select_changed = (old_select != current_select);
 
 
 
@@ -114,10 +113,10 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
 	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
 	    if (current_select < amount_of_settings - 1) {
 	        // any but the last → flip change_vs_split
-	        utils_change_settings(&midi_modify_data->change_or_split, 0, 1);
+	    	save_modify_u8(SAVE_MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
 	    } else {
 	        // last row → flip velocity type
-	        utils_change_settings(&midi_modify_data->velocity_type, 0, 1);
+	    	save_modify_u8(SAVE_MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
 	    }
 
 	    // always go back to the first row
