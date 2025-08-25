@@ -34,8 +34,6 @@ typedef enum {
 void screen_update_settings();
 
 
-void settings_update_menu(TIM_HandleTypeDef * timer3,
-		                  TIM_HandleTypeDef * timer4,
-						  osThreadId_t * display_updateHandle);
+void settings_update_menu(osThreadId_t * display_updateHandle);
 
 #endif /* SETTINGS_H_ */

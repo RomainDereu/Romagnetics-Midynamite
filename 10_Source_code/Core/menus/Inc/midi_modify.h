@@ -12,12 +12,6 @@
 #include "memory_main.h"
 #include "screen_driver.h"
 
-#define MIDI_NOTE_ORIGINAL 0
-#define MIDI_NOTE_SHIFTED  1
-
-extern uint8_t select_states_midi_modify[4];
-extern uint8_t select_states_midi_transpose[3];
-
 typedef struct {
     uint8_t status;   ///< 0x8n = Note Off, 0x9n = Note On, etc.
     uint8_t note;     ///< 0–127 pitch value
@@ -27,16 +21,12 @@ typedef struct {
 
 //midi_modify_menu
 void screen_update_midi_modify();
-void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-							 osThreadId_t * display_updateHandle);
+void midi_modify_update_menu(osThreadId_t * display_updateHandle);
 
 
 //midi transpose menu
 void screen_update_midi_transpose();
-void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-							 osThreadId_t * display_updateHandle);
+void midi_transpose_update_menu(osThreadId_t * display_updateHandle);
 
 
 //midi_modify_transform

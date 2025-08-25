@@ -141,9 +141,7 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
     }
 }
 
-void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
-							TIM_HandleTypeDef * timer4,
-							osThreadId_t * display_updateHandle){
+void midi_tempo_update_menu(osThreadId_t * display_updateHandle){
 	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
 
 
@@ -152,17 +150,17 @@ void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != MIDI_TEMPO);
-	update_select(timer3, &current_select, 0, 1, menu_changed, 1, WRAP);
+	update_select(&current_select, 0, 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
 	uint8_t select_changed = (old_select != current_select);
 
 
 	switch (current_select) {
 		case 0:
-			update_counter_32(timer4, SAVE_MIDI_TEMPO_CURRENT, select_changed, 10);
+			update_value(SAVE_MIDI_TEMPO_CURRENT, select_changed, 10);
 			break;
 		case 1:
-			update_counter(timer4, SAVE_MIDI_TEMPO_SEND_TO_OUT, select_changed, 1);
+			update_value(SAVE_MIDI_TEMPO_SEND_TO_OUT, select_changed, 1);
 			break;
 	}
 

@@ -22,8 +22,6 @@ void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out);
 
 void mt_start_stop(TIM_HandleTypeDef * timer);
 
-void midi_tempo_update_menu(TIM_HandleTypeDef * timer3,
-						    TIM_HandleTypeDef * timer4,
-							osThreadId_t * display_updateHandle);
+void midi_tempo_update_menu(osThreadId_t * display_updateHandle);
 
 #endif /* INC_DEBUG_H_ */

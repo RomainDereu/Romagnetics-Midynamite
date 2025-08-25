@@ -22,36 +22,34 @@
 #include "utils.h"
 
 
-static void transpose_shift_build_select(TIM_HandleTypeDef *timer4, uint8_t current_select, uint8_t select_changed)
+static void transpose_shift_build_select(uint8_t current_select, uint8_t select_changed)
 {
     if (current_select == 0) {
-    	update_counter_32(timer4, SAVE_TRANSPOSE_SHIFT_VALUE, select_changed, 12);
+    	update_value(SAVE_TRANSPOSE_SHIFT_VALUE, select_changed, 12);
     } else {
-    	update_counter(timer4, SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
     }
 }
 
-static void transpose_scaled_build_select(TIM_HandleTypeDef *timer4, uint8_t current_select, uint8_t select_changed) {
+static void transpose_scaled_build_select(uint8_t current_select, uint8_t select_changed) {
     switch (current_select) {
     case 0:
-    	update_counter(timer4, SAVE_TRANSPOSE_BASE_NOTE, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_BASE_NOTE, select_changed, 1);
         break;
     case 1:
-    	update_counter(timer4, SAVE_TRANSPOSE_INTERVAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_INTERVAL, select_changed, 1);
         break;
     case 2:
-    	update_counter(timer4, SAVE_TRANSPOSE_SCALE, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SCALE, select_changed, 1);
         break;
     case 3:
-    	update_counter(timer4, SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
+    	update_value(SAVE_TRANSPOSE_SEND_ORIGINAL, select_changed, 1);
         break;
     }
 }
 
 
-void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
-		                     TIM_HandleTypeDef * timer4,
-							 osThreadId_t * display_updateHandle){
+void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
 
 	midi_transpose_data_struct old_transpose_data = save_snapshot_transpose();
 
@@ -68,15 +66,15 @@ void midi_transpose_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t transpose_type = save_get(SAVE_TRANSPOSE_TYPE);
     uint8_t amount_of_settings = (transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 
-    update_select(timer3, &current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
+    update_select(&current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_MIDI_TRANSPOSE_SELECT, UI_MODIFY_SET , current_select);
 
 	uint8_t select_changed = (old_select != current_select);
 
 	if (transpose_type == MIDI_TRANSPOSE_SHIFT) {
-		transpose_shift_build_select(timer4, current_select,  select_changed);
+		transpose_shift_build_select(current_select,  select_changed);
 	} else {
-	    transpose_scaled_build_select(timer4, current_select, select_changed);
+	    transpose_scaled_build_select(current_select, select_changed);
 	}
 
 

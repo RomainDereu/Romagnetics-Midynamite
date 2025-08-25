@@ -23,26 +23,25 @@
 extern const Message * message;
 
 static void handle_modify_change(
-    TIM_HandleTypeDef *timer4,
     uint8_t            select_changed,
     uint8_t            current_select
 ) {
     switch (current_select) {
       case 0:
-        update_counter(timer4, SAVE_MIDI_MODIFY_CHANNEL_1, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_1, select_changed, 1);
         break;
       case 1:
-        update_counter(timer4, SAVE_MIDI_MODIFY_CHANNEL_2, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_CHANNEL_2, select_changed, 1);
         break;
       case 2:
-        update_counter(timer4, SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
+    	  update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
         break;
       case 3: {
         uint8_t vel_type = save_get(SAVE_MIDI_MODIFY_VELOCITY_TYPE);
         if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-            update_counter_32(timer4, SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
         } else {
-            update_counter(timer4, SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
+            update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
         }
         break;
       }
@@ -50,29 +49,28 @@ static void handle_modify_change(
 }
 
 static void handle_modify_split(
-    TIM_HandleTypeDef *timer4,
     uint8_t            select_changed,
     uint8_t            current_select
 ) {
     switch (current_select) {
       case 0:
-        update_counter(timer4, SAVE_MIDI_MODIFY_SPLIT_CH1, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH1, select_changed, 1);
         break;
       case 1:
-        update_counter(timer4, SAVE_MIDI_MODIFY_SPLIT_CH2, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_CH2, select_changed, 1);
         break;
       case 2:
-        update_counter(timer4, SAVE_MIDI_MODIFY_SPLIT_NOTE, select_changed, 12);
+    	update_value(SAVE_MIDI_MODIFY_SPLIT_NOTE, select_changed, 12);
         break;
       case 3:
-        update_counter(timer4, SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
+    	update_value(SAVE_MIDI_MODIFY_SEND_TO_OUT, select_changed, 1);
         break;
       case 4: {
         uint8_t vel_type = save_get(SAVE_MIDI_MODIFY_VELOCITY_TYPE);
         if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-            update_counter_32(timer4, SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS, select_changed, 10);
         } else {
-            update_counter(timer4, SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
+        	update_value(SAVE_MIDI_MODIFY_VELOCITY_ABS, select_changed, 10);
         }
         break;
       }
@@ -80,9 +78,7 @@ static void handle_modify_split(
 }
 
 // midi modify menu
-void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
-                             TIM_HandleTypeDef * timer4,
-                             osThreadId_t * display_updateHandle)
+void midi_modify_update_menu(osThreadId_t * display_updateHandle)
 {
     midi_modify_data_struct old_modify_data = save_snapshot_modify();
 
@@ -94,15 +90,15 @@ void midi_modify_update_menu(TIM_HandleTypeDef * timer3,
     uint8_t mode           = save_get(SAVE_MIDI_MODIFY_CHANGE_OR_SPLIT);
     uint8_t amount_of_settings = (mode == MIDI_MODIFY_CHANGE) ? 4 : 5;
 
-    update_select(timer3, &current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
+    update_select(&current_select, 0, amount_of_settings - 1, menu_changed, 1, WRAP);
     ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, current_select);
 
     uint8_t select_changed = (old_select != current_select);
 
     if (mode == MIDI_MODIFY_CHANGE) {
-        handle_modify_change(timer4, select_changed, current_select);
+        handle_modify_change(select_changed, current_select);
     } else {
-        handle_modify_split(timer4, select_changed, current_select);
+        handle_modify_split(select_changed, current_select);
     }
 
     // Mode toggle: last row toggles velocity type, others toggle change/split

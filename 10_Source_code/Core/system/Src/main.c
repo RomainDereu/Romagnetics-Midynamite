@@ -106,12 +106,7 @@ int main(void)
   osKernelInitialize();
 
   /* Create and start the application threads via the threads module */
-  threads_ctx_t th_ctx = {
-    .htim2 = &htim2,
-    .htim3 = &htim3,
-    .htim4 = &htim4,
-  };
-  threads_start(&th_ctx);
+  threads_start();
 
   /* Start scheduler */
   osKernelStart();

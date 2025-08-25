@@ -157,15 +157,14 @@ static void saving_settings_ui(){
 
 
 
-static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
-                                    uint32_t *filtered_channels,
+static void midi_filter_update_menu(uint32_t *filtered_channels,
                                     uint8_t * current_select,
                                     uint8_t select_changed)
 {
     uint8_t channel_index = (uint8_t)(*current_select - FT1);
     uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
 
-    update_select(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
+    update_select(&bit_value, 0, 1, select_changed, 1, WRAP);
 
     if (bit_value)
         *filtered_channels |=  (uint32_t)(1UL << channel_index);
@@ -177,9 +176,7 @@ static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
 
 
 
-void settings_update_menu(TIM_HandleTypeDef * timer3,
-                          TIM_HandleTypeDef * timer4,
-						  osThreadId_t * display_updateHandle){
+void settings_update_menu(osThreadId_t * display_updateHandle){
 
 	settings_data_struct old_settings_data = save_snapshot_settings();
 
@@ -189,7 +186,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
 	uint8_t old_menu = ui_state_get(UI_OLD_MENU);
 	uint8_t menu_changed = (old_menu != SETTINGS);
-	update_select(timer3, &current_select, 0, AMOUNT_OF_SETTINGS_ITEMS - 1, menu_changed, 1, WRAP);
+	update_select(&current_select, 0, AMOUNT_OF_SETTINGS_ITEMS - 1, menu_changed, 1, WRAP);
 	ui_state_modify(UI_SETTINGS_SELECT, UI_MODIFY_SET, current_select);
 	uint8_t select_changed = (old_select != current_select);
 
@@ -197,16 +194,16 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 	switch (current_select) {
 		// Global section
 		case SETT_START_MENU:
-			update_counter(timer4, SAVE_SETTINGS_START_MENU, select_changed, 1);
+			update_value(SAVE_SETTINGS_START_MENU, select_changed, 1);
 			break;
 
 		case SETT_SEND_TO_USB:
-			update_counter(timer4, SAVE_SETTINGS_SEND_USB, select_changed, 1);
+			update_value(SAVE_SETTINGS_SEND_USB, select_changed, 1);
 			break;
 
 		case SETT_BRIGHTNESS:
 			   // Let the helper update the stored index in memory
-			    update_counter(timer4, SAVE_SETTINGS_BRIGHTNESS, select_changed, 1);
+			    update_value(SAVE_SETTINGS_BRIGHTNESS, select_changed, 1);
 
 			    // Read back the updated index and apply to hardware
 			    uint8_t idx2 = save_get(SAVE_SETTINGS_BRIGHTNESS);
@@ -221,13 +218,13 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 			    }
 			    break;
 		case SETT_MIDI_THRU:
-			update_counter(timer4, SAVE_SETTINGS_MIDI_THRU, select_changed, 1);
+			update_value(SAVE_SETTINGS_MIDI_THRU, select_changed, 1);
 			break;
 		case SETT_USB_THRU:
-			update_counter(timer4, SAVE_SETTINGS_USB_THRU, select_changed, 1);
+			update_value(SAVE_SETTINGS_USB_THRU, select_changed, 1);
 			break;
 		case CHANNEL_FILTER:
-			update_counter(timer4, SAVE_SETTINGS_CHANNEL_FILTER, select_changed, 1);
+			update_value(SAVE_SETTINGS_CHANNEL_FILTER, select_changed, 1);
 			break;
 
 		case FT1: case FT2: case FT3: case FT4:
@@ -238,7 +235,7 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		    if (filtered_channels == SAVE_STATE_BUSY) {
 		        break;
 		    }
-		    midi_filter_update_menu(timer4, &filtered_channels, &current_select, select_changed);
+		    midi_filter_update_menu(&filtered_channels, &current_select, select_changed);
 		    save_modify_u32(SAVE_SETTINGS_FILTERED_CHANNELS, SAVE_MODIFY_SET, filtered_channels);
 		    break;
 		}

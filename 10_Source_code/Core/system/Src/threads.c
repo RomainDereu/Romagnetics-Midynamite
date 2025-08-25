@@ -8,14 +8,19 @@
 #include "midi_modify.h"
 #include "settings.h"
 #include "utils.h"
+#include "stm32f4xx_hal.h"  // HAL types
+
+// Timers used inside threads (owned/initialized by CubeMX in main.c)
+extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
 // -------------------------
 // Internal state
 // -------------------------
-static osThreadId_t s_display_handle     = NULL;
-static osThreadId_t s_midi_core_handle   = NULL;
-static osThreadId_t s_medium_tasks_handle= NULL;
-static threads_ctx_t s_ctx;
+static osThreadId_t s_display_handle      = NULL;
+static osThreadId_t s_midi_core_handle    = NULL;
+static osThreadId_t s_medium_tasks_handle = NULL;
 
 #ifndef DISPLAY_FLAG_MASK
 #define DISPLAY_FLAG_MASK (FLAG_TEMPO | FLAG_MODIFY | FLAG_TRANSPOSE | FLAG_SETTINGS)
@@ -76,7 +81,7 @@ static void DisplayUpdateThread(void *argument)
 static void MidiCoreThread(void *argument)
 {
   (void)argument;
-  MX_USB_DEVICE_Init(); // same place you had it
+  MX_USB_DEVICE_Init();
   for (;;) {
     calculate_incoming_midi();
     osDelay(5);
@@ -100,16 +105,16 @@ static void MediumTasksThread(void *argument)
     uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
     switch (current_menu) {
       case MIDI_TEMPO:
-        midi_tempo_update_menu(s_ctx.htim3, s_ctx.htim4, threads_display_handle());
+        midi_tempo_update_menu(threads_display_handle());
         break;
       case MIDI_MODIFY:
-        midi_modify_update_menu(s_ctx.htim3, s_ctx.htim4, threads_display_handle());
+        midi_modify_update_menu(threads_display_handle());
         break;
       case MIDI_TRANSPOSE:
-        midi_transpose_update_menu(s_ctx.htim3, s_ctx.htim4, threads_display_handle());
+        midi_transpose_update_menu(threads_display_handle());
         break;
       case SETTINGS:
-        settings_update_menu(s_ctx.htim3, s_ctx.htim4, threads_display_handle());
+        settings_update_menu(threads_display_handle());
         break;
       default:
         break;
@@ -124,7 +129,7 @@ static void MediumTasksThread(void *argument)
       switch (ui_state_get(UI_CURRENT_MENU)) {
         case MIDI_TEMPO:
           save_modify_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
-          mt_start_stop(s_ctx.htim2);
+          mt_start_stop(&htim2);
           threads_display_notify(FLAG_TEMPO);
           break;
         case MIDI_MODIFY:
@@ -151,10 +156,8 @@ static void MediumTasksThread(void *argument)
 // -------------------------
 // Public API
 // -------------------------
-void threads_start(const threads_ctx_t *ctx)
+void threads_start(void)
 {
-  s_ctx = *ctx; // copy pointers
-
   // Start display first so others can signal it
   s_display_handle      = osThreadNew(DisplayUpdateThread, NULL, &s_display_attrs);
   s_midi_core_handle    = osThreadNew(MidiCoreThread,       NULL, &s_midi_core_attrs);

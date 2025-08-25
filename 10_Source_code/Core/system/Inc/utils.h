@@ -50,22 +50,13 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
-
-
-void update_counter_32(TIM_HandleTypeDef *timer,
-                       save_field_t field,
-                       uint8_t menu_changed,
-                       uint8_t multiplier);
-
-void update_counter(TIM_HandleTypeDef *timer,
-                    save_field_t field,
-                    uint8_t menu_changed,
-                    uint8_t multiplier);
+void update_value(save_field_t field,
+                  uint8_t menu_changed,
+                  uint8_t multiplier);
 
 
 
-void update_select(TIM_HandleTypeDef *timer,
-                   uint8_t *value,
+void update_select(uint8_t *value,
                    int32_t min,
                    int32_t max,
                    uint8_t menu_changed,

@@ -13,9 +13,17 @@
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "memory_main.h"
+#include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 
 #include "text.h"
 
+// We now bind encoder helpers to fixed timers:
+//  - TIM3: selection (left encoder)
+//  - TIM4: value    (right encoder)
+extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+
+// (kept for other modules using it)
 extern osThreadId display_updateHandle;
 
 
@@ -49,76 +57,27 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 
+/* ---------------------------
+ * Encoder helpers (refactored)
+ * ---------------------------
+ * - update_select(...) uses TIM3 and edits a local UI selector (uint8_t*)
+ * - update_value(...)  uses TIM4 and writes to save fields (u8 or u32)
+ */
 
-
-
-
-void update_counter_32(TIM_HandleTypeDef *timer,
-                       save_field_t field,
-                       uint8_t menu_changed,
-                       uint8_t multiplier)
+// Selection (TIM3)
+void update_select(uint8_t *value,
+                   int32_t  min,
+                   int32_t  max,
+                   uint8_t  menu_changed,
+                   uint8_t  multiplier,
+                   uint8_t  wrap)
 {
-    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
+    TIM_HandleTypeDef *timer = &htim3;
 
-    uint8_t active_mult = 1;
-    if (multiplier != 1) {
-        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        active_mult = (Btn2State == 0) ? multiplier : 1;
-    }
-
-    // Consume as many steps as the encoder moved
-    for (;;) {
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
-
-        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
-        int32_t cur  = (int32_t)save_get_u32(field);
-        int32_t next = cur + step * active_mult;
-        // limits are enforced inside save_modify_u32 via save_norm()
-        save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next);
-
+    if (menu_changed) {
         __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        return;
     }
-}
-
-void update_counter(TIM_HandleTypeDef *timer,
-                    save_field_t field,
-                    uint8_t menu_changed,
-                    uint8_t multiplier)
-{
-    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
-
-    uint8_t active_mult = 1;
-    if (multiplier != 1) {
-        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        active_mult = (Btn2State == 0) ? multiplier : 1;
-    }
-
-    for (;;) {
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
-
-        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
-        uint8_t cur  = save_get(field);
-        if (cur == SAVE_STATE_BUSY) break;  // u8 only
-
-        int32_t next = (int32_t)cur + step * active_mult;
-        save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
-
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-    }
-}
-
-
-void update_select(TIM_HandleTypeDef *timer,
-                   uint8_t *value,
-                   int32_t min,
-                   int32_t max,
-                   uint8_t menu_changed,
-                   uint8_t multiplier,
-                   uint8_t wrap)
-{
-    if (menu_changed) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return; }
 
     uint8_t active_mult = 1;
     if (multiplier != 1) {
@@ -139,7 +98,58 @@ void update_select(TIM_HandleTypeDef *timer,
     }
 }
 
+// Value (TIM4). Works for u32 and u8 fields.
+void update_value(save_field_t field,
+                  uint8_t      menu_changed,
+                  uint8_t      multiplier)
+{
+    TIM_HandleTypeDef *timer = &htim4;
 
+    if (menu_changed) {
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+        return;
+    }
+
+    uint8_t active_mult = 1;
+    if (multiplier != 1) {
+        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        active_mult = (Btn2State == 0) ? multiplier : 1;
+    }
+
+    for (;;) {
+        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+
+        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
+
+        // Try treating the field as u32 first
+        int32_t cur32  = (int32_t)save_get_u32(field);
+        int32_t next32 = cur32 + step * active_mult;
+
+        if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) {
+            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+            continue;
+        }
+
+        // If not u32, fall back to u8
+        uint8_t cur8 = save_get(field);
+        if (cur8 == SAVE_STATE_BUSY) {
+            // a writer is in progress; abort this tick peacefully
+            break;
+        }
+
+        int32_t next8 = (int32_t)cur8 + step * active_mult;
+        (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
+
+        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
+    }
+}
+
+
+
+/* ---------------------------
+ * Panic / MIDI helpers
+ * --------------------------- */
 
 // Panic on a single UART
 void all_notes_off(UART_HandleTypeDef *huart) {
@@ -188,6 +198,9 @@ void panic_midi(UART_HandleTypeDef *huart1,
 
 
 
+/* ---------------------------
+ * GUI helpers
+ * --------------------------- */
 
 //On/ Off Part
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
@@ -203,12 +216,6 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
     }
 
 }
-
-
-
-
-
-
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
                            uint16_t pin1,
@@ -233,30 +240,28 @@ uint8_t handle_menu_toggle(GPIO_TypeDef *port,
     return 0;
 }
 
-
 uint8_t debounce_button(GPIO_TypeDef *port,
 		                uint16_t      pin,
 		                uint8_t     *prev_state,
 		                uint32_t      db_ms)
-		{
-		    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
+{
+    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
 
-		    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
-		    // Otherwise, fire on cur==0 immediately.
-		    if (cur == 0 && (!prev_state || *prev_state == 1)) {
-		        osDelay(db_ms);
-		        cur = HAL_GPIO_ReadPin(port, pin);
-		        if (cur == 0) {
-		            if (prev_state) *prev_state = 0;
-		            return 1;
-		        }
-		    }
+    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
+    // Otherwise, fire on cur==0 immediately.
+    if (cur == 0 && (!prev_state || *prev_state == 1)) {
+        osDelay(db_ms);
+        cur = HAL_GPIO_ReadPin(port, pin);
+        if (cur == 0) {
+            if (prev_state) *prev_state = 0;
+            return 1;
+        }
+    }
 
-		    // remember state if tracking
-		    if (prev_state) *prev_state = cur;
-		    return 0;
-		}
-
+    // remember state if tracking
+    if (prev_state) *prev_state = cur;
+    return 0;
+}
 
 //GUI function setting a flag on the currently selected item
 void select_current_state(uint8_t *select_states,
@@ -269,24 +274,22 @@ void select_current_state(uint8_t *select_states,
     select_states[current_select] = 1;
 }
 
-
-
 //Checks for updates to a menu and refreshes the screen if needed
 uint8_t menu_check_for_updates(
     uint8_t   menu_changed,
     const void *old_data,
     const void *data_ptr,
     size_t    sz,
-    uint8_t       *old_select,
-    uint8_t       *current_select) {
-	uint8_t changed =  ( menu_changed
-      || (*old_select != *current_select)
-      || memcmp(old_data, data_ptr, sz) != 0
-    );
-	return changed;
+    uint8_t   *old_select,
+    uint8_t   *current_select)
+{
+    uint8_t changed =
+        ( menu_changed
+       || (*old_select != *current_select)
+       || memcmp(old_data, data_ptr, sz) != 0
+        );
+    return changed;
 }
-
-
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
 int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap) {
@@ -302,7 +305,3 @@ int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap) {
     if (off < 0) off += range;
     return min + off;
 }
-
-
-
-
