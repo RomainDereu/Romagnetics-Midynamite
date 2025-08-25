@@ -5,6 +5,7 @@
  *      Author: Romain Dereu
  */
 #include <string.h>
+#include <stdio.h>
 
 
 #include "memory_ui_state.h"
@@ -49,7 +50,6 @@ static void screen_update_global_settings1(uint8_t *select_states){
 	screen_driver_underline_WriteString(message->contrast_levels[idx],
 	                                    Font_6x8, White, 70, LINE_3_VERT,
 	                                    select_states[SETT_BRIGHTNESS]);
-	screen_driver_underline_WriteString(message->contrast_levels[idx], Font_6x8, White, 70, LINE_3_VERT, select_states[SETT_BRIGHTNESS]);
 }
 
 
@@ -70,21 +70,21 @@ static void screen_update_global_settings2(uint8_t *select_states){
 }
 
 static void screen_update_midi_filter(uint8_t *select_states){
-    menu_display(&Font_6x8, message->USB_Thru);
+    menu_display(&Font_6x8, message->MIDI_Filter);
     screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
-    // Read the 16-bit mask correctly
-    uint32_t m32 = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
-    uint16_t mask = (m32 == SAVE_STATE_BUSY) ? 0 : (uint16_t)m32;  // defensive
+    // Read the 32-bit mask safely
+    uint32_t mask = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
+    if (mask == SAVE_STATE_BUSY) mask = 0;  // avoid rendering everything as 'X' on contention
 
     for (uint8_t i = 0; i < 16; i++) {
-        char label[3];  // Enough for "16" or "X"
+        char label[3];  // "16" + '\0' fits
 
-        // Show "X" if bit is 1 (blocked), else show channel number (allowed)
-        if ((mask & (1U << i)) != 0) {
+        // Bit = 1 → blocked → show "X". Bit = 0 → allowed → show number
+        if ((mask & (1UL << i)) != 0UL) {
             strcpy(label, "X");
         } else {
-            snprintf(label, sizeof(label), "%u", i + 1);
+            snprintf(label, sizeof(label), "%u", (unsigned)(i + 1));
         }
 
         uint8_t x = 5 + 15 * (i % 8);
@@ -93,6 +93,7 @@ static void screen_update_midi_filter(uint8_t *select_states){
         screen_driver_underline_WriteString(label, Font_6x8, White, x, y, select_states[FT1 + i]);
     }
 }
+
 
 
 // About Section
@@ -157,18 +158,21 @@ static void saving_settings_ui(){
 
 
 static void midi_filter_update_menu(TIM_HandleTypeDef *timer,
-                                    uint16_t *filtered_channels,
-									uint8_t * current_select,
+                                    uint32_t *filtered_channels,
+                                    uint8_t * current_select,
                                     uint8_t select_changed)
 {
-    uint8_t channel_index = (uint8_t)(* current_select - FT1);
+    uint8_t channel_index = (uint8_t)(*current_select - FT1);
     uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
+
     utils_counter_change(timer, &bit_value, 0, 1, select_changed, 1, WRAP);
+
     if (bit_value)
-        *filtered_channels |=  (uint16_t)(1U << channel_index);
+        *filtered_channels |=  (uint32_t)(1UL << channel_index);
     else
-        *filtered_channels &= ~(uint16_t)(1U << channel_index);
+        *filtered_channels &= ~(uint32_t)(1UL << channel_index);
 }
+
 
 
 
@@ -230,9 +234,12 @@ void settings_update_menu(TIM_HandleTypeDef * timer3,
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-			uint16_t filtered_channels = (uint16_t)save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
-			midi_filter_update_menu(timer4, &filtered_channels , &current_select, select_changed);
-			save_modify_u32(SAVE_SETTINGS_FILTERED_CHANNELS, SAVE_MODIFY_SET, filtered_channels);
+		    uint32_t filtered_channels = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
+		    if (filtered_channels == SAVE_STATE_BUSY) {
+		        break;
+		    }
+		    midi_filter_update_menu(timer4, &filtered_channels, &current_select, select_changed);
+		    save_modify_u32(SAVE_SETTINGS_FILTERED_CHANNELS, SAVE_MODIFY_SET, filtered_channels);
 		    break;
 		}
 	}

@@ -73,7 +73,7 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SAVE_SETTINGS_CHANNEL_FILTER]     = {0,15,1},
     [SAVE_SETTINGS_MIDI_THRU]          = {0,1,1},
     [SAVE_SETTINGS_USB_THRU]           = {0,1,1},
-    [SAVE_SETTINGS_FILTERED_CHANNELS]  = {0, (int32_t)0xFFFF, 1},
+	[SAVE_SETTINGS_FILTERED_CHANNELS] = {0, 0x0000FFFF, 1},
 
     [SAVE_DATA_VALIDITY]               = {0,0xFFFFFFFF,0}
 };
@@ -328,8 +328,7 @@ save_struct make_default_settings(void) {
     s.settings_data.channel_filter = 0;
     s.settings_data.midi_thru = 0;
     s.settings_data.usb_thru = 0;
-    s.settings_data.filtered_channels = 0xFFFF;
-
+    s.settings_data.filtered_channels = 0x0000FFFF;
 
     s.check_data_validity = DATA_VALIDITY_CHECKSUM;
 
