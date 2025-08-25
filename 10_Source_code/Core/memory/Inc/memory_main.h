@@ -81,6 +81,8 @@ typedef struct {
 // ---------------------
 // Use a 32-bit sentinel so both u8/u32 getters can return it as int32_t.
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
+#define SAVE_U8_BUSY    ((uint8_t)0xFF)
+
 #define DATA_VALIDITY_CHECKSUM  0xA5A5A5A4u
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 

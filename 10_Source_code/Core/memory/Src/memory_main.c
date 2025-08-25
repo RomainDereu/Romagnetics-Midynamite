@@ -146,13 +146,14 @@ int32_t save_get_u32(save_field_t field) {
     return *p;
 }
 
-int32_t save_get(save_field_t field) {
-    if (save_busy) return SAVE_STATE_BUSY;
+uint8_t save_get(save_field_t field) {
+    if (save_busy) return SAVE_U8_BUSY;                 // <-- u8 busy
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     uint8_t *p = u8_fields[field];
     if (!p) return 0;
-    return (int32_t)(*p);
+    return *p;
 }
+
 
 
 // ---------------------
