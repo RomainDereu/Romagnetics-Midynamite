@@ -1,47 +1,28 @@
-/* USER CODE BEGIN Header */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "cmsis_os.h"
-#include "usb_device.h"
+/*
+ * main.c
+ *
+ *      Author: Romain Dereu
+ */
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
-
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
+#include "main.h"
+#include "cmsis_os.h"
+#include "usb_device.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
-
-#include "memory.h"
+#include "memory_ui_state.h"
 #include "menu.h"
 #include "midi_tempo.h"
 #include "midi_modify.h"
-#include "saving.h"
+#include "memory_main.h"
 #include "settings.h"
 #include "utils.h"
 
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
@@ -74,16 +55,11 @@ const osThreadAttr_t display_update_attributes = {
 };
 /* USER CODE BEGIN PV */
 //Romagnetics code
-//structs containing the informaiton for each mode
-//Roro will be deleted once memory has been moved
-midi_tempo_data_struct midi_tempo_data;
-midi_modify_data_struct midi_modify_data;
-midi_transpose_data_struct midi_transpose_data;
-settings_data_struct settings_data;
-
 //midi receive
 midi_modify_circular_buffer midi_modify_buff = {0};
 uint8_t midi_uart_rx_byte;
+
+
 
 /* USER CODE END PV */
 
@@ -151,11 +127,16 @@ int main(void)
   screen_driver_Init();
 
 
-  load_settings();
-  screen_driver_SetContrast(settings_data.brightness);
+  save_load_from_flash();
+  uint8_t brightness = (uint8_t)save_get(SAVE_SETTINGS_BRIGHTNESS);
+  const uint8_t contrast_values[10] =
+      {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
+  uint8_t new_contrast = contrast_values[brightness];
+  screen_driver_SetContrast(new_contrast);
 
-  if(midi_tempo_data.currently_sending == 1){
-	  mt_start_stop(&htim2, &midi_tempo_data);
+
+  if(save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING) == 1){
+	  mt_start_stop(&htim2);
   }
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
@@ -593,7 +574,7 @@ void MediumTasks(void *argument)
 {
   /* USER CODE BEGIN MediumTasks */
 	//Old menu needs to be set up to a different value than current_menu to trigger drawing
-	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, settings_data.start_menu);
+	ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get(SAVE_SETTINGS_START_MENU));
 	ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET,99);
 
 	/* Infinite loop */
@@ -606,15 +587,15 @@ void MediumTasks(void *argument)
 
 	switch(current_menu) {
 		case MIDI_TEMPO:
-			midi_tempo_update_menu(&htim3, &htim4, &midi_tempo_data, display_updateHandle);
+			midi_tempo_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case MIDI_MODIFY:
-			midi_modify_update_menu(&htim3, &htim4, &midi_modify_data, display_updateHandle);
+			midi_modify_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case MIDI_TRANSPOSE:
-			midi_transpose_update_menu(&htim3, &htim4, &midi_transpose_data, display_updateHandle);
+			midi_transpose_update_menu(&htim3, &htim4, display_updateHandle);
 			break;
 
 		case SETTINGS:
@@ -622,7 +603,6 @@ void MediumTasks(void *argument)
 			break;
 
 		default:
-			// Optional: handle unknown menu case
 			break;
 	}
 
@@ -637,18 +617,18 @@ void MediumTasks(void *argument)
 		uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
 		 switch (current_menu) {
 		 	case MIDI_TEMPO:
-		 		midi_tempo_data.currently_sending = (midi_tempo_data.currently_sending == 0) ? 1 : 0;
-		 		mt_start_stop(&htim2, &midi_tempo_data);
+		 		save_modify_u8(SAVE_MIDI_TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
+		 		mt_start_stop(&htim2);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_TEMPO);
 		 		break;
 
 		 	case MIDI_MODIFY:
-		 		midi_modify_data.currently_sending = (midi_modify_data.currently_sending == 0) ? 1 : 0;
+		 		save_modify_u8(SAVE_MIDI_MODIFY_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_MODIFY);
 		 		break;
 
 		 	case MIDI_TRANSPOSE:
-		 		midi_transpose_data.currently_sending = (midi_transpose_data.currently_sending == 0) ? 1 : 0;
+		 		save_modify_u8(SAVE_TRANSPOSE_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
 		 		osThreadFlagsSet(display_updateHandle, FLAG_TRANSPOSE);
 		 		break;
 
@@ -687,19 +667,19 @@ void DisplayUpdate(void *argument)
 	  switch (current_menu) {
 	  	case MIDI_TEMPO:
 	  		if (displayFlags & FLAG_TEMPO) {
-	  			screen_update_midi_tempo(&midi_tempo_data);
+	  			screen_update_midi_tempo();
 	  		}
 	  		break;
 
 	  	case MIDI_MODIFY:
 	  		if (displayFlags & FLAG_MODIFY) {
-	  			screen_update_midi_modify(&midi_modify_data);
+	  			screen_update_midi_modify();
 	  		}
 	  		break;
 
 	  	case MIDI_TRANSPOSE:
 	  		if (displayFlags & FLAG_TRANSPOSE) {
-	  			screen_update_midi_transpose(&midi_transpose_data);
+	  			screen_update_midi_transpose();
 	  		}
 	  		break;
 
@@ -738,7 +718,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   //Romagnetics code
 
   if (htim->Instance == TIM2) {
-	  send_midi_tempo_out(midi_tempo_data.tempo_click_rate, midi_tempo_data.send_to_midi_out);
+	  uint8_t send_to_out     = save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT);
+	  uint32_t tempo_click_rate = save_get_u32(SAVE_MIDI_TEMPO_CLICK_RATE);
+	  send_midi_tempo_out(tempo_click_rate, send_to_out);
   }
 
 

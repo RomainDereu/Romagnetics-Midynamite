@@ -9,7 +9,7 @@
 #define SRC_UTILS_H_
 
 #include "stdio.h"
-#include "main.h"
+#include "memory_main.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 
@@ -50,6 +50,24 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
+
+
+void update_counter_32(TIM_HandleTypeDef *timer,
+                       save_field_t field,
+                       uint8_t menu_changed,
+                       uint8_t multiplier);
+
+void update_counter(TIM_HandleTypeDef *timer,
+                    save_field_t field,
+                    uint8_t menu_changed,
+                    uint8_t multiplier);
+
+
+
+
+
+
+//Roro the bottom two functions will be deleted after the refactoring
 void utils_counter_change_i32(TIM_HandleTypeDef * timer,
                               int32_t * data_to_change,
                               int32_t bottom_value,
@@ -65,12 +83,6 @@ void utils_counter_change(TIM_HandleTypeDef * timer,
 						   uint8_t menu_changed,
 						   uint8_t multiplier,
 						   uint8_t wrap_or_not);
-
-void utils_change_settings(uint8_t * data_to_change, int8_t bottom_value, int32_t max_value);
-
-
-
-
 
 
 void all_notes_off(UART_HandleTypeDef *huart);
@@ -101,6 +113,8 @@ void select_current_state(uint8_t *select_states,
 uint8_t menu_check_for_updates(uint8_t menu_changed, const void *old_data,
 		                       const void *data_ptr, size_t sz,
 							   uint8_t *old_select, uint8_t *current_select);
+
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
 
 
 #endif /* SRC_UTILS_H_ */
