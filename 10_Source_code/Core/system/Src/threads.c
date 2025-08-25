@@ -8,7 +8,6 @@
 #include "midi_modify.h"
 #include "settings.h"
 #include "utils.h"
-#include "main.h"
 
 // -------------------------
 // Internal state
