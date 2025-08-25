@@ -179,7 +179,7 @@ HAL_StatusTypeDef store_settings(save_struct *data);
 
 // Getters return int32_t so they can return SAVE_STATE_BUSY
 int32_t save_get_u32(save_field_t field);
-int32_t save_get(save_field_t field);
+uint8_t save_get(save_field_t field);
 
 // Setters / modifiers
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set);

@@ -138,21 +138,42 @@ static void save_init_field_pointers(void) {
 // ---------------------
 // Generic getters (BUSY-safe)
 // ---------------------
+// Small bounded wait helper used by getters (non-blocking feel)
+static inline void save_busy_wait_short(void) {
+    // ~ a few hundred no-ops; tweak if needed
+    volatile int spin = 200;
+    while (spin--) { /* no-op */ }
+}
+
 int32_t save_get_u32(save_field_t field) {
-    if (save_busy) return SAVE_STATE_BUSY;
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     int32_t *p = u32_fields[field];
     if (!p) return 0;
+
+    // Try a few quick waits for ongoing write to finish
+    for (int i = 0; i < 5; ++i) {
+        if (!save_busy) return *p;     // fast path
+        save_busy_wait_short();        // short backoff
+    }
+
+    // Best-effort read (32-bit aligned writes on Cortex-M are atomic)
     return *p;
 }
 
 uint8_t save_get(save_field_t field) {
-    if (save_busy) return SAVE_U8_BUSY;                 // <-- u8 busy
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     uint8_t *p = u8_fields[field];
     if (!p) return 0;
+
+    for (int i = 0; i < 5; ++i) {
+        if (!save_busy) return *p;
+        save_busy_wait_short();
+    }
+
+    // Best-effort read (8-bit writes are atomic on Cortex-M)
     return *p;
 }
+
 
 
 
