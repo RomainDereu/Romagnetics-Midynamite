@@ -182,18 +182,7 @@ void settings_update_menu(){
 		case SETT_BRIGHTNESS:
 			   // Let the helper update the stored index in memory
 			    update_value(SAVE_SETTINGS_BRIGHTNESS, 1);
-
-			    // Read back the updated index and apply to hardware
-			    uint8_t idx2 = save_get(SAVE_SETTINGS_BRIGHTNESS);
-			    if (idx2 > 9) idx2 = 9;
-
-			    static const uint8_t contrast_values[10] =
-			        {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
-			    uint8_t new_contrast = contrast_values[idx2];
-
-			    if (old_settings_data.brightness != idx2) {
-			        screen_driver_SetContrast(new_contrast);
-			    }
+			    screen_driver_UpdateContrast();
 			    break;
 		case SETT_MIDI_THRU:
 			update_value(SAVE_SETTINGS_MIDI_THRU, 1);
