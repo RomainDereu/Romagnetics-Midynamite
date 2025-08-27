@@ -62,7 +62,7 @@ static const Message _message = {
     .dorian = "Dorian",
     .phrygian = "Phrygian",
     .lydian = "Lydian",
-    .mixolydian = "Mixo",
+    .mixolydian = "Mixolydian",
     .mixo = "Mixo",
     .aeolian = "Aeolian",
     .locrian = "Locrian",
@@ -145,6 +145,10 @@ static const Message _message = {
         "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
     },
 
+	.one_to_sixteen  = {
+        "1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"
+    },
+
 	//Error Handlers
 	.error = "ERROR",
 
@@ -154,7 +158,7 @@ static const Message _message = {
         .change_fixed = { "Change", "Fixed" },
         .midi_outs = {"Out 1", "Out 2", "Out 1+2", "Split"},
         .transpose_modes = { "Pitch Shift", "Scale" },
-        .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixolydian", "Aeolian", "Locrian" },
+        .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixo.", "Aeolian", "Locrian" },
         .intervals = {
             "Oct Dn", "6th Dn", "5th Dn", "4th Dn", "3rd Dn",
             "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"

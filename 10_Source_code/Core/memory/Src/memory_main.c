@@ -102,8 +102,8 @@ static void save_init_field_pointers(void) {
     u32_fields[SAVE_MIDI_TEMPO_CLICK_RATE]           = &save_data.midi_tempo_data.tempo_click_rate;
     u32_fields[SAVE_MIDI_MODIFY_VELOCITY_PLUS_MINUS] = &save_data.midi_modify_data.velocity_plus_minus;
     u32_fields[SAVE_TRANSPOSE_SHIFT_VALUE]           = &save_data.midi_transpose_data.midi_shift_value;
-    u32_fields[SAVE_SETTINGS_FILTERED_CHANNELS]      = (int32_t*)&save_data.settings_data.filtered_channels;
-    u32_fields[SAVE_DATA_VALIDITY]                   = (int32_t*)&save_data.check_data_validity;
+    u32_fields[SAVE_SETTINGS_FILTERED_CHANNELS]      = &save_data.settings_data.filtered_channels;
+    u32_fields[SAVE_DATA_VALIDITY]                   = &save_data.check_data_validity;
 
     // u8 fields
     u8_fields[SAVE_MIDI_TEMPO_CURRENTLY_SENDING]   = &save_data.midi_tempo_data.currently_sending;

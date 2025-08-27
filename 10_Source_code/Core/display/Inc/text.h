@@ -133,6 +133,8 @@ typedef struct {
     // Note names
     const char *midi_note_names[128];
     const char *twelve_notes_names[12];
+    const char *one_to_sixteen[16];
+
 
 
     // All selectable dropdowns and grouped options

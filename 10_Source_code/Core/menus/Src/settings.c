@@ -70,30 +70,32 @@ static void screen_update_global_settings2(uint8_t *select_states){
 	screen_driver_underline_WriteString(message->choices.off_on[save_get(SAVE_SETTINGS_CHANNEL_FILTER)], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
 }
 
-static void screen_update_midi_filter(uint8_t *select_states){
+
+
+
+
+static void screen_update_midi_filter(uint8_t *select_states)
+{
     menu_display(&Font_6x8, message->MIDI_Filter);
-    screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+    screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel,
+                                        Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
-    // Read the 32-bit mask safely
     uint32_t mask = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
-    if (mask == SAVE_STATE_BUSY) mask = 0;  // avoid rendering everything as 'X' on contention
-
     for (uint8_t i = 0; i < 16; i++) {
-        char label[3];  // "16" + '\0' fits
+        const char *label = (mask & ((uint32_t)1 << i)) ? "X" : message->one_to_sixteen[i];
 
-        // Bit = 1 → blocked → show "X". Bit = 0 → allowed → show number
-        if ((mask & (1UL << i)) != 0UL) {
-            strcpy(label, "X");
-        } else {
-            snprintf(label, sizeof(label), "%u", (unsigned)(i + 1));
-        }
-
-        uint8_t x = 5 + 15 * (i % 8);
+        uint8_t x = (uint8_t)(5 + 15 * (i % 8));
         uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
 
-        screen_driver_underline_WriteString(label, Font_6x8, White, x, y, select_states[FT1 + i]);
+        uint8_t underline = 0;
+        uint8_t idx = (uint8_t)(FT1 + i);
+        if (idx < AMOUNT_OF_SETTINGS_ITEMS) underline = select_states[idx] ? 1 : 0;
+
+        screen_driver_underline_WriteString(label, Font_6x8, White, x, y, underline);
     }
 }
+
+
 
 
 
@@ -209,6 +211,8 @@ void settings_update_menu(){
 		case FT13: case FT14: case FT15: case FT16: {
 		    uint8_t channel_index = (uint8_t)(current_select - FT1);
 		    update_channel_filter(SAVE_SETTINGS_FILTERED_CHANNELS, channel_index);
+
+
 		    break;
 		}
 	}
