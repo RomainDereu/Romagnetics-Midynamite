@@ -58,8 +58,15 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 /* ---------------------------
- * Encoder helpers (refactored)
+ * Encoder helpers
  * --------------------------- */
+
+static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
+    int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+    if (delta <= -ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return -1; }
+    if (delta >=  ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return +1; }
+    return 0; // no step
+}
 
 void update_select(uint8_t *value,
                    int32_t  min,
@@ -75,21 +82,16 @@ void update_select(uint8_t *value,
         active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
-    for (;;) {
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+    int8_t step = encoder_read_step(timer);
+    if (step == 0) return;
 
-        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
-        int32_t next = (int32_t)(*value) + step * active_mult;
-        next = wrap_or_clamp_i32(next, min, max, wrap);
-        *value = (uint8_t)next;
-
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-    }
+    int32_t next = (int32_t)(*value) + step * active_mult;
+    next = wrap_or_clamp_i32(next, min, max, wrap);
+    *value = (uint8_t)next;
 }
 
-void update_value(save_field_t field,
-                  uint8_t      multiplier)
+
+void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
 
@@ -99,28 +101,39 @@ void update_value(save_field_t field,
         active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
-    for (;;) {
-        int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-        if (delta < ENCODER_THRESHOLD && delta > -ENCODER_THRESHOLD) break;
+    int8_t step = encoder_read_step(timer);
+    if (step == 0) return;
 
-        int32_t step = (delta >= ENCODER_THRESHOLD) ? +1 : -1;
+    // Try u32 field first
+    int32_t cur32  = (int32_t)save_get_u32(field);
+    int32_t next32 = cur32 + step * active_mult;
+    if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) return;
 
-        int32_t cur32  = (int32_t)save_get_u32(field);
-        int32_t next32 = cur32 + step * active_mult;
-
-        if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) {
-            __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-            continue;
-        }
-
-        uint8_t cur8 = save_get(field);
-
-        int32_t next8 = (int32_t)cur8 + step * active_mult;
-        (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
-
-        __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER);
-    }
+    // Fallback to u8
+    uint8_t cur8  = save_get(field);
+    int32_t next8 = (int32_t)cur8 + step * active_mult;
+    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
 }
+
+
+
+//Specific logic for the channel_filter
+// Toggle one channel bit per call when a detent is seen
+void update_channel_filter(save_field_t field, uint8_t bit_index)
+{
+    if (bit_index > 15) return;
+
+    TIM_HandleTypeDef *timer4 = &htim4;
+    int8_t step = encoder_read_step(timer4);
+    if (step == 0) return;
+
+    uint32_t mask = (uint32_t)save_get_u32(field);
+    mask ^= (1UL << bit_index);  // toggle exactly this bit
+    (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+}
+
+
+
 
 
 
@@ -246,25 +259,23 @@ void select_current_state(uint8_t *select_states,
                           uint8_t  amount,
                           uint8_t  current_select)
 {
-    for (uint8_t i = 0; i < amount; i++) {
-        select_states[i] = 0;
+    for (uint8_t i = 0; i < amount; i++) select_states[i] = 0;
+    if (current_select < amount) {
+        select_states[current_select] = 1;
     }
-    select_states[current_select] = 1;
 }
 
 //Checks for updates to a menu and refreshes the screen if needed
 uint8_t menu_check_for_updates(
     const void *old_data,
     const void *data_ptr,
-    size_t    sz,
-    uint8_t   *old_select,
-    uint8_t   *current_select)
+    size_t      sz,
+    uint8_t    *old_select,
+    uint8_t    *current_select)
 {
-    uint8_t changed =
-        ((*old_select != *current_select)
-       || memcmp(old_data, data_ptr, sz) != 0
-        );
-    return changed;
+    const uint8_t sel_changed  = (*old_select != *current_select);
+    const uint8_t data_changed = (memcmp(old_data, data_ptr, sz) != 0);
+    return (sel_changed || data_changed);
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap

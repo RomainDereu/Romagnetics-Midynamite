@@ -112,5 +112,6 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
 }
 
 
-
+void    ui_state_note_select_changed(void);
+uint8_t ui_state_toggle_select_changed(void);
 

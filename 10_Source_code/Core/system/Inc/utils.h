@@ -50,8 +50,7 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
-void update_value(save_field_t field,
-                  uint8_t multiplier);
+void update_value(save_field_t field, uint8_t multiplier);
 
 
 
@@ -60,6 +59,8 @@ void update_select(uint8_t *value,
                    int32_t max,
                    uint8_t multiplier,
                    uint8_t wrap);
+
+void update_channel_filter(save_field_t field, uint8_t bit_index);
 
 
 void all_notes_off(UART_HandleTypeDef *huart);

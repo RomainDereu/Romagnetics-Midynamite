@@ -56,7 +56,7 @@ typedef struct {
 
 static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SAVE_MIDI_TEMPO_CURRENT]            = {  20,       300, NO_WRAP, 120},
-    [SAVE_MIDI_TEMPO_CLICK_RATE]         = {   1,      1000, NO_WRAP,  24},
+    [SAVE_MIDI_TEMPO_CLICK_RATE]         = {   1,     50000, NO_WRAP,  24},
     [SAVE_MIDI_TEMPO_CURRENTLY_SENDING]  = {   0,         1, WRAP,     0},
     [SAVE_MIDI_TEMPO_SEND_TO_OUT]        = {   0,         1, WRAP,     0},
 

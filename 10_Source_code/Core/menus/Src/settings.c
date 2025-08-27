@@ -158,31 +158,10 @@ static void saving_settings_ui(){
 
 
 
-static void midi_filter_update_menu(uint32_t *filtered_channels,
-                                    uint8_t * current_select)
-{
-    uint8_t channel_index = (uint8_t)(*current_select - FT1);
-    uint8_t bit_value = (uint8_t)((*filtered_channels >> channel_index) & 1U);
-
-    update_select(&bit_value, 0, 1, 1, WRAP);
-
-    if (bit_value)
-        *filtered_channels |=  (uint32_t)(1UL << channel_index);
-    else
-        *filtered_channels &= ~(uint32_t)(1UL << channel_index);
-}
-
-
-
-
-
 void settings_update_menu(){
 
 	settings_data_struct old_settings_data = save_snapshot_settings();
-
-
 	static uint8_t old_select = 0;
-
 	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
 	update_select(&current_select, 0, AMOUNT_OF_SETTINGS_ITEMS - 1, 1, WRAP);
 	ui_state_modify(UI_SETTINGS_SELECT, UI_MODIFY_SET, current_select);
@@ -228,12 +207,8 @@ void settings_update_menu(){
 		case FT5: case FT6: case FT7: case FT8:
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
-		    uint32_t filtered_channels = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
-		    if (filtered_channels == SAVE_STATE_BUSY) {
-		        break;
-		    }
-		    midi_filter_update_menu(&filtered_channels, &current_select);
-		    save_modify_u32(SAVE_SETTINGS_FILTERED_CHANNELS, SAVE_MODIFY_SET, filtered_channels);
+		    uint8_t channel_index = (uint8_t)(current_select - FT1);
+		    update_channel_filter(SAVE_SETTINGS_FILTERED_CHANNELS, channel_index);
 		    break;
 		}
 	}

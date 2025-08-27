@@ -82,6 +82,7 @@ int main(void)
   screen_driver_Init();
 
   save_load_from_flash();
+
   uint8_t brightness = (uint8_t)save_get(SAVE_SETTINGS_BRIGHTNESS);
   const uint8_t contrast_values[10] =
       {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
