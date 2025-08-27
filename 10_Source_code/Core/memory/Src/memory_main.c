@@ -218,9 +218,25 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     int32_t v = (int32_t)(*u8_fields[field]);
 
     switch (op) {
-        case SAVE_MODIFY_INCREMENT: v += 1; break;
-        case SAVE_MODIFY_SET:       v  = (int32_t)value_if_set; break;
-        default: save_unlock(); return 0;
+        case SAVE_MODIFY_SET: {
+            int32_t desired = (int32_t)value_if_set;
+
+            if (!lim.wrap) {
+                if (desired > lim.max && desired >= 128) {v = lim.min;}
+                else if (desired < lim.min) {v = lim.min;}
+                else {v = desired;}
+            }
+            else {v = desired;}
+            break;
+        }
+
+        case SAVE_MODIFY_INCREMENT:
+            v += 1;
+            break;
+
+        default:
+            save_unlock();
+            return 0;
     }
 
     v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
@@ -229,6 +245,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     save_unlock();
     return 1;
 }
+
 
 // ---------------------
 // Load / store from flash
