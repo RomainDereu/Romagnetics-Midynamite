@@ -52,27 +52,9 @@ static uint8_t*  u8_fields[SAVE_FIELD_COUNT] = {0};
 
 typedef void (*save_update_fn_t)(save_field_t field, uint8_t arg);
 
-void update_value(save_field_t field, uint8_t multiplier);
-
-
-
-
-
-
 // ---------------------
 // Limits table
 // ---------------------
-typedef struct {
-    int32_t min;
-    int32_t max;
-    uint8_t wrap;   // 0 = clamp, 1 = wrap
-    int32_t def;    // DEFAULT value for this field
-
-    save_update_fn_t handler;     // e.g., update_value or ui_noop_update
-    uint8_t          handler_arg;
-
-    ui_group_t       ui_group;
-} menu_items_parameters_t;
 
 
 #ifdef UNIT_TEST

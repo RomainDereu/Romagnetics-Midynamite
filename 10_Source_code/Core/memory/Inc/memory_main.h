@@ -12,9 +12,10 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
 
-#ifdef UNIT_TEST
-extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
-#endif
+// ---------------------
+// menu parameters visible to c and tests
+// ---------------------
+
 
 // ---------------------
 // MIDI Tempo Data
@@ -162,6 +163,17 @@ typedef enum {
     SAVE_FIELD_COUNT
 } save_field_t;
 
+typedef struct {
+    int32_t min;
+    int32_t max;
+    uint8_t wrap;   // 0 = clamp, 1 = wrap
+    int32_t def;
+
+    void (*handler)(save_field_t field, uint8_t arg);
+    uint8_t handler_arg;
+    ui_group_t ui_group;
+} menu_items_parameters_t;
+
 // (Your encoder constants still live here if you need them across modules)
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
@@ -232,6 +244,11 @@ void memory_init_defaults(void);
 void memory_overwrite_modify(const midi_modify_data_struct *src);
 
 void memory_set_midi_thru(uint8_t v);
+
+
+extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
+
+
 #endif
 
 #endif /* MEMORY_SAVE_H_ */

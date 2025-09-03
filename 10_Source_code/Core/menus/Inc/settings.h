@@ -11,6 +11,8 @@
 #include "cmsis_os.h"
 #include "main.h"
 
+// Used for tests
+uint8_t get_settings_items_count(void);
 
 void screen_update_settings();
 void settings_update_menu();

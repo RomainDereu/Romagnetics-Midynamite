@@ -35,7 +35,7 @@ extern const Message *message;
 
 
 
-static uint8_t get_settings_items_count(void) {
+uint8_t get_settings_items_count(void) {
     return build_select_states(UI_GROUP_SETTINGS, 0, NULL, 0) + 1; // +1 for "About"
 }
 
