@@ -154,7 +154,7 @@ static void screen_update_velocity_change(uint8_t * select_states){
     screen_driver_SetCursor_WriteString(message->change_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
     int8_t delta = (int8_t)(int32_t)save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
-    char txt[6]; sprintf(txt, "%+d", delta);
+    static char txt[6]; sprintf(txt, "%+d", delta);
     screen_driver_underline_WriteString(txt, Font_6x8, White, 100, BOTTOM_LINE_VERT, select_states[row]);
 }
 
@@ -162,7 +162,7 @@ static void screen_update_velocity_fixed(uint8_t * select_states){
     screen_driver_SetCursor_WriteString(message->fixed_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
     uint8_t v = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
-    char txt[6]; sprintf(txt, "%u", v);
+    static char txt[6]; sprintf(txt, "%u", v);
     screen_driver_underline_WriteString(txt, Font_6x8, White, 100, LINE_4_VERT+3, select_states[row]);
 }
 
