@@ -82,8 +82,8 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,     NO_WRAP,   2,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
 	[MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,    NO_WRAP,  60,   update_value   ,  12,     UI_GROUP_MODIFY_SPLIT },
 
-	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,      UI_GROUP_MODIFY_BOTH },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,      UI_GROUP_MODIFY_BOTH },
+	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,     UI_GROUP_MODIFY_BOTH },
+    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,     UI_GROUP_MODIFY_BOTH },
 
 	[MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
 
@@ -102,7 +102,7 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [SETTINGS_BRIGHTNESS]                 = {    0,   9,      NO_WRAP,   0,   update_contrast,  1,      UI_GROUP_SETTINGS },
     [SETTINGS_MIDI_THRU]                  = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
     [SETTINGS_USB_THRU]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,      WRAP,      0,   update_value,  1,UI_GROUP_SETTINGS },
+    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
     [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,  0,   update_channel_filter   ,  1,      UI_GROUP_SETTINGS },
 
 
@@ -113,59 +113,57 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 // UI functions
 // ---------------------
 
-static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
-    if (field_group == requested) return 1;
-    // Merge-in the shared group
-    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
-       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
-        return 1;
-    }
-    if (field_group == UI_GROUP_MODIFY_BOTH &&
-       (requested == UI_GROUP_MODIFY_CHANGE || requested == UI_GROUP_MODIFY_SPLIT)) {
-        return 1;
-    }
-
-    return 0;
+// How many rows are shown for each Modify page
+static inline uint8_t modify_row_count(ui_group_t group) {
+    return (group == UI_GROUP_MODIFY_CHANGE) ? 4 :
+           (group == UI_GROUP_MODIFY_SPLIT)  ? 5 : 0;
 }
 
-static inline int8_t modify_row_rank(ui_group_t group, int f) {
-    if (group != UI_GROUP_MODIFY_CHANGE && group != UI_GROUP_MODIFY_SPLIT) return -1;
+// Map (group, index) -> concrete save_field_t at runtime (last slot depends on vel type)
+static inline save_field_t modify_row_field(ui_group_t group, uint8_t index) {
+    const uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE); // 0=changed, 1=fixed
 
-    const uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE); // 0: CHANGED, 1: FIXED
-    const uint8_t is_change = (group == UI_GROUP_MODIFY_CHANGE);
-
-    switch (f) {
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1:  return is_change ? 0 : -1;
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2:  return is_change ? 1 : -1;
-
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1:    return is_change ? -1 : 0;
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2:    return is_change ? -1 : 1;
-        case MIDI_MODIFY_SPLIT_NOTE:              return is_change ? -1 : 2;
-
-        case MIDI_MODIFY_SEND_TO_MIDI_OUT:        return is_change ? 2 : 3;
-
-        case MIDI_MODIFY_VELOCITY_PLUS_MINUS:     return (vel_type == MIDI_MODIFY_CHANGED_VEL) ? (is_change ? 3 : 4) : -1;
-        case MIDI_MODIFY_VELOCITY_ABSOLUTE:       return (vel_type == MIDI_MODIFY_FIXED_VEL)   ? (is_change ? 3 : 4) : -1;
-
-        default: return -1;
+    if (group == UI_GROUP_MODIFY_CHANGE) {
+        switch (index) {
+            case 0: return MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1;
+            case 1: return MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2;
+            case 2: return MIDI_MODIFY_SEND_TO_MIDI_OUT;
+            case 3: return (vel_type == MIDI_MODIFY_CHANGED_VEL)
+                        ? MIDI_MODIFY_VELOCITY_PLUS_MINUS
+                        : MIDI_MODIFY_VELOCITY_ABSOLUTE;
+            default: return SAVE_FIELD_COUNT; // invalid
+        }
     }
+
+    if (group == UI_GROUP_MODIFY_SPLIT) {
+        switch (index) {
+            case 0: return MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1;
+            case 1: return MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2;
+            case 2: return MIDI_MODIFY_SPLIT_NOTE;
+            case 3: return MIDI_MODIFY_SEND_TO_MIDI_OUT;
+            case 4: return (vel_type == MIDI_MODIFY_CHANGED_VEL)
+                        ? MIDI_MODIFY_VELOCITY_PLUS_MINUS
+                        : MIDI_MODIFY_VELOCITY_ABSOLUTE;
+            default: return SAVE_FIELD_COUNT; // invalid
+        }
+    }
+
+    return SAVE_FIELD_COUNT;
 }
-
-
 
 void toggle_underline_items(ui_group_t group, uint8_t index) {
-    // Compact path for Modify: pick the field whose rank == index
-    if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
-        for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-            int8_t r = modify_row_rank(group, f);
-            if (r == index) {
-                const menu_items_parameters_t *p = &menu_items_parameters[f];
-                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
-                return;
-            }
-        }
-        return;
-    }
+	if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
+	    const uint8_t count = modify_row_count(group);
+	    if (index >= count) return;
+
+	    const save_field_t f = modify_row_field(group, index);
+	    if (f == SAVE_FIELD_COUNT) return;
+
+	    const menu_items_parameters_t *p = &menu_items_parameters[f];
+	    if (p->handler) p->handler(f, p->handler_arg);
+	    return;
+	}
+
 
     uint8_t seen = 0;
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
@@ -191,21 +189,44 @@ void toggle_underline_items(ui_group_t group, uint8_t index) {
 
 
 
+static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
+    if (field_group == requested) return 1;
+    // Merge-in the shared group
+    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
+       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
+        return 1;
+    }
+    if (field_group == UI_GROUP_MODIFY_BOTH &&
+       (requested == UI_GROUP_MODIFY_CHANGE || requested == UI_GROUP_MODIFY_SPLIT)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
 uint8_t build_select_states(ui_group_t group,
                             uint8_t current_select,
                             uint8_t *states,
                             uint8_t states_cap)
 {
-    if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
-        const uint8_t count = group == UI_GROUP_MODIFY_CHANGE ? 4 : 5;
-        if (states && states_cap) {
-            for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
-            if (current_select < count && current_select < states_cap) {
-                states[current_select] = 1;
-            }
-        }
-        return count;
-    }
+	if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
+	    const uint8_t count = modify_row_count(group);
+
+	    if (states && states_cap) {
+	        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
+	        if (current_select < count && current_select < states_cap) {
+	            states[current_select] = 1;
+	        }
+	    }
+	    return count;
+	}
+
     uint8_t count = 0;
     if (states && states_cap) {
         for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;

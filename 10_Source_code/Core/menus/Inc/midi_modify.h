@@ -20,13 +20,13 @@ typedef struct {
 
 
 //midi_modify_menu
-void screen_update_midi_modify();
 void midi_modify_update_menu();
+void screen_update_midi_modify();
 
 
 //midi transpose menu
-void screen_update_midi_transpose();
 void midi_transpose_update_menu();
+void screen_update_midi_transpose();
 
 
 //midi_modify_transform

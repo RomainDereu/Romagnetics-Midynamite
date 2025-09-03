@@ -25,14 +25,44 @@
 
 extern const Message * message;
 
+void midi_tempo_update_menu(){
+	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
+
+	static uint8_t old_select = 0;
+	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+
+    uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
+    update_select(&current_select, 0, count - 1, 1, WRAP);
+	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
+
+    toggle_underline_items(UI_GROUP_TEMPO, current_select);
+
+	uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
+	save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
+
+	midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
+	uint8_t tempo_has_changed = menu_check_for_updates( &old_midi_tempo_data,
+														&new_midi_tempo_data,
+														sizeof new_midi_tempo_data,
+														&current_select,
+														&old_select );
+
+    if (tempo_has_changed) {
+    	threads_display_notify(FLAG_TEMPO);
+    }
+    old_select  = current_select;
+}
+
 
 void screen_update_midi_tempo(){
 
 	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 
-	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
-	  (void)build_select_states(UI_GROUP_TEMPO, current_select,
-	                              select_states, AMOUNT_OF_TEMPO_ITEMS);
+      uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
+      if (count == 0) count = 1; // defensive for empty groups
+      uint8_t select_states[count];
+      for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
+      (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
 
    	  screen_driver_Fill(Black);
 	  //Menu
@@ -141,28 +171,4 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
     }
 }
 
-void midi_tempo_update_menu(){
-	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
 
-	static uint8_t old_select = 0;
-	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
-	update_select(&current_select, 0, 1, 1, WRAP);
-	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
-
-    toggle_underline_items(UI_GROUP_TEMPO, current_select);
-
-	uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
-	save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
-
-	midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
-	uint8_t tempo_has_changed = menu_check_for_updates( &old_midi_tempo_data,
-														&new_midi_tempo_data,
-														sizeof new_midi_tempo_data,
-														&current_select,
-														&old_select );
-
-    if (tempo_has_changed) {
-    	threads_display_notify(FLAG_TEMPO);
-    }
-    old_select  = current_select;
-}
