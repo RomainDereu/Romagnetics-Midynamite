@@ -23,34 +23,8 @@
 #include "utils.h"
 
 
-static void transpose_shift_build_select(uint8_t current_select)
-{
-    if (current_select == 0) {
-    	update_value(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE, 12);
-    } else {
-    	update_value(MIDI_TRANSPOSE_SEND_ORIGINAL, 1);
-    }
-}
 
-static void transpose_scaled_build_select(uint8_t current_select) {
-    switch (current_select) {
-    case 0:
-    	update_value(MIDI_TRANSPOSE_BASE_NOTE, 1);
-        break;
-    case 1:
-    	update_value(MIDI_TRANSPOSE_INTERVAL, 1);
-        break;
-    case 2:
-    	update_value(MIDI_TRANSPOSE_TRANSPOSE_SCALE, 1);
-        break;
-    case 3:
-    	update_value(MIDI_TRANSPOSE_SEND_ORIGINAL, 1);
-        break;
-    }
-}
-
-
-void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
+void midi_transpose_update_menu(){
 
 	midi_transpose_data_struct old_transpose_data = save_snapshot_transpose();
 
@@ -59,26 +33,20 @@ void midi_transpose_update_menu(osThreadId_t * display_updateHandle){
 	    }
 
 	static uint8_t old_select = 0;
-
 	uint8_t current_select = ui_state_get(UI_MIDI_TRANSPOSE_SELECT);
 	uint8_t transpose_type = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-    uint8_t amount_of_settings = (transpose_type == MIDI_TRANSPOSE_SCALED) ? 4 : 2;
 
-    update_select(&current_select, 0, amount_of_settings - 1, 1, WRAP);
+
+    ui_group_t group = (transpose_type == MIDI_TRANSPOSE_SCALED)
+                       ? UI_GROUP_TRANSPOSE_SCALED
+                       : UI_GROUP_TRANSPOSE_SHIFT;
+    uint8_t count = build_select_states(group, current_select, NULL, 0);
+    update_select(&current_select, 0, count - 1, 1, WRAP);
 	ui_state_modify(UI_MIDI_TRANSPOSE_SELECT, UI_MODIFY_SET , current_select);
 
 
-	if (transpose_type == MIDI_TRANSPOSE_SHIFT) {
-		transpose_shift_build_select(current_select);
-	} else {
-	    transpose_scaled_build_select(current_select);
-	}
+    toggle_underline_items(group, current_select);
 
-
-
-	#define AMOUNT_OF_STATES 4
-	uint8_t select_states[AMOUNT_OF_STATES] = {0};
-	select_current_state(select_states, AMOUNT_OF_STATES, current_select);
 	midi_transpose_data_struct new_transpose_data = save_snapshot_transpose();
 	if(menu_check_for_updates(&old_transpose_data,
 							  &new_transpose_data,
@@ -150,6 +118,12 @@ void screen_update_midi_transpose(){
 	menu_display(&Font_6x8, message->midi_transpose);
 
 	uint8_t transpose_type = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
+    ui_group_t group = (transpose_type == MIDI_TRANSPOSE_SCALED)
+                       ? UI_GROUP_TRANSPOSE_SCALED
+                       : UI_GROUP_TRANSPOSE_SHIFT;
+
+    // Build underline map to match handler ordering
+    (void)build_select_states(group, current_select, select_states, AMOUNT_OF_STATES);
 
 	if(transpose_type == MIDI_TRANSPOSE_SHIFT){
 		midi_transpose_shift_display(select_states);

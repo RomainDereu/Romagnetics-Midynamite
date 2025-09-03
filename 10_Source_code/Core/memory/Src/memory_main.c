@@ -15,7 +15,7 @@
 // Runtime save copy
 // ---------------------
 static save_struct save_data;
-static volatile uint8_t save_busy = 0;   // single definition
+static volatile uint8_t save_busy = 0;
 
 // ---------------------
 // Lock helpers
@@ -91,13 +91,12 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,       NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,       NO_WRAP,  64,   no_update   ,  0,      UI_GROUP_NONE },
     [MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-
     [MIDI_TRANSPOSE_TRANSPOSE_TYPE]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127,   127,       NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,        NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,         NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+	[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127, 127,         NO_WRAP,   0,   update_value, 12,      UI_GROUP_TRANSPOSE_SHIFT },
+    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,        NO_WRAP,   0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,         NO_WRAP,   0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,         WRAP,      0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,         WRAP,      0,   update_value,  1,      UI_GROUP_TRANSPOSE_BOTH },
     [MIDI_TRANSPOSE_CURRENTLY_SENDING]    = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
 
     [SETTINGS_START_MENU]                 = {    0,   3,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
@@ -108,27 +107,57 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [SETTINGS_CHANNEL_FILTER]             = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
     [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,     0,   no_update   ,  0,      UI_GROUP_NONE },
 
-    [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
+    [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
 };
 
 // ---------------------
 // UI functions
 // ---------------------
 
-void toggle_underline_items(uint8_t group, uint8_t index) {
+static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
+    if (field_group == requested) return 1;
+    // Merge-in the shared group
+    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
+       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
+        return 1;
+    }
+    return 0;
+}
+
+void toggle_underline_items(ui_group_t group, uint8_t index) {
     uint8_t seen = 0;
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        if (menu_items_parameters[f].ui_group == group) {
-            if (seen == index) {
-                const menu_items_parameters_t *p = &menu_items_parameters[f];
-                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
-                return;
-            }
-            ++seen;
+        const menu_items_parameters_t *p = &menu_items_parameters[f];
+        if (!ui_group_matches(group, p->ui_group)) continue;   // <-- use matcher
+        if (seen == index) {
+            if (p->handler) p->handler((save_field_t)f, p->handler_arg);
+            return;
+        }
+        ++seen;
+    }
+}
+
+uint8_t build_select_states(ui_group_t group,
+                            uint8_t current_select,
+                            uint8_t *states,
+                            uint8_t states_cap)
+{
+    uint8_t count = 0;
+    if (states && states_cap) {
+        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
+    }
+    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
+        if (ui_group_matches(group, menu_items_parameters[f].ui_group)) {  // <-- use matcher
+            ++count;
         }
     }
-    // index out of range: do nothing
+    if (states && states_cap && current_select < states_cap) {
+        states[current_select] = 1;
+    }
+    return count;
 }
+
+
 
 
 
@@ -142,7 +171,7 @@ static void save_init_field_pointers(void) {
     u32_fields[MIDI_MODIFY_VELOCITY_PLUS_MINUS]       = &save_data.midi_modify_data.velocity_plus_minus;
     u32_fields[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]       = &save_data.midi_transpose_data.midi_shift_value;
     u32_fields[SETTINGS_FILTERED_CHANNELS]            = &save_data.settings_data.filtered_channels;
-    u32_fields[SAVE_DATA_VALIDITY]                    = &save_data.check_data_validity;
+    u32_fields[SAVE_DATA_VALIDITY]                    = (int32_t*)&save_data.check_data_validity;
 
     // u8 fields
     u8_fields[MIDI_TEMPO_CURRENTLY_SENDING]           = &save_data.midi_tempo_data.currently_sending;
@@ -160,10 +189,10 @@ static void save_init_field_pointers(void) {
     u8_fields[MIDI_MODIFY_CURRENTLY_SENDING]          = &save_data.midi_modify_data.currently_sending;
 
     u8_fields[MIDI_TRANSPOSE_TRANSPOSE_TYPE]          = &save_data.midi_transpose_data.transpose_type;
-    u8_fields[MIDI_TRANSPOSE_SEND_ORIGINAL]           = &save_data.midi_transpose_data.send_original;
     u8_fields[MIDI_TRANSPOSE_BASE_NOTE]               = &save_data.midi_transpose_data.transpose_base_note;
     u8_fields[MIDI_TRANSPOSE_INTERVAL]                = &save_data.midi_transpose_data.transpose_interval;
     u8_fields[MIDI_TRANSPOSE_TRANSPOSE_SCALE]         = &save_data.midi_transpose_data.transpose_scale;
+    u8_fields[MIDI_TRANSPOSE_SEND_ORIGINAL]           = &save_data.midi_transpose_data.send_original;
     u8_fields[MIDI_TRANSPOSE_CURRENTLY_SENDING]       = &save_data.midi_transpose_data.currently_sending;
 
     u8_fields[SETTINGS_START_MENU]                    = &save_data.settings_data.start_menu;
@@ -380,10 +409,10 @@ static void save_set_field_default(save_struct *s, save_field_t f) {
         // --- midi_transpose_data ---
         case MIDI_TRANSPOSE_TRANSPOSE_TYPE:       s->midi_transpose_data.transpose_type = (uint8_t)d; break;
         case MIDI_TRANSPOSE_MIDI_SHIFT_VALUE:     s->midi_transpose_data.midi_shift_value = d; break;
-        case MIDI_TRANSPOSE_SEND_ORIGINAL:        s->midi_transpose_data.send_original = (uint8_t)d; break;
         case MIDI_TRANSPOSE_BASE_NOTE:            s->midi_transpose_data.transpose_base_note = (uint8_t)d; break;
         case MIDI_TRANSPOSE_INTERVAL:             s->midi_transpose_data.transpose_interval = (uint8_t)d; break;
         case MIDI_TRANSPOSE_TRANSPOSE_SCALE:      s->midi_transpose_data.transpose_scale = (uint8_t)d; break;
+        case MIDI_TRANSPOSE_SEND_ORIGINAL:        s->midi_transpose_data.send_original = (uint8_t)d; break;
         case MIDI_TRANSPOSE_CURRENTLY_SENDING:    s->midi_transpose_data.currently_sending = (uint8_t)d; break;
 
         // --- settings_data ---

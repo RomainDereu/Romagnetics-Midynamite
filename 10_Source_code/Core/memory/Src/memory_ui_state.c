@@ -19,7 +19,6 @@ typedef struct {
 static ui_state_t ui_state = {0};
 
 
-
 static int ui_state_try_lock(void) {
     if (ui_state_busy) {
         return 0; // already in use
@@ -56,8 +55,7 @@ uint8_t ui_state_get(ui_state_field_t field) {
 
 
 
-
-static uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
+uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
     if (!ui_state_try_lock()) {
         return 0; // busy
     }

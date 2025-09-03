@@ -73,7 +73,7 @@ typedef struct {
     midi_modify_data_struct    midi_modify_data;
     midi_transpose_data_struct midi_transpose_data;
     settings_data_struct       settings_data;
-    int32_t                   check_data_validity;
+    uint32_t                   check_data_validity;
 } save_struct;
 
 // ---------------------
@@ -82,8 +82,12 @@ typedef struct {
 typedef enum {
     UI_GROUP_TEMPO = 0,
     UI_GROUP_MODIFY,
+
     UI_GROUP_TRANSPOSE_SHIFT,
     UI_GROUP_TRANSPOSE_SCALED,
+	UI_GROUP_TRANSPOSE_BOTH,
+
+
     UI_GROUP_SETTINGS,
     UI_GROUP_NONE = 0xFF
 } ui_group_t;
@@ -133,10 +137,10 @@ typedef enum {
     // midi_transpose_data
     MIDI_TRANSPOSE_TRANSPOSE_TYPE,
     MIDI_TRANSPOSE_MIDI_SHIFT_VALUE,
-    MIDI_TRANSPOSE_SEND_ORIGINAL,
     MIDI_TRANSPOSE_BASE_NOTE,
     MIDI_TRANSPOSE_INTERVAL,
     MIDI_TRANSPOSE_TRANSPOSE_SCALE,
+    MIDI_TRANSPOSE_SEND_ORIGINAL,
     MIDI_TRANSPOSE_CURRENTLY_SENDING,
 
     // settings_data
@@ -187,8 +191,14 @@ typedef enum {
 // ---------------------
 // API
 // ---------------------
-void toggle_underline_items(uint8_t group, uint8_t index);
+void toggle_underline_items(ui_group_t group, uint8_t index);
 
+uint8_t build_select_states(ui_group_t group,
+                            uint8_t current_select,
+                            uint8_t *states,
+                            uint8_t states_cap);
+
+//Save functions
 void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(save_struct *data);
 

@@ -28,9 +28,11 @@ extern const Message * message;
 
 void screen_update_midi_tempo(){
 
-	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
 	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
-	  select_current_state(select_states, AMOUNT_OF_TEMPO_ITEMS, current_select);
+
+	  uint8_t select_states[AMOUNT_OF_TEMPO_ITEMS] = {0};
+	  (void)build_select_states(UI_GROUP_TEMPO, current_select,
+	                              select_states, AMOUNT_OF_TEMPO_ITEMS);
 
    	  screen_driver_Fill(Black);
 	  //Menu
