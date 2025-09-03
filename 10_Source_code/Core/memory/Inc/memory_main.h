@@ -12,6 +12,10 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
 
+#ifdef UNIT_TEST
+extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
+#endif
+
 // ---------------------
 // MIDI Tempo Data
 // ---------------------
