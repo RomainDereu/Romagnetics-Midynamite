@@ -128,17 +128,51 @@ static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_gr
     return 0;
 }
 
+static inline int8_t modify_row_rank(ui_group_t group, int f) {
+    if (group != UI_GROUP_MODIFY_CHANGE && group != UI_GROUP_MODIFY_SPLIT) return -1;
+
+    const uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE); // 0: CHANGED, 1: FIXED
+    const uint8_t is_change = (group == UI_GROUP_MODIFY_CHANGE);
+
+    switch (f) {
+        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1:  return is_change ? 0 : -1;
+        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2:  return is_change ? 1 : -1;
+
+        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1:    return is_change ? -1 : 0;
+        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2:    return is_change ? -1 : 1;
+        case MIDI_MODIFY_SPLIT_NOTE:              return is_change ? -1 : 2;
+
+        case MIDI_MODIFY_SEND_TO_MIDI_OUT:        return is_change ? 2 : 3;
+
+        case MIDI_MODIFY_VELOCITY_PLUS_MINUS:     return (vel_type == MIDI_MODIFY_CHANGED_VEL) ? (is_change ? 3 : 4) : -1;
+        case MIDI_MODIFY_VELOCITY_ABSOLUTE:       return (vel_type == MIDI_MODIFY_FIXED_VEL)   ? (is_change ? 3 : 4) : -1;
+
+        default: return -1;
+    }
+}
+
 
 
 void toggle_underline_items(ui_group_t group, uint8_t index) {
-    uint8_t seen = 0;
+    // Compact path for Modify: pick the field whose rank == index
+    if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
+        for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
+            int8_t r = modify_row_rank(group, f);
+            if (r == index) {
+                const menu_items_parameters_t *p = &menu_items_parameters[f];
+                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
+                return;
+            }
+        }
+        return;
+    }
 
+    uint8_t seen = 0;
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
         const menu_items_parameters_t *p = &menu_items_parameters[f];
         if (!ui_group_matches(group, p->ui_group)) continue;
 
         if (f == SETTINGS_FILTERED_CHANNELS) {
-            // Expanded to 16 slots
             if (index >= seen && index < seen + 16) {
                 uint8_t bit = index - seen;
                 update_channel_filter((save_field_t)f, bit);
@@ -156,13 +190,14 @@ void toggle_underline_items(ui_group_t group, uint8_t index) {
 }
 
 
+
 uint8_t build_select_states(ui_group_t group,
                             uint8_t current_select,
                             uint8_t *states,
                             uint8_t states_cap)
 {
     if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
-        const uint8_t count = (group == UI_GROUP_MODIFY_CHANGE) ? 4 : 5;
+        const uint8_t count = group == UI_GROUP_MODIFY_CHANGE ? 4 : 5;
         if (states && states_cap) {
             for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
             if (current_select < count && current_select < states_cap) {

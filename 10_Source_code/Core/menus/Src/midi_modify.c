@@ -23,95 +23,51 @@
 
 extern const Message * message;
 
-static void handle_modify_change(uint8_t current_select) {
-    switch (current_select) {
-      case 0:
-    	  update_value(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1, 1);
-        break;
-      case 1:
-    	  update_value(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2, 1);
-        break;
-      case 2:
-    	  update_value(MIDI_MODIFY_SEND_TO_MIDI_OUT, 1);
-        break;
-      case 3: {
-        uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE);
-        if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-        	update_value(MIDI_MODIFY_VELOCITY_PLUS_MINUS, 10);
-        } else {
-            update_value(MIDI_MODIFY_VELOCITY_ABSOLUTE, 10);
-        }
-        break;
-      }
-    }
-}
-
-static void handle_modify_split(uint8_t current_select) {
-    switch (current_select) {
-      case 0:
-    	update_value(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1, 1);
-        break;
-      case 1:
-    	update_value(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2, 1);
-        break;
-      case 2:
-    	update_value(MIDI_MODIFY_SPLIT_NOTE, 12);
-        break;
-      case 3:
-    	update_value(MIDI_MODIFY_SEND_TO_MIDI_OUT, 1);
-        break;
-      case 4: {
-        uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE);
-        if (vel_type == MIDI_MODIFY_CHANGED_VEL) {
-        	update_value(MIDI_MODIFY_VELOCITY_PLUS_MINUS, 10);
-        } else {
-        	update_value(MIDI_MODIFY_VELOCITY_ABSOLUTE, 10);
-        }
-        break;
-      }
-    }
-}
 
 // midi modify menu
-void midi_modify_update_menu()
+void midi_modify_update_menu(void)
 {
     midi_modify_data_struct old_modify_data = save_snapshot_modify();
     static uint8_t old_select = 0;
+
     uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-    uint8_t mode           = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-    uint8_t amount_of_settings = (mode == MIDI_MODIFY_CHANGE) ? 4 : 5;
-    update_select(&current_select, 0, amount_of_settings - 1, 1, WRAP);
+    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
+                                                    : UI_GROUP_MODIFY_SPLIT;
+
+    // Derive count from the table/rank (no hardcoded 4/5 needed elsewhere)
+    uint8_t count = build_select_states(group, current_select, NULL, 0);
+
+    update_select(&current_select, 0, count - 1, 1, WRAP);
     ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, current_select);
 
-    // Mode toggle: last row toggles velocity type, others toggle change/split
+    // Mode toggle: last row toggles velocity type, other rows toggle change/split
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        if (current_select < amount_of_settings - 1) {
+        if (current_select < count - 1) {
             save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
         } else {
             save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
         }
         ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, 0);
+
+        // Recompute group if mode changed
+        mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+        group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
+                                             : UI_GROUP_MODIFY_SPLIT;
     }
 
-    if (mode == MIDI_MODIFY_CHANGE) {
-        handle_modify_change(current_select);
-    } else {
-        handle_modify_split(current_select);
-    }
-
-
-    static uint8_t select_states[5] = {0};
-    select_current_state(select_states, amount_of_settings, current_select);
+    // Drive the selected row via the table handler (step sizes come from menu_items_parameters)
+    toggle_underline_items(group, current_select);
 
     midi_modify_data_struct new_modify_data = save_snapshot_modify();
-
     if (menu_check_for_updates(&old_modify_data,
                                &new_modify_data, sizeof new_modify_data,
                                &current_select, &old_select)) {
-    	threads_display_notify(FLAG_MODIFY);
+        threads_display_notify(FLAG_MODIFY);
     }
     old_select = current_select;
 }
+
 
 // -------- Display helpers (read from save_*, no struct param) --------
 
@@ -166,17 +122,21 @@ static void screen_update_velocity_fixed(uint8_t * select_states){
     screen_driver_underline_WriteString(txt, Font_6x8, White, 100, LINE_4_VERT+3, select_states[row]);
 }
 
-void screen_update_midi_modify(){
+void screen_update_midi_modify(void)
+{
     static uint8_t select_states[5] = {0};
+
     uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-    uint8_t amount_of_settings = (mode == MIDI_MODIFY_CHANGE) ? 4 : 5;
+    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
+                                                    : UI_GROUP_MODIFY_SPLIT;
+
     uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-    select_current_state(select_states, amount_of_settings, current_select);
+    (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);
     menu_display(&Font_6x8, message->midi_modify);
 
-    // Top: Channel
+    // Top: Channel rows
     if (mode == MIDI_MODIFY_CHANGE){
         screen_update_channel_change(select_states);
     } else {
@@ -185,7 +145,7 @@ void screen_update_midi_modify(){
 
     screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
 
-    // Bottom: Velocity
+    // Bottom: Velocity row (dynamic)
     uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE);
     if (vel_type == MIDI_MODIFY_CHANGED_VEL){
         screen_update_velocity_change(select_states);
@@ -199,3 +159,4 @@ void screen_update_midi_modify(){
 
     screen_driver_UpdateScreen();
 }
+
