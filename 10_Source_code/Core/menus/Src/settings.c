@@ -38,15 +38,15 @@ static void screen_update_global_settings1(uint8_t *select_states){
 		message->transpose,
 		message->settings,
 	};
-	screen_driver_underline_WriteString(start_menu_options[save_get(SAVE_SETTINGS_START_MENU)], Font_6x8, White, 70, LINE_1_VERT, select_states[SETT_START_MENU]);
+	screen_driver_underline_WriteString(start_menu_options[save_get(SETTINGS_START_MENU)], Font_6x8, White, 70, LINE_1_VERT, select_states[SETT_START_MENU]);
 
 	// Send to USB
 	screen_driver_SetCursor_WriteString(message->usb_midi, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.usb_receive_send[save_get(SAVE_SETTINGS_SEND_USB)], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_SEND_TO_USB]);
+	screen_driver_underline_WriteString(message->choices.usb_receive_send[save_get(SETTINGS_SEND_USB)], Font_6x8, White, 70, LINE_2_VERT, select_states[SETT_SEND_TO_USB]);
 
 	// Contrast
 	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	uint8_t idx = save_get(SAVE_SETTINGS_BRIGHTNESS);
+	uint8_t idx = save_get(SETTINGS_BRIGHTNESS);
 	if (idx > 9) idx = 9;
 	screen_driver_underline_WriteString(message->contrast_levels[idx],
 	                                    Font_6x8, White, 70, LINE_3_VERT,
@@ -59,15 +59,15 @@ static void screen_update_global_settings2(uint8_t *select_states){
 
 	// MIDI THRU
 	screen_driver_SetCursor_WriteString(message->MIDI_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SAVE_SETTINGS_MIDI_THRU)], Font_6x8, White, 80, LINE_1_VERT, select_states[SETT_MIDI_THRU]);
+	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_MIDI_THRU)], Font_6x8, White, 80, LINE_1_VERT, select_states[SETT_MIDI_THRU]);
 
 	// USB THRU
 	screen_driver_SetCursor_WriteString(message->USB_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SAVE_SETTINGS_USB_THRU)], Font_6x8, White, 80, LINE_2_VERT, select_states[SETT_USB_THRU]);
+	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_USB_THRU)], Font_6x8, White, 80, LINE_2_VERT, select_states[SETT_USB_THRU]);
 
 	// MIDI
 	screen_driver_SetCursor_WriteString(message->MIDI_Filter, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SAVE_SETTINGS_CHANNEL_FILTER)], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
+	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], Font_6x8, White, 80, LINE_3_VERT, select_states[CHANNEL_FILTER]);
 }
 
 
@@ -80,7 +80,7 @@ static void screen_update_midi_filter(uint8_t *select_states)
     screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel,
                                         Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
 
-    uint32_t mask = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
+    uint32_t mask = save_get_u32(SETTINGS_FILTERED_CHANNELS);
     for (uint8_t i = 0; i < 16; i++) {
         const char *label = (mask & ((uint32_t)1 << i))
                             ? "X"
@@ -175,26 +175,26 @@ void settings_update_menu(){
 	switch (current_select) {
 		// Global section
 		case SETT_START_MENU:
-			update_value(SAVE_SETTINGS_START_MENU, 1);
+			update_value(SETTINGS_START_MENU, 1);
 			break;
 
 		case SETT_SEND_TO_USB:
-			update_value(SAVE_SETTINGS_SEND_USB, 1);
+			update_value(SETTINGS_SEND_USB, 1);
 			break;
 
 		case SETT_BRIGHTNESS:
 			   // Let the helper update the stored index in memory
-			    update_value(SAVE_SETTINGS_BRIGHTNESS, 1);
+			    update_value(SETTINGS_BRIGHTNESS, 1);
 			    screen_driver_UpdateContrast();
 			    break;
 		case SETT_MIDI_THRU:
-			update_value(SAVE_SETTINGS_MIDI_THRU, 1);
+			update_value(SETTINGS_MIDI_THRU, 1);
 			break;
 		case SETT_USB_THRU:
-			update_value(SAVE_SETTINGS_USB_THRU, 1);
+			update_value(SETTINGS_USB_THRU, 1);
 			break;
 		case CHANNEL_FILTER:
-			update_value(SAVE_SETTINGS_CHANNEL_FILTER, 1);
+			update_value(SETTINGS_CHANNEL_FILTER, 1);
 			break;
 
 		case FT1: case FT2: case FT3: case FT4:
@@ -202,7 +202,7 @@ void settings_update_menu(){
 		case FT9: case FT10: case FT11: case FT12:
 		case FT13: case FT14: case FT15: case FT16: {
 		    uint8_t channel_index = (uint8_t)(current_select - FT1);
-		    update_channel_filter(SAVE_SETTINGS_FILTERED_CHANNELS, channel_index);
+		    update_channel_filter(SETTINGS_FILTERED_CHANNELS, channel_index);
 		    break;
 		}
 	}

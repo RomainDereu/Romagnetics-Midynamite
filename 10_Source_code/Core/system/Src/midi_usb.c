@@ -14,7 +14,7 @@ extern USBD_HandleTypeDef hUsbDeviceFS;
 void send_usb_midi_message(uint8_t *midi_message, uint8_t length) {
     if (USBD_MIDI_GetState(&hUsbDeviceFS) != MIDI_IDLE) return;
 
-    if(save_get(SAVE_SETTINGS_SEND_USB) == USB_MIDI_SEND){
+    if(save_get(SETTINGS_SEND_USB) == USB_MIDI_SEND){
 
 		uint8_t cin;
 		uint8_t status = midi_message[0];

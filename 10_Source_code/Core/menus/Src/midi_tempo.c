@@ -43,7 +43,7 @@ void screen_update_midi_tempo(){
  	  //Tempo
 	  char tempo_print[4];
 	  snprintf(tempo_print, sizeof tempo_print, "%lu",
-	           (unsigned long)save_get_u32(SAVE_MIDI_TEMPO_CURRENT));
+	           (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
 	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[TEMPO_PRINT]);
 	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 48);
 
@@ -52,7 +52,7 @@ void screen_update_midi_tempo(){
 	  //Send to Midi Out and / or Out 2
       screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
       char message_midi_out[10];
-      switch (save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT)) {
+      switch (save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT)) {
         case MIDI_OUT_1:
           strcpy(message_midi_out, message->midi_channel_1);
           break;
@@ -75,7 +75,7 @@ void screen_update_midi_tempo(){
 
       //Stop/Sending status
       screen_driver_SetCursor(15, 42);
-      uint8_t currently_sending = save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
+      uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
 
       if(currently_sending == 0){
     	  screen_driver_WriteString(message->off, Font_11x18 , White);
@@ -110,10 +110,10 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
 	uint8_t clock_stop  = 0xfC;
 
 	static UART_HandleTypeDef *UART_list_tempo[2];
-	uint8_t send_out_to = save_get(SAVE_MIDI_TEMPO_SEND_TO_OUT);
+	uint8_t send_out_to = save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT);
 	list_of_UART_to_send_to(send_out_to, UART_list_tempo);
 
-	uint8_t clock_sending = save_get(SAVE_MIDI_TEMPO_CURRENTLY_SENDING);
+	uint8_t clock_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
 
     // Stop clock
     if (clock_sending == 0) {
@@ -151,17 +151,17 @@ void midi_tempo_update_menu(){
 
 	switch (current_select) {
 		case 0:
-			update_value(SAVE_MIDI_TEMPO_CURRENT, 10);
+			update_value(MIDI_TEMPO_CURRENT_TEMPO, 10);
 			break;
 		case 1:
-			update_value(SAVE_MIDI_TEMPO_SEND_TO_OUT, 1);
+			update_value(MIDI_TEMPO_SEND_TO_MIDI_OUT, 1);
 			break;
 	}
 
 
 
-	uint32_t new_tempo = save_get_u32(SAVE_MIDI_TEMPO_CURRENT);
-	save_modify_u32(SAVE_MIDI_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
+	uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
+	save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
 
 	midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
 	uint8_t tempo_has_changed = menu_check_for_updates( &old_midi_tempo_data,

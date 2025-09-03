@@ -11,7 +11,7 @@
 
 
 #include "screen_driver.h"
-#include "memory_main.h" //For SAVE_SETTINGS_BRIGHTNESS
+#include "memory_main.h" //For SETTINGS_BRIGHTNESS
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>  // For memcpy
@@ -638,7 +638,7 @@ void screen_driver_SetContrast(const uint8_t value) {
 }
 
 void screen_driver_UpdateContrast(){
-	  uint8_t brightness = (uint8_t)save_get(SAVE_SETTINGS_BRIGHTNESS);
+	  uint8_t brightness = (uint8_t)save_get(SETTINGS_BRIGHTNESS);
 	  const uint8_t contrast_values[10] =
 	      {0x39,0x53,0x6D,0x87,0xA1,0xBB,0xD5,0xEF,0xF9,0xFF};
 	  uint8_t new_contrast = contrast_values[brightness];
