@@ -62,7 +62,9 @@ void update_select(uint8_t *value,
                    uint8_t multiplier,
                    uint8_t wrap);
 
+void update_contrast(save_field_t f, uint8_t step);
 void update_channel_filter(save_field_t field, uint8_t bit_index);
+
 
 
 void all_notes_off(UART_HandleTypeDef *huart);

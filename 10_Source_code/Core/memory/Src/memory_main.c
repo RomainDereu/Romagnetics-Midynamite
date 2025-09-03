@@ -11,6 +11,7 @@
 #include "stm32f4xx_hal.h"
 #include "utils.h"
 
+
 // ---------------------
 // Runtime save copy
 // ---------------------
@@ -75,37 +76,38 @@ typedef struct {
 
 static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     //                                         min    max         wrap     def    handler handler_arg   ui_group
-    [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,       NO_WRAP, 120,   update_value, 10,      UI_GROUP_TEMPO },
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,     NO_WRAP,  24,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {    0,   2,         WRAP,      0,   update_value,  1,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,    NO_WRAP, 120,   update_value   , 10,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,  NO_WRAP,  24,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {    0,   2,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TEMPO },
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]         = {    0,   1,         WRAP,      1,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_VELOCITY_TYPE]           = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]  = {    1,   16,        NO_WRAP,   1,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]  = {    0,   16,        NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,       NO_WRAP,  60,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]    = {    1,   16,        NO_WRAP,   1,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,        NO_WRAP,   2,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,       NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,       NO_WRAP,  64,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-	[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127, 127,         NO_WRAP,   0,   update_value, 12,      UI_GROUP_TRANSPOSE_SHIFT },
-    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,        NO_WRAP,   0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,         NO_WRAP,   0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,         WRAP,      0,   update_value,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,         WRAP,      0,   update_value,  1,      UI_GROUP_TRANSPOSE_BOTH },
-    [MIDI_TRANSPOSE_CURRENTLY_SENDING]    = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_CHANGE_OR_SPLIT]         = {    0,   1,      WRAP,      1,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_TYPE]           = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]  = {    1,   16,     NO_WRAP,   1,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]  = {    0,   16,     NO_WRAP,   0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,    NO_WRAP,  60,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]    = {    1,   16,     NO_WRAP,   1,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,     NO_WRAP,   2,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
 
-    [SETTINGS_START_MENU]                 = {    0,   3,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_SEND_USB]                   = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_BRIGHTNESS]                 = {    0,   9,         NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_MIDI_THRU]                  = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_USB_THRU]                   = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
-    [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,     0,   no_update   ,  0,      UI_GROUP_NONE },
+	[MIDI_TRANSPOSE_TRANSPOSE_TYPE]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+	[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127, 127,      NO_WRAP,   0,   update_value   , 12,      UI_GROUP_TRANSPOSE_SHIFT },
+    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,     NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,      NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
+    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_BOTH },
+    [MIDI_TRANSPOSE_CURRENTLY_SENDING]    = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+
+    [SETTINGS_START_MENU]                 = {    0,   3,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_SEND_USB]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_BRIGHTNESS]                 = {    0,   9,      NO_WRAP,   0,   update_contrast,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_MIDI_THRU]                  = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_USB_THRU]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,      WRAP,      0,   update_value,  1,UI_GROUP_SETTINGS },
+    [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,  0,   update_channel_filter   ,  1,      UI_GROUP_SETTINGS },
 
     [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
 };
@@ -124,18 +126,33 @@ static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_gr
     return 0;
 }
 
+
+
 void toggle_underline_items(ui_group_t group, uint8_t index) {
     uint8_t seen = 0;
+
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
         const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!ui_group_matches(group, p->ui_group)) continue;   // <-- use matcher
-        if (seen == index) {
-            if (p->handler) p->handler((save_field_t)f, p->handler_arg);
-            return;
+        if (!ui_group_matches(group, p->ui_group)) continue;
+
+        if (f == SETTINGS_FILTERED_CHANNELS) {
+            // Expanded to 16 slots
+            if (index >= seen && index < seen + 16) {
+                uint8_t bit = index - seen;
+                update_channel_filter((save_field_t)f, bit);
+                return;
+            }
+            seen += 16;
+        } else {
+            if (seen == index) {
+                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
+                return;
+            }
+            seen++;
         }
-        ++seen;
     }
 }
+
 
 uint8_t build_select_states(ui_group_t group,
                             uint8_t current_select,
@@ -146,16 +163,29 @@ uint8_t build_select_states(ui_group_t group,
     if (states && states_cap) {
         for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
     }
+
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        if (ui_group_matches(group, menu_items_parameters[f].ui_group)) {  // <-- use matcher
-            ++count;
+        const menu_items_parameters_t *p = &menu_items_parameters[f];
+        if (!ui_group_matches(group, p->ui_group)) continue;
+
+        if (f == SETTINGS_FILTERED_CHANNELS) {
+            // Expand into 16 "virtual" slots
+            for (uint8_t i = 0; i < 16; i++) {
+                if (count < states_cap && current_select == count) {
+                    states[count] = 1;
+                }
+                count++;
+            }
+        } else {
+            if (count < states_cap && current_select == count) {
+                states[count] = 1;
+            }
+            count++;
         }
-    }
-    if (states && states_cap && current_select < states_cap) {
-        states[current_select] = 1;
     }
     return count;
 }
+
 
 
 
@@ -419,9 +449,9 @@ static void save_set_field_default(save_struct *s, save_field_t f) {
         case SETTINGS_START_MENU:                 s->settings_data.start_menu = (uint8_t)d; break;
         case SETTINGS_SEND_USB:                   s->settings_data.send_to_usb = (uint8_t)d; break;
         case SETTINGS_BRIGHTNESS:                 s->settings_data.brightness = (uint8_t)d; break;
-        case SETTINGS_CHANNEL_FILTER:             s->settings_data.channel_filter = (uint8_t)d; break;
         case SETTINGS_MIDI_THRU:                  s->settings_data.midi_thru = (uint8_t)d; break;
         case SETTINGS_USB_THRU:                   s->settings_data.usb_thru = (uint8_t)d; break;
+        case SETTINGS_CHANNEL_FILTER:             s->settings_data.channel_filter = (uint8_t)d; break;
         case SETTINGS_FILTERED_CHANNELS:          s->settings_data.filtered_channels = d; break;
 
         // --- checksum ---

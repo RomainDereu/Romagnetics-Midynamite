@@ -121,6 +121,14 @@ void update_value(save_field_t field, uint8_t multiplier)
 
 
 
+
+void update_contrast(save_field_t f, uint8_t step) {
+    update_value(f, step);
+    screen_driver_UpdateContrast();
+}
+
+
+
 //Specific logic for the channel_filter
 // Toggle one channel bit per call when a detent is seen
 void update_channel_filter(save_field_t field, uint8_t bit_index)
