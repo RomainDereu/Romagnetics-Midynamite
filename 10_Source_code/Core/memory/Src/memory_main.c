@@ -58,35 +58,35 @@ static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [MIDI_TEMPO_CURRENT_TEMPO]            = {  20,       300, NO_WRAP, 120},
     [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {   1,     50000, NO_WRAP,  24},
     [MIDI_TEMPO_CURRENTLY_SENDING]        = {   0,         1, WRAP,     0},
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]        = {   0,         2, WRAP,     0},
+    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {   0,         2, WRAP,     0},
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]   = {   0,         1, WRAP,     0},
-    [MIDI_MODIFY_VELOCITY_TYPE]     = {   0,         1, WRAP,     0},
+    [MIDI_MODIFY_CHANGE_OR_SPLIT]        = {   0,         1, WRAP,     1},
+    [MIDI_MODIFY_VELOCITY_TYPE]          = {   0,         1, WRAP,     0},
     [MIDI_MODIFY_SEND_TO_MIDI_OUT]       = {   0,         3, WRAP,     0},
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]         = {   1,        16, NO_WRAP,   1},
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]         = {   0,        16, NO_WRAP,   0},
-    [MIDI_MODIFY_SPLIT_NOTE]        = {   0,       127, NO_WRAP,  60},
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]         = {   0,        15, NO_WRAP,   0},
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]         = {   0,        15, NO_WRAP,   0},
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS] = {-127,      127,NO_WRAP,   0},
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1] = {   1,        16, NO_WRAP,   1},
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2] = {   0,        16, NO_WRAP,   0},
+    [MIDI_MODIFY_SPLIT_NOTE]             = {   0,       127, NO_WRAP,  60},
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]   = {   1,        16, NO_WRAP,   1},
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]   = {   1,        16, NO_WRAP,   2},
+    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]    = {-127,      127,NO_WRAP,   0},
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]      = {   0,       127, NO_WRAP,  64},
-    [MIDI_MODIFY_CURRENTLY_SENDING] = {   0,         1, WRAP,   0},
+    [MIDI_MODIFY_CURRENTLY_SENDING]      = {   0,         1, WRAP,   0},
 
-    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]                = {   0,         1, WRAP,   0},
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]         = { -127,      127, NO_WRAP,   0},
+    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]      = {   0,         1, WRAP,   0},
+    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]    = { -127,      127, NO_WRAP,   0},
     [MIDI_TRANSPOSE_SEND_ORIGINAL]       = {   0,         1, WRAP,   0},
     [MIDI_TRANSPOSE_BASE_NOTE]           = {   0,        11, NO_WRAP,   0},
     [MIDI_TRANSPOSE_INTERVAL]            = {   0,         9, NO_WRAP,   0},
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]               = {   0,         6, WRAP,   0},
+    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]     = {   0,         6, WRAP,   0},
     [MIDI_TRANSPOSE_CURRENTLY_SENDING]   = {   0,         1, WRAP,   0},
 
-    [SETTINGS_START_MENU]           = {   0,         3, WRAP,   0},
-    [SETTINGS_SEND_USB]             = {   0,         1, WRAP,   0},
-	[SETTINGS_BRIGHTNESS]           = {   0,         9, NO_WRAP,   0},
-    [SETTINGS_MIDI_THRU]            = {   0,         1, WRAP,   0},
-    [SETTINGS_USB_THRU]             = {   0,         1, WRAP,   0},
-    [SETTINGS_CHANNEL_FILTER]       = {   0,         1, WRAP,   0},
-	[SETTINGS_FILTERED_CHANNELS]  = {   0,  0x0000FFFF, WRAP, 0},
+    [SETTINGS_START_MENU]                = {   0,         3, WRAP,   0},
+    [SETTINGS_SEND_USB]                  = {   0,         1, WRAP,   0},
+	[SETTINGS_BRIGHTNESS]                = {   0,         9, NO_WRAP,   0},
+    [SETTINGS_MIDI_THRU]                 = {   0,         1, WRAP,   0},
+    [SETTINGS_USB_THRU]                  = {   0,         1, WRAP,   0},
+    [SETTINGS_CHANNEL_FILTER]            = {   0,         1, WRAP,   0},
+	[SETTINGS_FILTERED_CHANNELS]         = {   0,  0x0000FFFF, WRAP, 0},
 
     [SAVE_DATA_VALIDITY]                 = {   0,  0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM}
 };
@@ -100,39 +100,39 @@ static void save_init_field_pointers(void) {
     // u32 fields
     u32_fields[MIDI_TEMPO_CURRENT_TEMPO]              = &save_data.midi_tempo_data.current_tempo;
     u32_fields[MIDI_TEMPO_TEMPO_CLICK_RATE]           = &save_data.midi_tempo_data.tempo_click_rate;
-    u32_fields[MIDI_MODIFY_VELOCITY_PLUS_MINUS] = &save_data.midi_modify_data.velocity_plus_minus;
-    u32_fields[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]           = &save_data.midi_transpose_data.midi_shift_value;
-    u32_fields[SETTINGS_FILTERED_CHANNELS]      = &save_data.settings_data.filtered_channels;
-    u32_fields[SAVE_DATA_VALIDITY]                   = &save_data.check_data_validity;
+    u32_fields[MIDI_MODIFY_VELOCITY_PLUS_MINUS]       = &save_data.midi_modify_data.velocity_plus_minus;
+    u32_fields[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]       = &save_data.midi_transpose_data.midi_shift_value;
+    u32_fields[SETTINGS_FILTERED_CHANNELS]            = &save_data.settings_data.filtered_channels;
+    u32_fields[SAVE_DATA_VALIDITY]                    = &save_data.check_data_validity;
 
     // u8 fields
-    u8_fields[MIDI_TEMPO_CURRENTLY_SENDING]   = &save_data.midi_tempo_data.currently_sending;
-    u8_fields[MIDI_TEMPO_SEND_TO_MIDI_OUT]         = &save_data.midi_tempo_data.send_to_midi_out;
+    u8_fields[MIDI_TEMPO_CURRENTLY_SENDING]           = &save_data.midi_tempo_data.currently_sending;
+    u8_fields[MIDI_TEMPO_SEND_TO_MIDI_OUT]            = &save_data.midi_tempo_data.send_to_midi_out;
 
-    u8_fields[MIDI_MODIFY_CHANGE_OR_SPLIT]    = &save_data.midi_modify_data.change_or_split;
-    u8_fields[MIDI_MODIFY_VELOCITY_TYPE]      = &save_data.midi_modify_data.velocity_type;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_OUT]        = &save_data.midi_modify_data.send_to_midi_out;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]          = &save_data.midi_modify_data.send_to_midi_channel_1;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]          = &save_data.midi_modify_data.send_to_midi_channel_2;
-    u8_fields[MIDI_MODIFY_SPLIT_NOTE]         = &save_data.midi_modify_data.split_note;
-    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]          = &save_data.midi_modify_data.split_midi_channel_1;
-    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]          = &save_data.midi_modify_data.split_midi_channel_2;
-    u8_fields[MIDI_MODIFY_VELOCITY_ABSOLUTE]       = &save_data.midi_modify_data.velocity_absolute;
-    u8_fields[MIDI_MODIFY_CURRENTLY_SENDING]  = &save_data.midi_modify_data.currently_sending;
+    u8_fields[MIDI_MODIFY_CHANGE_OR_SPLIT]            = &save_data.midi_modify_data.change_or_split;
+    u8_fields[MIDI_MODIFY_VELOCITY_TYPE]              = &save_data.midi_modify_data.velocity_type;
+    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_OUT]           = &save_data.midi_modify_data.send_to_midi_out;
+    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]     = &save_data.midi_modify_data.send_to_midi_channel_1;
+    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]     = &save_data.midi_modify_data.send_to_midi_channel_2;
+    u8_fields[MIDI_MODIFY_SPLIT_NOTE]                 = &save_data.midi_modify_data.split_note;
+    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]       = &save_data.midi_modify_data.split_midi_channel_1;
+    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]       = &save_data.midi_modify_data.split_midi_channel_2;
+    u8_fields[MIDI_MODIFY_VELOCITY_ABSOLUTE]          = &save_data.midi_modify_data.velocity_absolute;
+    u8_fields[MIDI_MODIFY_CURRENTLY_SENDING]          = &save_data.midi_modify_data.currently_sending;
 
-    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_TYPE]                 = &save_data.midi_transpose_data.transpose_type;
-    u8_fields[MIDI_TRANSPOSE_SEND_ORIGINAL]        = &save_data.midi_transpose_data.send_original;
-    u8_fields[MIDI_TRANSPOSE_BASE_NOTE]            = &save_data.midi_transpose_data.transpose_base_note;
-    u8_fields[MIDI_TRANSPOSE_INTERVAL]             = &save_data.midi_transpose_data.transpose_interval;
-    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_SCALE]                = &save_data.midi_transpose_data.transpose_scale;
-    u8_fields[MIDI_TRANSPOSE_CURRENTLY_SENDING]    = &save_data.midi_transpose_data.currently_sending;
+    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_TYPE]          = &save_data.midi_transpose_data.transpose_type;
+    u8_fields[MIDI_TRANSPOSE_SEND_ORIGINAL]           = &save_data.midi_transpose_data.send_original;
+    u8_fields[MIDI_TRANSPOSE_BASE_NOTE]               = &save_data.midi_transpose_data.transpose_base_note;
+    u8_fields[MIDI_TRANSPOSE_INTERVAL]                = &save_data.midi_transpose_data.transpose_interval;
+    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_SCALE]         = &save_data.midi_transpose_data.transpose_scale;
+    u8_fields[MIDI_TRANSPOSE_CURRENTLY_SENDING]       = &save_data.midi_transpose_data.currently_sending;
 
-    u8_fields[SETTINGS_START_MENU]            = &save_data.settings_data.start_menu;
-    u8_fields[SETTINGS_SEND_USB]              = &save_data.settings_data.send_to_usb;
-    u8_fields[SETTINGS_BRIGHTNESS]            = &save_data.settings_data.brightness;
-    u8_fields[SETTINGS_CHANNEL_FILTER]        = &save_data.settings_data.channel_filter;
-    u8_fields[SETTINGS_MIDI_THRU]             = &save_data.settings_data.midi_thru;
-    u8_fields[SETTINGS_USB_THRU]              = &save_data.settings_data.usb_thru;
+    u8_fields[SETTINGS_START_MENU]                    = &save_data.settings_data.start_menu;
+    u8_fields[SETTINGS_SEND_USB]                      = &save_data.settings_data.send_to_usb;
+    u8_fields[SETTINGS_BRIGHTNESS]                    = &save_data.settings_data.brightness;
+    u8_fields[SETTINGS_CHANNEL_FILTER]                = &save_data.settings_data.channel_filter;
+    u8_fields[SETTINGS_MIDI_THRU]                     = &save_data.settings_data.midi_thru;
+    u8_fields[SETTINGS_USB_THRU]                      = &save_data.settings_data.usb_thru;
 }
 
 // ---------------------

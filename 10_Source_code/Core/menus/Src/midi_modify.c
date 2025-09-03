@@ -23,9 +23,7 @@
 
 extern const Message * message;
 
-static void handle_modify_change(
-    uint8_t            current_select
-) {
+static void handle_modify_change(uint8_t current_select) {
     switch (current_select) {
       case 0:
     	  update_value(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1, 1);
@@ -48,9 +46,7 @@ static void handle_modify_change(
     }
 }
 
-static void handle_modify_split(
-    uint8_t            current_select
-) {
+static void handle_modify_split(uint8_t current_select) {
     switch (current_select) {
       case 0:
     	update_value(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1, 1);
@@ -84,11 +80,18 @@ void midi_modify_update_menu()
     uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
     uint8_t mode           = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
     uint8_t amount_of_settings = (mode == MIDI_MODIFY_CHANGE) ? 4 : 5;
-
     update_select(&current_select, 0, amount_of_settings - 1, 1, WRAP);
     ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, current_select);
 
-
+    // Mode toggle: last row toggles velocity type, others toggle change/split
+    if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+        if (current_select < amount_of_settings - 1) {
+            save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
+        } else {
+            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
+        }
+        ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, 0);
+    }
 
     if (mode == MIDI_MODIFY_CHANGE) {
         handle_modify_change(current_select);
@@ -96,19 +99,6 @@ void midi_modify_update_menu()
         handle_modify_split(current_select);
     }
 
-    // Mode toggle: last row toggles velocity type, others toggle change/split
-    if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        uint8_t cs = ui_state_get(UI_MIDI_MODIFY_SELECT);
-        uint8_t m  = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-        uint8_t n  = (m == MIDI_MODIFY_CHANGE) ? 4 : 5;
-
-        if (cs < n - 1) {
-            save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
-        } else {
-            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
-        }
-        ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, 0); // reset row for UX
-    }
 
     static uint8_t select_states[5] = {0};
     select_current_state(select_states, amount_of_settings, current_select);
@@ -142,12 +132,12 @@ static void screen_update_channel_change(uint8_t * select_states){
 static void screen_update_channel_split(uint8_t * select_states){
     screen_driver_SetCursor_WriteString(message->low_sem,  Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
     uint8_t low = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1);
-    char low_txt[6];  sprintf(low_txt, "%u", low);
+    static char low_txt[6];  sprintf(low_txt, "%u", low);
     screen_driver_underline_WriteString(low_txt, Font_6x8, White, 30, LINE_1_VERT, select_states[0]);
 
     screen_driver_SetCursor_WriteString(message->high_sem, Font_6x8 , White, 45, LINE_1_VERT);
     uint8_t high = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2);
-    char high_txt[6]; sprintf(high_txt, "%u", high);
+    static char high_txt[6]; sprintf(high_txt, "%u", high);
     screen_driver_underline_WriteString(high_txt, Font_6x8, White, 80, LINE_1_VERT, select_states[1]);
 
     screen_driver_SetCursor_WriteString(message->split, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
