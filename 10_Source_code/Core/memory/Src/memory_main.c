@@ -44,6 +44,31 @@ static int save_lock_with_retries(void) {
 static int32_t* u32_fields[SAVE_FIELD_COUNT] = {0};
 static uint8_t*  u8_fields[SAVE_FIELD_COUNT] = {0};
 
+
+// ---------------------
+// Function pointers
+// ---------------------
+
+typedef void (*save_update_fn_t)(save_field_t field, uint8_t arg);
+
+void update_value(save_field_t field, uint8_t multiplier);
+
+
+
+// ---------------------
+// UI submenu id
+// ---------------------
+typedef enum {
+    UI_GROUP_TEMPO = 0,
+    UI_GROUP_MODIFY,
+    UI_GROUP_TRANSPOSE_SHIFT,
+    UI_GROUP_TRANSPOSE_SCALED,
+    UI_GROUP_SETTINGS,
+    UI_GROUP_NONE = 0xFF
+} ui_group_t;
+
+
+
 // ---------------------
 // Limits table
 // ---------------------
@@ -52,44 +77,49 @@ typedef struct {
     int32_t max;
     uint8_t wrap;   // 0 = clamp, 1 = wrap
     int32_t def;    // DEFAULT value for this field
-} save_field_limits_t;
 
-static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
-    //                                        min        max  wrap     default
-    [MIDI_TEMPO_CURRENT_TEMPO]            = {  20,       300, NO_WRAP, 120},
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {   1,     50000, NO_WRAP,  24},
-    [MIDI_TEMPO_CURRENTLY_SENDING]        = {   0,         1, WRAP,     0},
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {   0,         2, WRAP,     0},
+    save_update_fn_t handler;     // e.g., update_value or ui_noop_update
+    uint8_t          handler_arg;
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]        = {   0,         1, WRAP,     1},
-    [MIDI_MODIFY_VELOCITY_TYPE]          = {   0,         1, WRAP,     0},
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]       = {   0,         3, WRAP,     0},
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1] = {   1,        16, NO_WRAP,   1},
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2] = {   0,        16, NO_WRAP,   0},
-    [MIDI_MODIFY_SPLIT_NOTE]             = {   0,       127, NO_WRAP,  60},
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]   = {   1,        16, NO_WRAP,   1},
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]   = {   1,        16, NO_WRAP,   2},
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]    = {-127,      127,NO_WRAP,   0},
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]      = {   0,       127, NO_WRAP,  64},
-    [MIDI_MODIFY_CURRENTLY_SENDING]      = {   0,         1, WRAP,   0},
+    uint8_t          ui_group;
+} menu_items_parameters_t;
 
-    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]      = {   0,         1, WRAP,   0},
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]    = { -127,      127, NO_WRAP,   0},
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]       = {   0,         1, WRAP,   0},
-    [MIDI_TRANSPOSE_BASE_NOTE]           = {   0,        11, NO_WRAP,   0},
-    [MIDI_TRANSPOSE_INTERVAL]            = {   0,         9, NO_WRAP,   0},
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]     = {   0,         6, WRAP,   0},
-    [MIDI_TRANSPOSE_CURRENTLY_SENDING]   = {   0,         1, WRAP,   0},
+static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
+    //                                         min    max         wrap     def    handler handler_arg   ui_group
+    [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,       NO_WRAP, 120,   update_value, 10,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,     NO_WRAP,  24,   no_update   ,  0,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {    0,   2,         WRAP,      0,   update_value,  1,      UI_GROUP_TEMPO },
 
-    [SETTINGS_START_MENU]                = {   0,         3, WRAP,   0},
-    [SETTINGS_SEND_USB]                  = {   0,         1, WRAP,   0},
-	[SETTINGS_BRIGHTNESS]                = {   0,         9, NO_WRAP,   0},
-    [SETTINGS_MIDI_THRU]                 = {   0,         1, WRAP,   0},
-    [SETTINGS_USB_THRU]                  = {   0,         1, WRAP,   0},
-    [SETTINGS_CHANNEL_FILTER]            = {   0,         1, WRAP,   0},
-	[SETTINGS_FILTERED_CHANNELS]         = {   0,  0x0000FFFF, WRAP, 0},
+    [MIDI_MODIFY_CHANGE_OR_SPLIT]         = {    0,   1,         WRAP,      1,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_TYPE]           = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]  = {    1,   16,        NO_WRAP,   1,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]  = {    0,   16,        NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,       NO_WRAP,  60,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]    = {    1,   16,        NO_WRAP,   1,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,        NO_WRAP,   2,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,       NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,       NO_WRAP,  64,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
 
-    [SAVE_DATA_VALIDITY]                 = {   0,  0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM}
+    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]       = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127,   127,       NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,        NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,         NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TRANSPOSE_CURRENTLY_SENDING]    = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+
+    [SETTINGS_START_MENU]                 = {    0,   3,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_SEND_USB]                   = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_BRIGHTNESS]                 = {    0,   9,         NO_WRAP,   0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_MIDI_THRU]                  = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_USB_THRU]                   = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
+    [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,     0,   no_update   ,  0,      UI_GROUP_NONE },
+
+    [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
 };
 
 
@@ -163,7 +193,7 @@ int32_t save_get_u32(save_field_t field) {
     }
 
     int32_t v = *p;
-    const save_field_limits_t lim = save_limits[field];
+    const menu_items_parameters_t lim = menu_items_parameters[field];
     return clamp_i32(v, lim.min, lim.max);
 }
 
@@ -178,7 +208,7 @@ uint8_t save_get(save_field_t field) {
     }
 
     int32_t v = (int32_t)(*p);
-    const save_field_limits_t lim = save_limits[field];
+    const menu_items_parameters_t lim = menu_items_parameters[field];
     return (uint8_t)clamp_i32(v, lim.min, lim.max);
 }
 
@@ -194,7 +224,7 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
     if (!u32_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
 
-    const save_field_limits_t lim = save_limits[field];
+    const menu_items_parameters_t lim = menu_items_parameters[field];
     int32_t v = *u32_fields[field];
 
     switch (op) {
@@ -215,7 +245,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     if (!u8_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
 
-    const save_field_limits_t lim = save_limits[field];
+    const menu_items_parameters_t lim = menu_items_parameters[field];
     int32_t v = (int32_t)(*u8_fields[field]);
 
     switch (op) {
@@ -318,44 +348,44 @@ void save_load_from_flash(void) {
 
 
 static void save_set_field_default(save_struct *s, save_field_t f) {
-    int32_t d = save_limits[f].def;
+    int32_t d = menu_items_parameters[f].def;
     switch (f) {
         // --- midi_tempo_data ---
-        case MIDI_TEMPO_CURRENT_TEMPO:             s->midi_tempo_data.current_tempo = d; break;
-        case MIDI_TEMPO_TEMPO_CLICK_RATE:          s->midi_tempo_data.tempo_click_rate = d; break;
+        case MIDI_TEMPO_CURRENT_TEMPO:            s->midi_tempo_data.current_tempo = d; break;
+        case MIDI_TEMPO_TEMPO_CLICK_RATE:         s->midi_tempo_data.tempo_click_rate = d; break;
         case MIDI_TEMPO_CURRENTLY_SENDING:        s->midi_tempo_data.currently_sending = (uint8_t)d; break;
         case MIDI_TEMPO_SEND_TO_MIDI_OUT:         s->midi_tempo_data.send_to_midi_out = (uint8_t)d; break;
 
         // --- midi_modify_data ---
-        case MIDI_MODIFY_CHANGE_OR_SPLIT:    s->midi_modify_data.change_or_split = (uint8_t)d; break;
-        case MIDI_MODIFY_VELOCITY_TYPE:      s->midi_modify_data.velocity_type = (uint8_t)d; break;
+        case MIDI_MODIFY_CHANGE_OR_SPLIT:         s->midi_modify_data.change_or_split = (uint8_t)d; break;
+        case MIDI_MODIFY_VELOCITY_TYPE:           s->midi_modify_data.velocity_type = (uint8_t)d; break;
         case MIDI_MODIFY_SEND_TO_MIDI_OUT:        s->midi_modify_data.send_to_midi_out = (uint8_t)d; break;
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1:          s->midi_modify_data.send_to_midi_channel_1 = (uint8_t)d; break;
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2:          s->midi_modify_data.send_to_midi_channel_2 = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_NOTE:         s->midi_modify_data.split_note = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1:          s->midi_modify_data.split_midi_channel_1 = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2:          s->midi_modify_data.split_midi_channel_2 = (uint8_t)d; break;
-        case MIDI_MODIFY_VELOCITY_PLUS_MINUS:s->midi_modify_data.velocity_plus_minus = d; break;
+        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1:  s->midi_modify_data.send_to_midi_channel_1 = (uint8_t)d; break;
+        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2:  s->midi_modify_data.send_to_midi_channel_2 = (uint8_t)d; break;
+        case MIDI_MODIFY_SPLIT_NOTE:              s->midi_modify_data.split_note = (uint8_t)d; break;
+        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1:    s->midi_modify_data.split_midi_channel_1 = (uint8_t)d; break;
+        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2:    s->midi_modify_data.split_midi_channel_2 = (uint8_t)d; break;
+        case MIDI_MODIFY_VELOCITY_PLUS_MINUS:     s->midi_modify_data.velocity_plus_minus = d; break;
         case MIDI_MODIFY_VELOCITY_ABSOLUTE:       s->midi_modify_data.velocity_absolute = (uint8_t)d; break;
-        case MIDI_MODIFY_CURRENTLY_SENDING:  s->midi_modify_data.currently_sending = (uint8_t)d; break;
+        case MIDI_MODIFY_CURRENTLY_SENDING:       s->midi_modify_data.currently_sending = (uint8_t)d; break;
 
         // --- midi_transpose_data ---
-        case MIDI_TRANSPOSE_TRANSPOSE_TYPE:                 s->midi_transpose_data.transpose_type = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_MIDI_SHIFT_VALUE:          s->midi_transpose_data.midi_shift_value = d; break;
+        case MIDI_TRANSPOSE_TRANSPOSE_TYPE:       s->midi_transpose_data.transpose_type = (uint8_t)d; break;
+        case MIDI_TRANSPOSE_MIDI_SHIFT_VALUE:     s->midi_transpose_data.midi_shift_value = d; break;
         case MIDI_TRANSPOSE_SEND_ORIGINAL:        s->midi_transpose_data.send_original = (uint8_t)d; break;
         case MIDI_TRANSPOSE_BASE_NOTE:            s->midi_transpose_data.transpose_base_note = (uint8_t)d; break;
         case MIDI_TRANSPOSE_INTERVAL:             s->midi_transpose_data.transpose_interval = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_TRANSPOSE_SCALE:                s->midi_transpose_data.transpose_scale = (uint8_t)d; break;
+        case MIDI_TRANSPOSE_TRANSPOSE_SCALE:      s->midi_transpose_data.transpose_scale = (uint8_t)d; break;
         case MIDI_TRANSPOSE_CURRENTLY_SENDING:    s->midi_transpose_data.currently_sending = (uint8_t)d; break;
 
         // --- settings_data ---
-        case SETTINGS_START_MENU:            s->settings_data.start_menu = (uint8_t)d; break;
-        case SETTINGS_SEND_USB:              s->settings_data.send_to_usb = (uint8_t)d; break;
-        case SETTINGS_BRIGHTNESS:            s->settings_data.brightness = (uint8_t)d; break;
-        case SETTINGS_CHANNEL_FILTER:        s->settings_data.channel_filter = (uint8_t)d; break;
-        case SETTINGS_MIDI_THRU:             s->settings_data.midi_thru = (uint8_t)d; break;
-        case SETTINGS_USB_THRU:              s->settings_data.usb_thru = (uint8_t)d; break;
-        case SETTINGS_FILTERED_CHANNELS:     s->settings_data.filtered_channels = d; break;
+        case SETTINGS_START_MENU:                 s->settings_data.start_menu = (uint8_t)d; break;
+        case SETTINGS_SEND_USB:                   s->settings_data.send_to_usb = (uint8_t)d; break;
+        case SETTINGS_BRIGHTNESS:                 s->settings_data.brightness = (uint8_t)d; break;
+        case SETTINGS_CHANNEL_FILTER:             s->settings_data.channel_filter = (uint8_t)d; break;
+        case SETTINGS_MIDI_THRU:                  s->settings_data.midi_thru = (uint8_t)d; break;
+        case SETTINGS_USB_THRU:                   s->settings_data.usb_thru = (uint8_t)d; break;
+        case SETTINGS_FILTERED_CHANNELS:          s->settings_data.filtered_channels = d; break;
 
         // --- checksum ---
         case SAVE_DATA_VALIDITY:                  s->check_data_validity = (uint32_t)d; break;

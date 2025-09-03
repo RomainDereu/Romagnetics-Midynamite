@@ -50,6 +50,8 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
+void no_update(save_field_t field, uint8_t arg);
+
 void update_value(save_field_t field, uint8_t multiplier);
 
 

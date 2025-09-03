@@ -91,6 +91,10 @@ void update_select(uint8_t *value,
 }
 
 
+void no_update(save_field_t field, uint8_t arg) {
+    (void)field; (void)arg;
+}
+
 void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
