@@ -82,16 +82,18 @@ static void screen_update_midi_filter(uint8_t *select_states)
 
     uint32_t mask = save_get_u32(SAVE_SETTINGS_FILTERED_CHANNELS);
     for (uint8_t i = 0; i < 16; i++) {
-        const char *label = (mask & ((uint32_t)1 << i)) ? "X" : message->one_to_sixteen[i];
+        const char *label = (mask & ((uint32_t)1 << i))
+                            ? "X"
+                            : message->one_to_sixteen[i];
 
-        uint8_t x = (uint8_t)(5 + 15 * (i % 8));
+        uint8_t x = (uint8_t)(5 + 10 * (i % 8));
         uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
 
         uint8_t underline = 0;
         uint8_t idx = (uint8_t)(FT1 + i);
         if (idx < AMOUNT_OF_SETTINGS_ITEMS) underline = select_states[idx] ? 1 : 0;
 
-        screen_driver_underline_WriteString(label, Font_6x8, White, x, y, underline);
+        screen_driver_underline_WriteString(label, Font_6x8_2, White, x, y, underline);
     }
 }
 
@@ -165,6 +167,7 @@ void settings_update_menu(){
 	settings_data_struct old_settings_data = save_snapshot_settings();
 	static uint8_t old_select = 0;
 	uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
+
 	update_select(&current_select, 0, AMOUNT_OF_SETTINGS_ITEMS - 1, 1, WRAP);
 	ui_state_modify(UI_SETTINGS_SELECT, UI_MODIFY_SET, current_select);
 
@@ -200,8 +203,6 @@ void settings_update_menu(){
 		case FT13: case FT14: case FT15: case FT16: {
 		    uint8_t channel_index = (uint8_t)(current_select - FT1);
 		    update_channel_filter(SAVE_SETTINGS_FILTERED_CHANNELS, channel_index);
-
-
 		    break;
 		}
 	}

@@ -136,7 +136,6 @@ typedef struct {
     const char *one_to_sixteen[16];
 
 
-
     // All selectable dropdowns and grouped options
     struct {
         const char *change_split[2];

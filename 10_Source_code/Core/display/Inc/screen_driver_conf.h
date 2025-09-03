@@ -45,6 +45,7 @@
 
 // Include only needed fonts
 #define screen_driver_INCLUDE_FONT_6x8
+#define screen_driver_INCLUDE_FONT_6x8_2
 #define screen_driver_INCLUDE_FONT_7x10
 #define screen_driver_INCLUDE_FONT_11x18
 #define screen_driver_INCLUDE_FONT_16x26

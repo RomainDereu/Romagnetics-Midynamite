@@ -6,6 +6,12 @@
 #ifdef screen_driver_INCLUDE_FONT_6x8
 extern const screen_driver_Font_t Font_6x8;
 #endif
+
+#ifdef screen_driver_INCLUDE_FONT_6x8_2
+extern const screen_driver_Font_t Font_6x8_2;
+#endif
+
+
 #ifdef screen_driver_INCLUDE_FONT_7x10
 extern const screen_driver_Font_t Font_7x10;
 #endif
