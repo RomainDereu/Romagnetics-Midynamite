@@ -62,7 +62,7 @@ typedef struct {
     uint8_t  channel_filter;
     uint8_t  midi_thru;
     uint8_t  usb_thru;
-    int32_t filtered_channels; // 16-bit bitmask (ch 1..16)
+    int32_t filtered_channels;
 } settings_data_struct;
 
 // ---------------------

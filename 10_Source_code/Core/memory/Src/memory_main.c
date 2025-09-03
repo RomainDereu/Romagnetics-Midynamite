@@ -55,6 +55,7 @@ typedef struct {
 } save_field_limits_t;
 
 static const save_field_limits_t save_limits[SAVE_FIELD_COUNT] = {
+    //                                        min        max  wrap     default
     [MIDI_TEMPO_CURRENT_TEMPO]            = {  20,       300, NO_WRAP, 120},
     [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {   1,     50000, NO_WRAP,  24},
     [MIDI_TEMPO_CURRENTLY_SENDING]        = {   0,         1, WRAP,     0},
@@ -322,7 +323,7 @@ static void save_set_field_default(save_struct *s, save_field_t f) {
         // --- midi_tempo_data ---
         case MIDI_TEMPO_CURRENT_TEMPO:             s->midi_tempo_data.current_tempo = d; break;
         case MIDI_TEMPO_TEMPO_CLICK_RATE:          s->midi_tempo_data.tempo_click_rate = d; break;
-        case MIDI_TEMPO_CURRENTLY_SENDING:   s->midi_tempo_data.currently_sending = (uint8_t)d; break;
+        case MIDI_TEMPO_CURRENTLY_SENDING:        s->midi_tempo_data.currently_sending = (uint8_t)d; break;
         case MIDI_TEMPO_SEND_TO_MIDI_OUT:         s->midi_tempo_data.send_to_midi_out = (uint8_t)d; break;
 
         // --- midi_modify_data ---
@@ -354,7 +355,7 @@ static void save_set_field_default(save_struct *s, save_field_t f) {
         case SETTINGS_CHANNEL_FILTER:        s->settings_data.channel_filter = (uint8_t)d; break;
         case SETTINGS_MIDI_THRU:             s->settings_data.midi_thru = (uint8_t)d; break;
         case SETTINGS_USB_THRU:              s->settings_data.usb_thru = (uint8_t)d; break;
-        case SETTINGS_FILTERED_CHANNELS:     s->settings_data.filtered_channels = (uint16_t)d; break;
+        case SETTINGS_FILTERED_CHANNELS:     s->settings_data.filtered_channels = d; break;
 
         // --- checksum ---
         case SAVE_DATA_VALIDITY:                  s->check_data_validity = (uint32_t)d; break;
