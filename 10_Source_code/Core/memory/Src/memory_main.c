@@ -64,7 +64,7 @@ const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 // Keep private in production
 static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 #endif
-    //                                         min    max         wrap     def    handler handler_arg   ui_group
+    //                                         min    max     wrap     def    handler       handler_arg   ui_group
     [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,    NO_WRAP, 120,   update_value   , 10,      UI_GROUP_TEMPO },
     [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,  NO_WRAP,  24,   no_update      ,  0,      UI_GROUP_NONE },
     [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
