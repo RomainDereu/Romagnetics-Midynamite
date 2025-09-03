@@ -55,17 +55,6 @@ void update_value(save_field_t field, uint8_t multiplier);
 
 
 
-// ---------------------
-// UI submenu id
-// ---------------------
-typedef enum {
-    UI_GROUP_TEMPO = 0,
-    UI_GROUP_MODIFY,
-    UI_GROUP_TRANSPOSE_SHIFT,
-    UI_GROUP_TRANSPOSE_SCALED,
-    UI_GROUP_SETTINGS,
-    UI_GROUP_NONE = 0xFF
-} ui_group_t;
 
 
 
@@ -81,14 +70,14 @@ typedef struct {
     save_update_fn_t handler;     // e.g., update_value or ui_noop_update
     uint8_t          handler_arg;
 
-    uint8_t          ui_group;
+    ui_group_t       ui_group;
 } menu_items_parameters_t;
 
 static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     //                                         min    max         wrap     def    handler handler_arg   ui_group
     [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,       NO_WRAP, 120,   update_value, 10,      UI_GROUP_TEMPO },
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,     NO_WRAP,  24,   no_update   ,  0,      UI_GROUP_TEMPO },
-    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_TEMPO },
+    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,     NO_WRAP,  24,   no_update   ,  0,      UI_GROUP_NONE },
+    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,         WRAP,      0,   no_update   ,  0,      UI_GROUP_NONE },
     [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {    0,   2,         WRAP,      0,   update_value,  1,      UI_GROUP_TEMPO },
 
     [MIDI_MODIFY_CHANGE_OR_SPLIT]         = {    0,   1,         WRAP,      1,   no_update   ,  0,      UI_GROUP_NONE },
@@ -121,6 +110,25 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 
     [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, (int32_t)DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
 };
+
+// ---------------------
+// UI functions
+// ---------------------
+
+void toggle_underline_items(uint8_t group, uint8_t index) {
+    uint8_t seen = 0;
+    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
+        if (menu_items_parameters[f].ui_group == group) {
+            if (seen == index) {
+                const menu_items_parameters_t *p = &menu_items_parameters[f];
+                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
+                return;
+            }
+            ++seen;
+        }
+    }
+    // index out of range: do nothing
+}
 
 
 

@@ -77,6 +77,19 @@ typedef struct {
 } save_struct;
 
 // ---------------------
+// UI submenu id
+// ---------------------
+typedef enum {
+    UI_GROUP_TEMPO = 0,
+    UI_GROUP_MODIFY,
+    UI_GROUP_TRANSPOSE_SHIFT,
+    UI_GROUP_TRANSPOSE_SCALED,
+    UI_GROUP_SETTINGS,
+    UI_GROUP_NONE = 0xFF
+} ui_group_t;
+
+
+// ---------------------
 // Constants
 // ---------------------
 // Use a 32-bit sentinel so both u8/u32 getters can return it as int32_t.
@@ -174,6 +187,8 @@ typedef enum {
 // ---------------------
 // API
 // ---------------------
+void toggle_underline_items(uint8_t group, uint8_t index);
+
 void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(save_struct *data);
 

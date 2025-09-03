@@ -142,23 +142,12 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
 void midi_tempo_update_menu(){
 	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
 
-
 	static uint8_t old_select = 0;
 	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 	update_select(&current_select, 0, 1, 1, WRAP);
 	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
 
-
-	switch (current_select) {
-		case 0:
-			update_value(MIDI_TEMPO_CURRENT_TEMPO, 10);
-			break;
-		case 1:
-			update_value(MIDI_TEMPO_SEND_TO_MIDI_OUT, 1);
-			break;
-	}
-
-
+    toggle_underline_items(UI_GROUP_TEMPO, current_select);
 
 	uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
 	save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
