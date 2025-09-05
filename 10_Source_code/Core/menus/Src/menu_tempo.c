@@ -17,10 +17,12 @@
 
 #include "midi_tempo.h"
 
+#include "screen_driver.h"
+
 //under_here_header_checks
 #include "midi_usb.h"
-#include "screen_driver.h"
-#include "screen_driver_fonts.h"
+
+
 #include "text.h"
 #include "threads.h"
 #include "utils.h"
@@ -69,23 +71,23 @@ void screen_update_midi_tempo(){
 
    	  screen_driver_Fill(Black);
 	  //Menu
-	  menu_display(&Font_6x8, message->send_midi_tempo);
+	  menu_display(message->send_midi_tempo);
 	  //Vertical line
-	  screen_driver_Line(64, 10, 64, 64, White);
+	  draw_line(64, 10, 64, 64);
 	  //Horizontal line
-	  screen_driver_Line(0, 40, 64, 40, White);
+	  draw_line(0, 40, 64, 40);
 
  	  //Tempo
 	  char tempo_print[4];
 	  snprintf(tempo_print, sizeof tempo_print, "%lu",
 	           (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
-	  screen_driver_underline_WriteString(tempo_print, Font_16x24, White, 80, 20, select_states[TEMPO_PRINT]);
-	  screen_driver_SetCursor_WriteString(message->bpm, Font_6x8, White, 80, 48);
+	  write_underline_1624(tempo_print, 80, 20, select_states[TEMPO_PRINT]);
+	  write_68(message->bpm, 80, 48);
 
 
 
 	  //Send to Midi Out and / or Out 2
-      screen_driver_SetCursor_WriteString(message->target, Font_6x8 , White, TEXT_LEFT_START, 15);
+	  write_68(message->target, TEXT_LEFT_START, 15);
       char message_midi_out[10];
       switch (save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT)) {
         case MIDI_OUT_1:
@@ -106,17 +108,16 @@ void screen_update_midi_tempo(){
           break;
       }
 
-      screen_driver_underline_WriteString(message_midi_out, Font_6x8 , White, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
+      write_underline_68(message_midi_out, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
 
       //Stop/Sending status
-      screen_driver_SetCursor(15, 42);
       uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
 
       if(currently_sending == 0){
-    	  screen_driver_WriteString(message->off, Font_11x18 , White);
+    	  write_1118(message->off, 15, 42);
       }
       else if (currently_sending == 1){
-    	  screen_driver_WriteString(message->on, Font_11x18 , White);
+    	  write_1118(message->on, 15, 42);
       }
 
       screen_driver_UpdateScreen();

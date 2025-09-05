@@ -16,10 +16,10 @@
 #include "midi_transform.h"
 
 
+#include "screen_driver.h"
+
 //under_here_header_checks
 #include "menu.h"
-#include "screen_driver.h"
-#include "screen_driver_fonts.h"
 #include "text.h"
 #include "threads.h"
 #include "utils.h"
@@ -72,54 +72,54 @@ void midi_modify_update_menu(void)
 // -------- Display helpers (read from save_*, no struct param) --------
 
 static void screen_update_channel_change(uint8_t * select_states){
-    screen_driver_SetCursor_WriteString(message->send_1_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
+	write_68(message->send_1_sem, TEXT_LEFT_START, LINE_1_VERT);
     const char *ch1 = message->choices.midi_channels[ save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1) ];
-    screen_driver_underline_WriteString(ch1, Font_6x8 , White, 50, LINE_1_VERT, select_states[0]);
+    write_underline_68(ch1, 50, LINE_1_VERT, select_states[0]);
 
-    screen_driver_SetCursor_WriteString(message->send_2_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_2_VERT);
+    write_68(message->send_2_sem, TEXT_LEFT_START, LINE_2_VERT);
     const char *ch2 = message->choices.midi_channels[ save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2) ];
-    screen_driver_underline_WriteString(ch2, Font_6x8 , White, 50, LINE_2_VERT, select_states[1]);
+    write_underline_68(ch2, 50, LINE_2_VERT, select_states[1]);
 
-    screen_driver_SetCursor_WriteString(message->output_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_3_VERT);
+    write_68(message->output_sem, TEXT_LEFT_START, LINE_3_VERT);
     const char *out = message->choices.midi_outs[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
-    screen_driver_underline_WriteString(out, Font_6x8 , White, 50, LINE_3_VERT, select_states[2]);
+    write_underline_68(out, 50, LINE_3_VERT, select_states[2]);
 }
 
 static void screen_update_channel_split(uint8_t * select_states){
-    screen_driver_SetCursor_WriteString(message->low_sem,  Font_6x8 , White, TEXT_LEFT_START, LINE_1_VERT);
+	write_68(message->low_sem, TEXT_LEFT_START, LINE_1_VERT);
     uint8_t low = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1);
     static char low_txt[6];  sprintf(low_txt, "%u", low);
-    screen_driver_underline_WriteString(low_txt, Font_6x8, White, 30, LINE_1_VERT, select_states[0]);
+    write_underline_68(low_txt, 30, LINE_1_VERT, select_states[0]);
 
-    screen_driver_SetCursor_WriteString(message->high_sem, Font_6x8 , White, 45, LINE_1_VERT);
+    write_68(message->high_sem, 45, LINE_1_VERT);
     uint8_t high = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2);
     static char high_txt[6]; sprintf(high_txt, "%u", high);
-    screen_driver_underline_WriteString(high_txt, Font_6x8, White, 80, LINE_1_VERT, select_states[1]);
+    write_underline_68(high_txt, 80, LINE_1_VERT, select_states[1]);
 
-    screen_driver_SetCursor_WriteString(message->split, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
+    write_68(message->split, TEXT_LEFT_START, LINE_2_VERT);
     uint8_t split_note = save_get(MIDI_MODIFY_SPLIT_NOTE);
     const char *note_to_write = message->midi_note_names[split_note];
-    screen_driver_underline_WriteString(note_to_write, Font_6x8, White, 40, LINE_2_VERT, select_states[2]);
+    write_underline_68(note_to_write, 40, LINE_2_VERT, select_states[2]);
 
-    screen_driver_SetCursor_WriteString(message->output_sem, Font_6x8 , White, TEXT_LEFT_START, LINE_3_VERT);
+    write_68(message->output_sem, TEXT_LEFT_START, LINE_3_VERT);
     const char *out = message->choices.midi_outs[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
-    screen_driver_underline_WriteString(out, Font_6x8 , White, 50, LINE_3_VERT, select_states[3]);
+    write_underline_68(out, 50, LINE_3_VERT, select_states[3]);
 }
 
 static void screen_update_velocity_change(uint8_t * select_states){
-    screen_driver_SetCursor_WriteString(message->change_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+	write_68(message->change_velocity, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
     int8_t delta = (int8_t)(int32_t)save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
     static char txt[6]; sprintf(txt, "%+d", delta);
-    screen_driver_underline_WriteString(txt, Font_6x8, White, 100, BOTTOM_LINE_VERT, select_states[row]);
+    write_underline_68(txt, 100, BOTTOM_LINE_VERT, select_states[row]);
 }
 
 static void screen_update_velocity_fixed(uint8_t * select_states){
-    screen_driver_SetCursor_WriteString(message->fixed_velocity, Font_6x8 , White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+	write_68(message->fixed_velocity, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
     uint8_t v = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
     static char txt[6]; sprintf(txt, "%u", v);
-    screen_driver_underline_WriteString(txt, Font_6x8, White, 100, LINE_4_VERT+3, select_states[row]);
+    write_underline_68(txt, 100, LINE_4_VERT+3, select_states[row]);
 }
 
 void screen_update_midi_modify(void)
@@ -134,7 +134,7 @@ void screen_update_midi_modify(void)
     (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);
-    menu_display(&Font_6x8, message->midi_modify);
+    menu_display(message->midi_modify);
 
     // Top: Channel rows
     if (mode == MIDI_MODIFY_CHANGE){
@@ -143,7 +143,7 @@ void screen_update_midi_modify(void)
         screen_update_channel_split(select_states);
     }
 
-    screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
+    draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
 
     // Bottom: Velocity row (dynamic)
     uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE);

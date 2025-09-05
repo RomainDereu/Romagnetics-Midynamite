@@ -12,9 +12,9 @@
 #include "memory_ui_state.h"
 #include "memory_main.h"
 
-//under_here_header_checks
 #include "screen_driver.h"
-#include "screen_driver_fonts.h"
+
+//under_here_header_checks
 
 
 #include "menu.h"
@@ -42,46 +42,46 @@ uint8_t get_settings_items_count(void) {
 
 // Settings Section
 static void screen_update_global_settings1(uint8_t *select_states){
-	menu_display(&Font_6x8, message->global_settings_1);
+	menu_display(message->global_settings_1);
 	uint8_t idx = SETTINGS_FIRST_GLOBAL1 - SETTINGS_START_MENU;
 
 	// Start Menu
-	screen_driver_SetCursor_WriteString(message->start_menu, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+	write_68(message->start_menu, TEXT_LEFT_START, LINE_1_VERT);
 	const char *start_menu_options[] = {
 		message->tempo,
 		message->modify,
 		message->transpose,
 		message->settings,
 	};
-	screen_driver_underline_WriteString(start_menu_options[save_get(SETTINGS_START_MENU)], Font_6x8, White, 70, LINE_1_VERT, select_states[idx++]);
+	write_underline_68(start_menu_options[save_get(SETTINGS_START_MENU)], 70, LINE_1_VERT, select_states[idx++]);
 
 	// Send to USB
-	screen_driver_SetCursor_WriteString(message->usb_midi, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.usb_receive_send[save_get(SETTINGS_SEND_USB)], Font_6x8, White, 70, LINE_2_VERT, select_states[idx++]);
+	write_68(message->usb_midi, TEXT_LEFT_START, LINE_2_VERT);
+	write_underline_68(message->choices.usb_receive_send[save_get(SETTINGS_SEND_USB)], 70, LINE_2_VERT, select_states[idx++]);
 
 	// Contrast
-	screen_driver_SetCursor_WriteString(message->contrast, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	write_68(message->contrast, TEXT_LEFT_START, LINE_3_VERT);
 	uint8_t brightness_val = save_get(SETTINGS_BRIGHTNESS);
 	if (brightness_val > 9) brightness_val = 9;
-	screen_driver_underline_WriteString(message->contrast_levels[brightness_val], Font_6x8, White, 70, LINE_3_VERT, select_states[idx++]);
+	write_underline_68(message->contrast_levels[brightness_val], 70, LINE_3_VERT, select_states[idx++]);
 }
 
 
 static void screen_update_global_settings2(uint8_t *select_states){
-	menu_display(&Font_6x8, message->global_settings_2);
+	menu_display(message->global_settings_2);
 	uint8_t idx = SETTINGS_FIRST_GLOBAL2 - SETTINGS_START_MENU;
 
 	// MIDI THRU
-	screen_driver_SetCursor_WriteString(message->MIDI_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_MIDI_THRU)], Font_6x8, White, 80, LINE_1_VERT, select_states[idx++]);
+	write_68(message->MIDI_Thru, TEXT_LEFT_START, LINE_1_VERT);
+	write_underline_68(message->choices.off_on[save_get(SETTINGS_MIDI_THRU)], 80, LINE_1_VERT, select_states[idx++]);
 
 	// USB THRU
-	screen_driver_SetCursor_WriteString(message->USB_Thru, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_USB_THRU)], Font_6x8, White, 80, LINE_2_VERT, select_states[idx++]);
+	write_68(message->USB_Thru, TEXT_LEFT_START, LINE_2_VERT);
+	write_underline_68(message->choices.off_on[save_get(SETTINGS_USB_THRU)], 80, LINE_2_VERT, select_states[idx++]);
 
 	// MIDI
-	screen_driver_SetCursor_WriteString(message->MIDI_Filter, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
-	screen_driver_underline_WriteString(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], Font_6x8, White, 80, LINE_3_VERT, select_states[idx++]);
+	write_68(message->MIDI_Filter, TEXT_LEFT_START, LINE_3_VERT);
+	write_underline_68(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], 80, LINE_3_VERT, select_states[idx++]);
 }
 
 
@@ -90,11 +90,10 @@ static void screen_update_global_settings2(uint8_t *select_states){
 
 static void screen_update_midi_filter(uint8_t *select_states)
 {
-    menu_display(&Font_6x8, message->MIDI_Filter);
+    menu_display(message->MIDI_Filter);
 
 
-    screen_driver_SetCursor_WriteString(message->X_equals_ignore_channel,
-                                        Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
+    write_68(message->X_equals_ignore_channel, TEXT_LEFT_START, LINE_1_VERT);
 
     uint32_t mask = save_get_u32(SETTINGS_FILTERED_CHANNELS);
     for (uint8_t i = 0; i < 16; i++) {
@@ -108,7 +107,7 @@ static void screen_update_midi_filter(uint8_t *select_states)
         uint8_t base_idx = SETTINGS_FIRST_FILTER - SETTINGS_START_MENU;
         uint8_t underline = select_states[base_idx + i];
 
-        screen_driver_underline_WriteString(label, Font_6x8_2, White, x, y, underline);
+        write_underline_68(label, x, y, underline);
     }
 }
 
@@ -118,10 +117,10 @@ static void screen_update_midi_filter(uint8_t *select_states)
 
 // About Section
 static void screen_update_settings_about(){
-	menu_display(&Font_6x8, message->about);
-	screen_driver_SetCursor_WriteString(message->about_brand, Font_6x8, White, TEXT_LEFT_START, LINE_1_VERT);
-	screen_driver_SetCursor_WriteString(message->about_product, Font_6x8, White, TEXT_LEFT_START, LINE_2_VERT);
-	screen_driver_SetCursor_WriteString(message->about_version, Font_6x8, White, TEXT_LEFT_START, LINE_3_VERT);
+	menu_display(message->about);
+	write_68(message->about_brand, TEXT_LEFT_START, LINE_1_VERT);
+	write_68(message->about_product, TEXT_LEFT_START, LINE_2_VERT);
+	write_68(message->about_version, TEXT_LEFT_START, LINE_3_VERT);
 }
 
 // The current selected menu part
@@ -155,8 +154,8 @@ void screen_update_settings(){
 	else {
 	    screen_update_settings_about();
 	}
-	screen_driver_Line(0, LINE_4_VERT, 127, LINE_4_VERT, White);
-	screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+	draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
+	write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 	screen_driver_UpdateScreen();
 }
 
@@ -166,7 +165,7 @@ void screen_update_settings(){
 // Save portion
 static void saving_settings_ui(){
 		// Saving the current configuration to the memory
-		screen_driver_SetCursor_WriteString(message->saving, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+	    write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 		screen_driver_UpdateScreen();
 
 		save_struct memory_to_be_saved;
@@ -178,10 +177,10 @@ static void saving_settings_ui(){
 
 		store_settings(&memory_to_be_saved);
 
-		screen_driver_SetCursor_WriteString(message->saved, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 		screen_driver_UpdateScreen();
 		osDelay(1000);
-		screen_driver_SetCursor_WriteString(message->save_instruction, Font_6x8, White, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 		screen_driver_UpdateScreen();
 }
 

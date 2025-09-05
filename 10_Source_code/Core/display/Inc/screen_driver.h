@@ -162,9 +162,9 @@ void screen_driver_Fill(screen_driver_COLOR color);
 void screen_driver_UpdateScreen(void);
 void screen_driver_DrawPixel(uint8_t x, uint8_t y, screen_driver_COLOR color);
 char screen_driver_WriteChar(char ch, screen_driver_Font_t Font, screen_driver_COLOR color);
-char screen_driver_WriteString(const char* str, screen_driver_Font_t Font, screen_driver_COLOR color);
+
 void screen_driver_SetCursor(uint8_t x, uint8_t y);
-void screen_driver_Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color);
+
 void screen_driver_DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, screen_driver_COLOR color);
 void screen_driver_DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, screen_driver_COLOR color);
 void screen_driver_DrawCircle(uint8_t par_x, uint8_t par_y, uint8_t par_r, screen_driver_COLOR color);
@@ -174,18 +174,18 @@ void screen_driver_DrawRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
 void screen_driver_FillRectangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color);
 
 
-// Midynamite defs
-void screen_driver_SetCursor_WriteString(const char* str, screen_driver_Font_t font,
-										 screen_driver_COLOR color,
-										 uint8_t x_align,
-										 uint8_t y_align);
 
 
-void screen_driver_underline_WriteString(const char* str, screen_driver_Font_t font,
-										  screen_driver_COLOR color,
-										  uint8_t x_align,
-										  uint8_t y_align,
-										  uint8_t underlined);
+
+void write_68(const char* str, uint8_t x_align, uint8_t y_align);
+void write_1118(const char* str, uint8_t x_align, uint8_t y_align);
+
+void write_underline_68(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined);
+void write_underline_1624(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined);
+
+void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
+
 
 
 

@@ -11,7 +11,8 @@
 #include "cmsis_os.h"
 
 #include "screen_driver.h"
-#include "screen_driver_fonts.h"
+
+
 #include "memory_main.h"
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 
@@ -207,15 +208,13 @@ void panic_midi(UART_HandleTypeDef *huart1,
 
 //On/ Off Part
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	screen_driver_Line(92, 10, 92, bottom_line, White);
+	draw_line(92, 10, 92, bottom_line);
 	uint8_t text_position = bottom_line/2;
-    screen_driver_SetCursor(95, text_position);
-
     if(on_or_off ==0){
-  	  screen_driver_WriteString(message->off, Font_11x18 , White);
+    	write_1118(message->off, 95, text_position);
     }
     else if (on_or_off ==1){
-  	  screen_driver_WriteString(message->on, Font_11x18 , White);
+    	write_1118(message->on, 95, text_position);
     }
 
 }

@@ -10,8 +10,6 @@
 
 #include "stdio.h"
 #include "memory_main.h"
-#include "screen_driver.h"
-#include "screen_driver_fonts.h"
 
 #define LINE_1_VERT 15
 #define LINE_2_VERT 25
