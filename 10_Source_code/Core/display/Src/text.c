@@ -81,10 +81,7 @@ static const Message _message = {
 
     // MIDI Out
     .send_to = "Send to",
-    .midi_channel_1 = "Out",
-    .midi_channel_2 = "Out 2",
-    .midi_channel_1_2 = "OUT 1+2",
-    .split_1_2 = "Split 1/2",
+
 
     // Start Menu
     .start_menu = "Start Menu",

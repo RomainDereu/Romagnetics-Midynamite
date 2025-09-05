@@ -13,117 +13,97 @@
 #include "memory_main.h"
 
 #include "menu.h"
-
 #include "menu_tempo.h"
 #include "midi_tempo.h"
-
 #include "screen_driver.h"
 
-//under_here_header_checks
-
-
-
+// under_here_header_checks
 #include "text.h"
 #include "threads.h"
 #include "utils.h"
 
-
 extern const Message * message;
 
-void midi_tempo_update_menu(){
-	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
-	static uint8_t old_select = 0;
-	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+/* -------------------------
+ * Controller
+ * ------------------------- */
+void midi_tempo_update_menu(void)
+{
+    // Snapshot before
+    midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
 
-    uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
+    // Begin frame for this group
+    menu_nav_begin(UI_GROUP_TEMPO);
 
-    update_select(&current_select, 0, count - 1, 1, WRAP);
-	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
+    // How many interactive rows are active right now
+    const uint8_t count = build_select_states(UI_GROUP_TEMPO, /*current_select=*/0, NULL, 0);
 
+    // Selection update (left encoder)
+    uint8_t current_select = menu_nav_update_and_get(
+        UI_MIDI_TEMPO_SELECT,
+        /*min=*/0,
+        /*max=*/(uint8_t)(count ? (count - 1) : 0),
+        /*step=*/1,
+        /*wrap=*/WRAP
+    );
+
+    // Drive selected item (right encoder)
     toggle_underline_items(UI_GROUP_TEMPO, current_select);
 
-	uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
-	save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
+    // Keep click-rate in sync with tempo
+    uint32_t new_tempo = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
+    save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000 / (new_tempo * 24));
 
-	midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
-	uint8_t tempo_has_changed = menu_check_for_updates( &old_midi_tempo_data,
-														&new_midi_tempo_data,
-														sizeof new_midi_tempo_data,
-														&current_select,
-														&old_select );
-
-    if (tempo_has_changed) {
-    	threads_display_notify(FLAG_TEMPO);
+    // End frame: redraw if selection or any tracked field changed
+    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO, current_select)) {
+        threads_display_notify(FLAG_TEMPO);
+    } else {
+        // (Optional) Preserve your previous compare if you still want the extra guard)
+        midi_tempo_data_struct new_midi_tempo_data = save_snapshot_tempo();
+        uint8_t dummy_old = current_select, dummy_cur = current_select;
+        if (menu_check_for_updates(&old_midi_tempo_data, &new_midi_tempo_data,
+                                   sizeof new_midi_tempo_data, &dummy_cur, &dummy_old)) {
+            threads_display_notify(FLAG_TEMPO);
+        }
     }
-    old_select  = current_select;
 }
 
+/* -------------------------
+ * Painter
+ * ------------------------- */
+void screen_update_midi_tempo(void)
+{
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
 
-void screen_update_midi_tempo(){
+    // Build underline map
+    uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
+    if (count == 0) count = 1; // defensive
+    uint8_t select_states[count];
+    for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
+    (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
 
-	  uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
+    screen_driver_Fill(Black);
 
-      uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
-      if (count == 0) count = 1; // defensive for empty groups
-      uint8_t select_states[count];
-      for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
-      (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
+    // Title + layout guides
+    menu_display(message->send_midi_tempo);
+    draw_line(64, 10, 64, 64);   // vertical
+    draw_line(0, 40, 64, 40);    // horizontal
 
-   	  screen_driver_Fill(Black);
-	  //Menu
-	  menu_display(message->send_midi_tempo);
-	  //Vertical line
-	  draw_line(64, 10, 64, 64);
-	  //Horizontal line
-	  draw_line(0, 40, 64, 40);
+    // Tempo big number
+    char tempo_print[6]; // room for 3 digits + null (or 4 just in case)
+    snprintf(tempo_print, sizeof tempo_print, "%lu",
+             (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
+    write_underline_1624(tempo_print, 80, 20, select_states[TEMPO_PRINT]);
+    write_68(message->bpm, 80, 48);
 
- 	  //Tempo
-	  char tempo_print[4];
-	  snprintf(tempo_print, sizeof tempo_print, "%lu",
-	           (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
-	  write_underline_1624(tempo_print, 80, 20, select_states[TEMPO_PRINT]);
-	  write_68(message->bpm, 80, 48);
+    // Send target (array lookup instead of switch)
+    write_68(message->target, TEXT_LEFT_START, 15);
+    const char *midi_send_out =
+        message->choices.midi_outs[ save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT) ];
+    write_underline_68(midi_send_out, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
 
+    // On/Off indicator
+    midi_display_on_off(save_get(MIDI_TEMPO_CURRENTLY_SENDING), 63);
 
-
-	  //Send to Midi Out and / or Out 2
-	  write_68(message->target, TEXT_LEFT_START, 15);
-      char message_midi_out[10];
-      switch (save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT)) {
-        case MIDI_OUT_1:
-          strcpy(message_midi_out, message->midi_channel_1);
-          break;
-
-        case MIDI_OUT_2:
-          strcpy(message_midi_out, message->midi_channel_2);
-          break;
-
-        case MIDI_OUT_1_2:
-          strcpy(message_midi_out, message->midi_channel_1_2);
-          break;
-
-        default:
-          // Optionally handle invalid values
-          strcpy(message_midi_out,  message->error);
-          break;
-      }
-
-      write_underline_68(message_midi_out, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
-
-      //Stop/Sending status
-      uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
-
-      if(currently_sending == 0){
-    	  write_1118(message->off, 15, 42);
-      }
-      else if (currently_sending == 1){
-    	  write_1118(message->on, 15, 42);
-      }
-
-      screen_driver_UpdateScreen();
-
+    screen_driver_UpdateScreen();
 }
-
-
-
-

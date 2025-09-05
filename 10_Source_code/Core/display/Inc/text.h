@@ -84,12 +84,8 @@ typedef struct {
     const char *sixth_up;
     const char *octave_up;
 
-    // MIDI out choices
     const char *send_to;
-    const char *midi_channel_1;
-    const char *midi_channel_2;
-    const char *midi_channel_1_2;
-    const char *split_1_2;
+
 
     // Start Menu
     const char *start_menu;
