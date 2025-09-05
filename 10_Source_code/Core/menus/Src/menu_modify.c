@@ -32,7 +32,7 @@ void midi_modify_update_menu(void)
 {
     ui_group_t group = UI_GROUP_MODIFY_BOTH; // family root
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group, /*tail_extra=*/0, /*mult=*/1, WRAP);
+    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group, 1, WRAP);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         uint8_t count = build_select_states(group, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
