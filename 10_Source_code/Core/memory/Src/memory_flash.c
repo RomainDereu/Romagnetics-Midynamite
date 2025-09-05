@@ -129,6 +129,7 @@ void save_load_from_flash(void) {
     }
 
     save_init_field_pointers();
+    save_mark_all_changed();
 }
 
 // ---------------------
@@ -243,6 +244,7 @@ settings_data_struct save_snapshot_settings(void) {
 void memory_init_defaults(void) {
     save_data = make_default_settings();
     save_init_field_pointers();
+    save_mark_all_changed();
 }
 
 void memory_overwrite_modify(const midi_modify_data_struct *src) {

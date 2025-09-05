@@ -33,7 +33,8 @@ typedef enum {
     UI_MIDI_TRANSPOSE_SELECT,
     UI_SETTINGS_SELECT,
     UI_CURRENT_MENU,
-	UI_OLD_MENU
+	UI_OLD_MENU,
+    UI_STATE_FIELD_COUNT
 } ui_state_field_t;
 
 

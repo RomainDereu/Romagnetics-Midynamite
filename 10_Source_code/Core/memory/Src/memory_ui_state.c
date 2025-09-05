@@ -8,10 +8,6 @@
 
 
 typedef struct {
-    uint8_t midi_tempo_current_select;
-    uint8_t midi_modify_current_select;
-    uint8_t midi_transpose_current_select;
-    uint8_t settings_current_select;
     uint8_t current_menu;
     uint8_t old_menu;
 } ui_state_t;
@@ -41,10 +37,6 @@ uint8_t ui_state_get(ui_state_field_t field) {
     uint8_t value = 0;
 
     switch (field) {
-        case UI_MIDI_TEMPO_SELECT:      value = ui_state.midi_tempo_current_select; break;
-        case UI_MIDI_MODIFY_SELECT:     value = ui_state.midi_modify_current_select; break;
-        case UI_MIDI_TRANSPOSE_SELECT:  value = ui_state.midi_transpose_current_select; break;
-        case UI_SETTINGS_SELECT:        value = ui_state.settings_current_select; break;
         case UI_CURRENT_MENU:           value = ui_state.current_menu; break;
         case UI_OLD_MENU:               value = ui_state.old_menu; break;
     }
@@ -61,14 +53,6 @@ uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
     }
 
     switch (field) {
-        case UI_MIDI_TEMPO_SELECT:
-            ui_state.midi_tempo_current_select = value; break;
-        case UI_MIDI_MODIFY_SELECT:
-            ui_state.midi_modify_current_select = value; break;
-        case UI_MIDI_TRANSPOSE_SELECT:
-            ui_state.midi_transpose_current_select = value; break;
-        case UI_SETTINGS_SELECT:
-            ui_state.settings_current_select = value; break;
         case UI_CURRENT_MENU:
             ui_state.current_menu = value; break;
         case UI_OLD_MENU:

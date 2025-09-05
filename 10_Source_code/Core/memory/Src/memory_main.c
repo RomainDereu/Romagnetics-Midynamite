@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "memory_main.h"
+#include "memory_ui_state.h"
 #include "stm32f4xx_hal.h"
 #include "utils.h"
 
@@ -265,6 +266,112 @@ static inline int32_t clamp_i32(int32_t v, int32_t lo, int32_t hi) {
     return v;
 }
 
+
+
+// ---- Field-change tracking (one bit per save_field_t) ----
+#define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
+
+static uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
+
+static inline void mark_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
+    s_field_change_bits[f >> 5] |= (1u << (f & 31));
+}
+
+static inline uint8_t test_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    return (s_field_change_bits[f >> 5] >> (f & 31)) & 1u;
+}
+
+static inline void clear_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
+    s_field_change_bits[f >> 5] &= ~(1u << (f & 31));
+}
+
+// Useful for big state transitions (load defaults / from flash)
+void save_mark_all_changed(void) {
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFFu;
+}
+
+
+// Persisted select per menu page
+static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
+
+// Per-frame list of active fields (indices)
+#ifndef ACTIVE_LIST_CAP
+#define ACTIVE_LIST_CAP 64  // more than enough for your visible rows
+#endif
+static uint16_t s_active_list[ACTIVE_LIST_CAP];
+static uint8_t  s_active_count = 0;
+
+void menu_nav_begin(ui_group_t group)
+{
+    s_active_count = 0;
+
+    const MenuDef *def = menu_def_for(group);
+    ui_group_t active[8];
+    const uint8_t act_n = build_active_groups(def, active, 8);
+
+    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && s_active_count < ACTIVE_LIST_CAP; ++f) {
+        const menu_items_parameters_t *p = &menu_items_parameters[f];
+        if (!group_is_active(p->ui_group, active, act_n)) continue;
+        s_active_list[s_active_count++] = f;
+    }
+}
+
+uint8_t menu_nav_get_select(ui_state_field_t field)
+{
+    if (field >= UI_STATE_FIELD_COUNT) return 0;
+    return s_menu_selects[field];
+}
+
+void menu_nav_set_select(ui_state_field_t field, uint8_t v)
+{
+    if (field >= UI_STATE_FIELD_COUNT) return;
+    s_menu_selects[field] = v;
+}
+
+uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select)
+{
+    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+    const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
+
+    uint8_t data_changed = 0;
+    for (uint8_t i = 0; i < s_active_count; ++i) {
+        save_field_t f = (save_field_t)s_active_list[i];
+        if (test_field_changed(f)) { data_changed = 1; break; }
+    }
+
+    // Persist new select
+    if (field < UI_STATE_FIELD_COUNT) s_menu_selects[field] = current_select;
+
+    // Clear change bits only for the fields we tracked this frame
+    for (uint8_t i = 0; i < s_active_count; ++i) {
+        clear_field_changed((save_field_t)s_active_list[i]);
+    }
+
+    return (sel_changed || data_changed);
+}
+
+uint8_t menu_nav_update_and_get(ui_state_field_t field,
+                                uint8_t min, uint8_t max,
+                                uint8_t step, uint8_t wrap)
+{
+    if (field >= UI_STATE_FIELD_COUNT) return min;
+    uint8_t sel = s_menu_selects[field];
+
+    update_select(&sel, min, max, step, wrap);
+
+    return sel;
+}
+
+
+void menu_nav_reset(ui_state_field_t field, uint8_t value)
+{
+    if (field >= UI_STATE_FIELD_COUNT) return;
+    s_menu_selects[field] = value;
+}
+
 int32_t save_get_u32(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     int32_t *p = u32_fields[field];
@@ -308,7 +415,8 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
     if (!save_lock_with_retries()) return 0;
 
     const menu_items_parameters_t lim = menu_items_parameters[field];
-    int32_t v = *u32_fields[field];
+    int32_t old_v = *u32_fields[field];
+    int32_t v = old_v;
 
     switch (op) {
         case SAVE_MODIFY_INCREMENT: v += 1; break;
@@ -317,7 +425,11 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
     }
 
     v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
-    *u32_fields[field] = v;
+
+    if (v != old_v) {
+        *u32_fields[field] = v;
+        mark_field_changed(field);
+    }
 
     save_unlock();
     return 1;
@@ -329,20 +441,20 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     if (!save_lock_with_retries()) return 0;
 
     const menu_items_parameters_t lim = menu_items_parameters[field];
-    int32_t v = (int32_t)(*u8_fields[field]);
+    uint8_t old_v = *u8_fields[field];
+    int32_t v = (int32_t)old_v;
 
     switch (op) {
         case SAVE_MODIFY_SET: {
             int32_t desired = (int32_t)value_if_set;
-
             if (!lim.wrap) {
-                if (desired > lim.max && desired >= 128) {v = lim.min;}
-                else if (desired < lim.min) {v = lim.min;}
-                else {v = desired;}
+                if (desired > lim.max && desired >= 128) v = lim.min;
+                else if (desired < lim.min)             v = lim.min;
+                else                                     v = desired;
+            } else {
+                v = desired;
             }
-            else {v = desired;}
-            break;
-        }
+        } break;
 
         case SAVE_MODIFY_INCREMENT:
             v += 1;
@@ -354,11 +466,14 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     }
 
     v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
-    *u8_fields[field] = (uint8_t)v;
+    uint8_t new_v = (uint8_t)v;
+
+    if (new_v != old_v) {
+        *u8_fields[field] = new_v;
+        mark_field_changed(field);
+    }
 
     save_unlock();
     return 1;
 }
-
-
 

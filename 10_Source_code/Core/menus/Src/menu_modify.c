@@ -30,16 +30,16 @@ extern const Message * message;
 // midi modify menu
 void midi_modify_update_menu(void)
 {
-    midi_modify_data_struct old_modify_data = save_snapshot_modify();
-    static uint8_t old_select = 0;
-    uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-
     uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
-    uint8_t count = build_select_states(group, current_select, NULL, 0);
 
-    update_select(&current_select, 0, count - 1, 1, WRAP);
-    ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, current_select);
+    menu_nav_begin(group);
+
+    // Selection handling
+    uint8_t count = build_select_states(group, /*current_select=*/0, NULL, 0);
+    uint8_t current_select = menu_nav_update_and_get(UI_MIDI_MODIFY_SELECT,
+                                          /*min=*/0, /*max=*/count - 1,
+                                          /*step=*/1, /*wrap=*/WRAP);
 
     // Mode toggle: last row toggles velocity type, other rows toggle change/split
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
@@ -51,21 +51,19 @@ void midi_modify_update_menu(void)
         ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, 0);
 
         // Recompute group if mode changed
-        mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-        group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
-                                             : UI_GROUP_MODIFY_SPLIT;
+        current_select = 0;
+        menu_nav_set_select(UI_MIDI_MODIFY_SELECT, current_select);
+
+
     }
 
     // Drive the selected row via the table handler (step sizes come from menu_items_parameters)
     toggle_underline_items(group, current_select);
 
-    midi_modify_data_struct new_modify_data = save_snapshot_modify();
-    if (menu_check_for_updates(&old_modify_data,
-                               &new_modify_data, sizeof new_modify_data,
-                               &current_select, &old_select)) {
+    // End: repaint if selection changed or any tracked field mutated
+    if (menu_nav_end(UI_MIDI_MODIFY_SELECT, group, current_select)) {
         threads_display_notify(FLAG_MODIFY);
     }
-    old_select = current_select;
 }
 
 
@@ -130,7 +128,7 @@ void screen_update_midi_modify(void)
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
                                                     : UI_GROUP_MODIFY_SPLIT;
 
-    uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_MODIFY_SELECT);
     (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);

@@ -123,25 +123,12 @@ static void MediumTasksThread(void *argument)
         screen_refresh();
     }
 
-    if (old_menu != current_menu) {
-        screen_refresh();
-    }
-
     switch (current_menu) {
-      case MIDI_TEMPO:
-        midi_tempo_update_menu();
-        break;
-      case MIDI_MODIFY:
-        midi_modify_update_menu();
-        break;
-      case MIDI_TRANSPOSE:
-        midi_transpose_update_menu();
-        break;
-      case SETTINGS:
-        settings_update_menu();
-        break;
-      default:
-        break;
+      case MIDI_TEMPO:     midi_tempo_update_menu();     break;
+      case MIDI_MODIFY:    midi_modify_update_menu();    break;
+      case MIDI_TRANSPOSE: midi_transpose_update_menu(); break;
+      case SETTINGS:       settings_update_menu();       break;
+      default: break;
     }
 
     current_menu = ui_state_get(UI_CURRENT_MENU);
