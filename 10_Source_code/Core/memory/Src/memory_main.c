@@ -356,6 +356,12 @@ void menu_nav_reset(ui_state_field_t field, uint8_t value)
     ui_state_modify(field, UI_MODIFY_SET, value);
 }
 
+
+uint8_t menu_nav_get_select(ui_state_field_t field) {
+    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+}
+
+
 int32_t save_get_u32(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     int32_t *p = u32_fields[field];

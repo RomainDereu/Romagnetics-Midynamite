@@ -258,6 +258,8 @@ uint8_t menu_nav_update_and_get(ui_state_field_t field,
 // Reset persisted selection (usually to 0) for a given menu page.
 void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
+uint8_t menu_nav_get_select(ui_state_field_t field);
+
 
 // Returns 1 if anything changed (selection or any tracked save field), else 0.
 uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select);

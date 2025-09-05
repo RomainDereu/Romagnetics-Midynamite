@@ -30,16 +30,18 @@ extern const Message * message;
 // midi modify menu
 void midi_modify_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_MODIFY_BOTH; // family root
+    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
     menu_nav_begin(group);
     uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group, 1, WRAP);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        uint8_t count = build_select_states(group, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
+        // unchanged…
+        uint8_t count = build_select_states(group, 0, NULL, 0);
         if (current_select < (uint8_t)(count - 1)) {
             save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
         } else {
-            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE,   SAVE_MODIFY_INCREMENT, 0);
+            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
         }
         menu_nav_reset(UI_MIDI_MODIFY_SELECT, 0);
         threads_display_notify(FLAG_MODIFY);
@@ -51,6 +53,7 @@ void midi_modify_update_menu(void)
         threads_display_notify(FLAG_MODIFY);
     }
 }
+
 
 
 
@@ -117,7 +120,7 @@ void screen_update_midi_modify(void)
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
                                                     : UI_GROUP_MODIFY_SPLIT;
 
-    uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
+    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group, 1, WRAP);
     (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);
