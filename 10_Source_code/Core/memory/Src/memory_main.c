@@ -128,7 +128,6 @@ static inline const MenuDef* menu_def_for(ui_group_t group) {
 }
 
 // Helper: an item is a 16-bit virtual strip if its handler is update_channel_filter
-extern void update_channel_filter(save_field_t field, uint8_t bit_index);
 static inline uint8_t is_bits_item(save_field_t f) {
     return menu_items_parameters[f].handler == update_channel_filter;
 }
@@ -353,6 +352,7 @@ void menu_nav_reset(ui_state_field_t field, uint8_t value)
 {
     if (field >= UI_STATE_FIELD_COUNT) return;
     s_menu_selects[field] = value;
+    ui_state_modify(field, UI_MODIFY_SET, value);
 }
 
 int32_t save_get_u32(save_field_t field) {

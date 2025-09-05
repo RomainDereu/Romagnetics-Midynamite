@@ -29,11 +29,11 @@ extern const Message * message;
  * ------------------------- */
 void midi_tempo_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_TEMPO;
+    ui_group_t group = UI_GROUP_TEMPO; // family root
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO, 0, 1, WRAP);
+    uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT, group, 0, 1, WRAP);
 
-    // Keep click-rate in sync with BPM
+
     uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
     save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
 
@@ -42,6 +42,7 @@ void midi_tempo_update_menu(void)
         threads_display_notify(FLAG_TEMPO);
     }
 }
+
 
 
 

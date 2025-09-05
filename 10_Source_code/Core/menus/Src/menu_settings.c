@@ -54,20 +54,22 @@ static void saving_settings_ui(void){
 
 void settings_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_SETTINGS;
+    ui_group_t group = UI_GROUP_SETTINGS; // family root
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS, 1, 1, WRAP);
 
+    uint8_t current_select = update_select(UI_SETTINGS_SELECT, group, /*tail_extra=*/1, /*mult=*/1, WRAP);
 
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();
     }
 
     toggle_underline_items(group, current_select);
+
     if (menu_nav_end(UI_SETTINGS_SELECT, group, current_select)) {
         threads_display_notify(FLAG_SETTINGS);
     }
 }
+
 
 
 
