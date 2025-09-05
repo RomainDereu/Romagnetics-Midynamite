@@ -335,7 +335,6 @@ uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_s
     // Persist new select
     if (field < UI_STATE_FIELD_COUNT) {
         s_menu_selects[field] = current_select;
-        // Mirror into UI state so painters can read it
         ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
@@ -346,6 +345,7 @@ uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_s
 
     return (sel_changed || data_changed);
 }
+
 
 
 

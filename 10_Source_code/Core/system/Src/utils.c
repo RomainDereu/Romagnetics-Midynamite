@@ -80,7 +80,7 @@ uint8_t update_select(ui_state_field_t field,
     TIM_HandleTypeDef *timer = &htim3;
 
     // Read current persisted selection for this UI field
-    uint8_t sel = menu_nav_get_select(field);
+    uint8_t sel = ui_state_get(field);
 
     // Optional speed-up when Btn2 is held
     uint8_t active_mult = 1;

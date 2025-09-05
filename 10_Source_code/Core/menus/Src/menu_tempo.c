@@ -58,7 +58,7 @@ void screen_update_midi_tempo(void)
 
     uint8_t select_states[count];
     for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
-    (void)build_select_states(UI_GROUP_TEMPO, sel, select_states, count);
+    (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
 
     screen_driver_Fill(Black);
 
