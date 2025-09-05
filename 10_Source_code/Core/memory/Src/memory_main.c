@@ -46,11 +46,6 @@ static int32_t* u32_fields[SAVE_FIELD_COUNT] = {0};
 static uint8_t*  u8_fields[SAVE_FIELD_COUNT] = {0};
 
 
-// ---------------------
-// Function pointers
-// ---------------------
-
-typedef void (*save_update_fn_t)(save_field_t field, uint8_t arg);
 
 // ---------------------
 // Limits table
@@ -82,8 +77,8 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,     NO_WRAP,   2,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
 	[MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,    NO_WRAP,  60,   update_value   ,  12,     UI_GROUP_MODIFY_SPLIT },
 
-	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,     UI_GROUP_MODIFY_BOTH },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,     UI_GROUP_MODIFY_BOTH },
+	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_CHANGED },
+    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_FIXED },
 
 	[MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
 
@@ -113,141 +108,163 @@ static const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 // UI functions
 // ---------------------
 
-// How many rows are shown for each Modify page
-static inline uint8_t modify_row_count(ui_group_t group) {
-    return (group == UI_GROUP_MODIFY_CHANGE) ? 4 :
-           (group == UI_GROUP_MODIFY_SPLIT)  ? 5 : 0;
+// Variant selection per menu family
+typedef struct {
+    save_field_t key;               // field whose current value selects one option
+    const ui_group_t *options;      // array of groups; index by clamped key value
+    uint8_t option_count;           // number of options
+} VariantSelector;
+
+// Menu definition: always-active groups + independent variant selectors
+typedef struct {
+    const ui_group_t *always_groups;
+    uint8_t always_count;
+
+    const VariantSelector *selectors;
+    uint8_t selector_count;
+} MenuDef;
+
+// Family definitions
+static const ui_group_t kTempoAlways[] = { UI_GROUP_TEMPO };
+static const MenuDef kMenuTempo = { kTempoAlways, 1, NULL, 0 };
+
+static const ui_group_t kSettingsAlways[] = { UI_GROUP_SETTINGS };
+static const MenuDef kMenuSettings = { kSettingsAlways, 1, NULL, 0 };
+
+// Transpose: one selector (SHIFT vs SCALED) + BOTH
+static const ui_group_t kTransposeAlways[] = { UI_GROUP_TRANSPOSE_BOTH };
+static const ui_group_t kTransposeOpts[]   = { UI_GROUP_TRANSPOSE_SHIFT, UI_GROUP_TRANSPOSE_SCALED };
+static const VariantSelector kTransposeSel[] = {
+    { MIDI_TRANSPOSE_TRANSPOSE_TYPE, kTransposeOpts, 2 },
+};
+static const MenuDef kMenuTranspose = { kTransposeAlways, 1, kTransposeSel, 1 };
+
+// Modify: two selectors (CHANGE/SPLIT) and (VEL_CHANGED/VEL_FIXED) + BOTH
+static const ui_group_t kModifyAlways[] = { UI_GROUP_MODIFY_BOTH };
+static const ui_group_t kModifyPageOpts[] = { UI_GROUP_MODIFY_CHANGE, UI_GROUP_MODIFY_SPLIT };
+static const ui_group_t kModifyVelOpts[]  = { UI_GROUP_MODIFY_VEL_CHANGED, UI_GROUP_MODIFY_VEL_FIXED };
+static const VariantSelector kModifySel[] = {
+    { MIDI_MODIFY_CHANGE_OR_SPLIT, kModifyPageOpts, 2 },
+    { MIDI_MODIFY_VELOCITY_TYPE,   kModifyVelOpts,  2 },
+};
+static const MenuDef kMenuModify = { kModifyAlways, 1, kModifySel, 2 };
+
+// Router: which family to use based on the incoming group
+static inline const MenuDef* menu_def_for(ui_group_t group) {
+    switch (group) {
+        case UI_GROUP_TEMPO:             return &kMenuTempo;
+        case UI_GROUP_SETTINGS:          return &kMenuSettings;
+
+        case UI_GROUP_TRANSPOSE_SHIFT:
+        case UI_GROUP_TRANSPOSE_SCALED:
+        case UI_GROUP_TRANSPOSE_BOTH:    return &kMenuTranspose;
+
+        case UI_GROUP_MODIFY_CHANGE:
+        case UI_GROUP_MODIFY_SPLIT:
+        case UI_GROUP_MODIFY_BOTH:
+        case UI_GROUP_MODIFY_VEL_CHANGED:
+        case UI_GROUP_MODIFY_VEL_FIXED:  return &kMenuModify;
+
+        default:                         return &kMenuTempo;
+    }
 }
 
-// Map (group, index) -> concrete save_field_t at runtime (last slot depends on vel type)
-static inline save_field_t modify_row_field(ui_group_t group, uint8_t index) {
-    const uint8_t vel_type = save_get(MIDI_MODIFY_VELOCITY_TYPE); // 0=changed, 1=fixed
-
-    if (group == UI_GROUP_MODIFY_CHANGE) {
-        switch (index) {
-            case 0: return MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1;
-            case 1: return MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2;
-            case 2: return MIDI_MODIFY_SEND_TO_MIDI_OUT;
-            case 3: return (vel_type == MIDI_MODIFY_CHANGED_VEL)
-                        ? MIDI_MODIFY_VELOCITY_PLUS_MINUS
-                        : MIDI_MODIFY_VELOCITY_ABSOLUTE;
-            default: return SAVE_FIELD_COUNT; // invalid
-        }
-    }
-
-    if (group == UI_GROUP_MODIFY_SPLIT) {
-        switch (index) {
-            case 0: return MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1;
-            case 1: return MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2;
-            case 2: return MIDI_MODIFY_SPLIT_NOTE;
-            case 3: return MIDI_MODIFY_SEND_TO_MIDI_OUT;
-            case 4: return (vel_type == MIDI_MODIFY_CHANGED_VEL)
-                        ? MIDI_MODIFY_VELOCITY_PLUS_MINUS
-                        : MIDI_MODIFY_VELOCITY_ABSOLUTE;
-            default: return SAVE_FIELD_COUNT; // invalid
-        }
-    }
-
-    return SAVE_FIELD_COUNT;
+// Helper: an item is a 16-bit virtual strip if its handler is update_channel_filter
+extern void update_channel_filter(save_field_t field, uint8_t bit_index);
+static inline uint8_t is_bits_item(save_field_t f) {
+    return menu_items_parameters[f].handler == update_channel_filter;
 }
 
-static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
-    if (field_group == requested) return 1;
-    // Merge-in the shared group
-    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
-       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
-        return 1;
-    }
-    if (field_group == UI_GROUP_MODIFY_BOTH &&
-       (requested == UI_GROUP_MODIFY_CHANGE || requested == UI_GROUP_MODIFY_SPLIT)) {
-        return 1;
-    }
+// Build active group set for the family, combining "always" groups and variant-selected groups
+static uint8_t build_active_groups(const MenuDef *def, ui_group_t *out, uint8_t cap) {
+    uint8_t n = 0;
+    for (uint8_t i = 0; i < def->always_count && n < cap; ++i) out[n++] = def->always_groups[i];
 
+    for (uint8_t s = 0; s < def->selector_count; ++s) {
+        int v = (int)save_get(def->selectors[s].key);
+        if (v < 0) v = 0;
+        if (v >= def->selectors[s].option_count) v = def->selectors[s].option_count - 1;
+        if (n < cap) out[n++] = def->selectors[s].options[v];
+    }
+    return n;
+}
+
+static inline uint8_t group_is_active(ui_group_t g, const ui_group_t *act, uint8_t n) {
+    if (g == UI_GROUP_NONE) return 0; // do NOT render uncategorized items
+    for (uint8_t i = 0; i < n; ++i) if (act[i] == g) return 1;
     return 0;
 }
 
-void toggle_underline_items(ui_group_t group, uint8_t index) {
-	if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
-	    const uint8_t count = modify_row_count(group);
-	    if (index >= count) return;
-
-	    const save_field_t f = modify_row_field(group, index);
-	    if (f == SAVE_FIELD_COUNT) return;
-
-	    const menu_items_parameters_t *p = &menu_items_parameters[f];
-	    if (p->handler) p->handler(f, p->handler_arg);
-	    return;
-	}
-
-
-    uint8_t seen = 0;
-    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!ui_group_matches(group, p->ui_group)) continue;
-
-        if (f == SETTINGS_FILTERED_CHANNELS) {
-            if (index >= seen && index < seen + 16) {
-                uint8_t bit = index - seen;
-                update_channel_filter((save_field_t)f, bit);
-                return;
-            }
-            seen += 16;
-        } else {
-            if (seen == index) {
-                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
-                return;
-            }
-            seen++;
-        }
-    }
-}
-
-
-
-
+// -------- Rewritten build_select_states (generic) --------
 uint8_t build_select_states(ui_group_t group,
                             uint8_t current_select,
                             uint8_t *states,
                             uint8_t states_cap)
 {
-	if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
-	    const uint8_t count = modify_row_count(group);
+    const MenuDef *def = menu_def_for(group);
 
-	    if (states && states_cap) {
-	        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
-	        if (current_select < count && current_select < states_cap) {
-	            states[current_select] = 1;
-	        }
-	    }
-	    return count;
-	}
+    ui_group_t active[8];
+    uint8_t act_n = build_active_groups(def, active, 8);
 
-    uint8_t count = 0;
+    uint8_t rows = 0;
     if (states && states_cap) {
         for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
     }
 
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
         const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!ui_group_matches(group, p->ui_group)) continue;
+        if (!group_is_active(p->ui_group, active, act_n)) continue;
 
-        if (f == SETTINGS_FILTERED_CHANNELS) {
-            // Expand into 16 "virtual" slots
-            for (uint8_t i = 0; i < 16; i++) {
-                if (count < states_cap && current_select == count) {
-                    states[count] = 1;
-                }
-                count++;
+        if (is_bits_item((save_field_t)f)) {
+            for (uint8_t b = 0; b < 16; ++b) {
+                if (states && rows == current_select && rows < states_cap) states[rows] = 1;
+                rows++;
             }
         } else {
-            if (count < states_cap && current_select == count) {
-                states[count] = 1;
-            }
-            count++;
+            if (states && rows == current_select && rows < states_cap) states[rows] = 1;
+            rows++;
         }
     }
-    return count;
+    return rows;
 }
+
+// -------- Rewritten toggle_underline_items (generic) --------
+void toggle_underline_items(ui_group_t group, uint8_t index)
+{
+    const MenuDef *def = menu_def_for(group);
+
+    ui_group_t active[8];
+    uint8_t act_n = build_active_groups(def, active, 8);
+
+    uint8_t row = 0;
+
+    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
+        const menu_items_parameters_t *p = &menu_items_parameters[f];
+        if (!group_is_active(p->ui_group, active, act_n)) continue;
+
+        if (is_bits_item((save_field_t)f)) {
+            if (index >= row && index < (uint8_t)(row + 16)) {
+                uint8_t bit = (uint8_t)(index - row);
+                update_channel_filter((save_field_t)f, bit);
+                return;
+            }
+            row = (uint8_t)(row + 16);
+        } else {
+            if (row == index) {
+                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
+                return;
+            }
+            row++;
+        }
+    }
+}
+
+
+
+
+
+
+
 
 
 
