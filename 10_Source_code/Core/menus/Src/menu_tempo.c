@@ -51,10 +51,10 @@ void midi_tempo_update_menu(void)
 void screen_update_midi_tempo(void)
 {
     // Current selection for underline map
-    uint8_t sel = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
+	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 
     // Build underline states matching current UI_GROUP_TEMPO rows
-    uint8_t count = build_select_states(UI_GROUP_TEMPO, sel, NULL, 0);
+    uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
 
     uint8_t select_states[count];
     for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;

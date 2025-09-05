@@ -319,12 +319,6 @@ void menu_nav_begin(ui_group_t group)
     }
 }
 
-uint8_t menu_nav_get_select(ui_state_field_t field)
-{
-    if (field >= UI_STATE_FIELD_COUNT) return 0;
-    return s_menu_selects[field];
-}
-
 
 
 uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select)
@@ -339,7 +333,11 @@ uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_s
     }
 
     // Persist new select
-    if (field < UI_STATE_FIELD_COUNT) s_menu_selects[field] = current_select;
+    if (field < UI_STATE_FIELD_COUNT) {
+        s_menu_selects[field] = current_select;
+        // Mirror into UI state so painters can read it
+        ui_state_modify(field, UI_MODIFY_SET, current_select);
+    }
 
     // Clear change bits only for the fields we tracked this frame
     for (uint8_t i = 0; i < s_active_count; ++i) {
@@ -348,6 +346,7 @@ uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_s
 
     return (sel_changed || data_changed);
 }
+
 
 
 void menu_nav_reset(ui_state_field_t field, uint8_t value)

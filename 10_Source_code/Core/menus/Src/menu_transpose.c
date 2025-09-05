@@ -57,11 +57,11 @@ void screen_update_midi_transpose(void)
                  ? UI_GROUP_TRANSPOSE_SHIFT
                  : UI_GROUP_TRANSPOSE_SCALED;
 
-    uint8_t sel = menu_nav_get_select(UI_MIDI_TRANSPOSE_SELECT);
+    uint8_t current_select = ui_state_get(UI_MIDI_TRANSPOSE_SELECT);
 
     // enough for the worst-case page (SCALED has 4 rows; SHIFT has 2)
     uint8_t select_states[5] = {0};
-    (void)build_select_states(group, sel, select_states, sizeof select_states);
+    (void)build_select_states(group, current_select, select_states, sizeof select_states);
 
     screen_driver_Fill(Black);
     menu_display(message->midi_transpose);

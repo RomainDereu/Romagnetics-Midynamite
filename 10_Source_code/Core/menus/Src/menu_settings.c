@@ -64,7 +64,6 @@ void settings_update_menu(void)
     }
 
     toggle_underline_items(group, current_select);
-
     if (menu_nav_end(UI_SETTINGS_SELECT, group, current_select)) {
         threads_display_notify(FLAG_SETTINGS);
     }
@@ -152,7 +151,7 @@ void screen_update_settings(void)
     // “About” is a synthetic extra row at the end
     const uint8_t total = (uint8_t)(rows + 1);
 
-    uint8_t current_select = menu_nav_get_select(UI_SETTINGS_SELECT);
+    uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
     if (current_select >= total) current_select = (uint8_t)(total - 1);
 
     // underline map only for interactive rows
