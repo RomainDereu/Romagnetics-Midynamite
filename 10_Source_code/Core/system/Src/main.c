@@ -50,17 +50,8 @@ static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_I2C1_Init(void);
 
-/* USER CODE BEGIN PFP */
-/* USER CODE END PFP */
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-/* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
   /* MCU Configuration--------------------------------------------------------*/
@@ -113,10 +104,7 @@ int main(void)
   while (1) { }
 }
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -156,11 +144,9 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
+
 static void MX_I2C1_Init(void)
 {
   hi2c1.Instance = I2C1;
@@ -177,11 +163,9 @@ static void MX_I2C1_Init(void)
   }
 }
 
-/**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
+
 static void MX_TIM2_Init(void)
 {
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -207,11 +191,9 @@ static void MX_TIM2_Init(void)
   }
 }
 
-/**
-  * @brief TIM3 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
+
 static void MX_TIM3_Init(void)
 {
   TIM_Encoder_InitTypeDef sConfig = {0};
@@ -242,11 +224,10 @@ static void MX_TIM3_Init(void)
   }
 }
 
-/**
-  * @brief TIM4 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
+
+
 static void MX_TIM4_Init(void)
 {
   TIM_Encoder_InitTypeDef sConfig = {0};
@@ -277,11 +258,9 @@ static void MX_TIM4_Init(void)
   }
 }
 
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
+
 static void MX_USART1_UART_Init(void)
 {
   huart1.Instance = USART1;
@@ -297,11 +276,8 @@ static void MX_USART1_UART_Init(void)
   }
 }
 
-/**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
 static void MX_USART2_UART_Init(void)
 {
   huart2.Instance = USART2;
@@ -317,11 +293,8 @@ static void MX_USART2_UART_Init(void)
   }
 }
 
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+
+
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -346,8 +319,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
-/* USER CODE BEGIN 4 */
-// Romagnetics code
+
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -357,9 +330,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
 }
 
-/**
-  * @brief  Period elapsed callback in non-blocking mode
-  */
+
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM1) {
@@ -373,12 +346,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     send_midi_tempo_out(tempo_click_rate, send_to_out);
   }
 }
-/* USER CODE END 4 */
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+
+
 void Error_Handler(void)
 {
   __disable_irq();

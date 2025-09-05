@@ -18,6 +18,12 @@
 #include "midi_usb.h"
 #include "memory_main.h"
 
+typedef struct {
+    uint8_t status;   ///< 0x8n = Note Off, 0x9n = Note On, etc.
+    uint8_t note;     ///< 0–127 pitch value
+    uint8_t velocity; ///< 0–127 velocity
+} midi_note;
+
 //midi_modify_transform
 void midi_buffer_push(uint8_t byte);
 uint8_t midi_buffer_pop(uint8_t *byte);

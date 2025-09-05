@@ -12,11 +12,7 @@
 #include "memory_main.h"
 #include "screen_driver.h"
 
-typedef struct {
-    uint8_t status;   ///< 0x8n = Note Off, 0x9n = Note On, etc.
-    uint8_t note;     ///< 0–127 pitch value
-    uint8_t velocity; ///< 0–127 velocity
-} midi_note;
+
 
 
 //midi_modify_menu
