@@ -151,6 +151,21 @@ static inline save_field_t modify_row_field(ui_group_t group, uint8_t index) {
     return SAVE_FIELD_COUNT;
 }
 
+static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
+    if (field_group == requested) return 1;
+    // Merge-in the shared group
+    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
+       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
+        return 1;
+    }
+    if (field_group == UI_GROUP_MODIFY_BOTH &&
+       (requested == UI_GROUP_MODIFY_CHANGE || requested == UI_GROUP_MODIFY_SPLIT)) {
+        return 1;
+    }
+
+    return 0;
+}
+
 void toggle_underline_items(ui_group_t group, uint8_t index) {
 	if (group == UI_GROUP_MODIFY_CHANGE || group == UI_GROUP_MODIFY_SPLIT) {
 	    const uint8_t count = modify_row_count(group);
@@ -186,26 +201,6 @@ void toggle_underline_items(ui_group_t group, uint8_t index) {
         }
     }
 }
-
-
-
-static inline uint8_t ui_group_matches(ui_group_t requested, ui_group_t field_group) {
-    if (field_group == requested) return 1;
-    // Merge-in the shared group
-    if (field_group == UI_GROUP_TRANSPOSE_BOTH &&
-       (requested == UI_GROUP_TRANSPOSE_SHIFT || requested == UI_GROUP_TRANSPOSE_SCALED)) {
-        return 1;
-    }
-    if (field_group == UI_GROUP_MODIFY_BOTH &&
-       (requested == UI_GROUP_MODIFY_CHANGE || requested == UI_GROUP_MODIFY_SPLIT)) {
-        return 1;
-    }
-
-    return 0;
-}
-
-
-
 
 
 

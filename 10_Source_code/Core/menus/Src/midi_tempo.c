@@ -27,11 +27,11 @@ extern const Message * message;
 
 void midi_tempo_update_menu(){
 	midi_tempo_data_struct old_midi_tempo_data = save_snapshot_tempo();
-
 	static uint8_t old_select = 0;
 	uint8_t current_select = ui_state_get(UI_MIDI_TEMPO_SELECT);
 
     uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
+
     update_select(&current_select, 0, count - 1, 1, WRAP);
 	ui_state_modify(UI_MIDI_TEMPO_SELECT, UI_MODIFY_SET ,current_select);
 

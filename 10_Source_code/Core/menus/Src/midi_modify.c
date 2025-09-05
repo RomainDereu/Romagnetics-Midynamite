@@ -29,13 +29,10 @@ void midi_modify_update_menu(void)
 {
     midi_modify_data_struct old_modify_data = save_snapshot_modify();
     static uint8_t old_select = 0;
-
     uint8_t current_select = ui_state_get(UI_MIDI_MODIFY_SELECT);
-    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
-                                                    : UI_GROUP_MODIFY_SPLIT;
 
-    // Derive count from the table/rank (no hardcoded 4/5 needed elsewhere)
+    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
     uint8_t count = build_select_states(group, current_select, NULL, 0);
 
     update_select(&current_select, 0, count - 1, 1, WRAP);
