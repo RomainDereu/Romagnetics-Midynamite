@@ -29,30 +29,20 @@ extern const Message * message;
  * ------------------------- */
 void midi_tempo_update_menu(void)
 {
-    // Begin nav frame for TEMPO family
-    menu_nav_begin(UI_GROUP_TEMPO);
+    ui_group_t group = UI_GROUP_TEMPO;
+    menu_nav_begin(group);
+    uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO, 0, 1, WRAP);
 
-
-    uint8_t count = build_select_states(UI_GROUP_TEMPO, 0, NULL, 0);
-    uint8_t current_select = menu_nav_update_and_get(UI_MIDI_TEMPO_SELECT,
-        /*min=*/0,
-        /*max=*/(uint8_t)(count - 1),
-        /*step=*/1,
-        /*wrap=*/WRAP
-    );
-
-    // Apply edit to focused row via right encoder (TIM4)
-    toggle_underline_items(UI_GROUP_TEMPO, current_select);
-
-    // Keep click-rate in sync with tempo (tempo >= 20 by table limits)
+    // Keep click-rate in sync with BPM
     uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
     save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
 
-    // End nav frame; notify if selection changed or any tracked field mutated
-    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO, current_select)) {
+    toggle_underline_items(group, current_select);
+    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, group, current_select)) {
         threads_display_notify(FLAG_TEMPO);
     }
 }
+
 
 
 /* -------------------------

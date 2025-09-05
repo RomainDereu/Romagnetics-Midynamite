@@ -29,36 +29,25 @@
 
 void midi_transpose_update_menu(void)
 {
-    // Decide which variant page is active right now
     uint8_t type  = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-    ui_group_t group  = (type == MIDI_TRANSPOSE_SHIFT) ? UI_GROUP_TRANSPOSE_SHIFT  : UI_GROUP_TRANSPOSE_SCALED;
-
-    // Track only fields visible on this page
+    ui_group_t group  = (type == MIDI_TRANSPOSE_SHIFT) ? UI_GROUP_TRANSPOSE_SHIFT : UI_GROUP_TRANSPOSE_SCALED;
     menu_nav_begin(group);
+    uint8_t current_select = update_select(UI_MIDI_TRANSPOSE_SELECT, group, 0, 1, WRAP);
 
-    // Row count for this page
-    uint8_t count = build_select_states(group, /*current_select=*/0, NULL, 0);
-    uint8_t current_select = menu_nav_update_and_get(UI_MIDI_TRANSPOSE_SELECT,
-                                          /*min=*/0, /*max=*/(uint8_t)(count - 1),
-                                          /*step=*/1, /*wrap=*/WRAP);
 
-    // Apply edits to the focused row with right encoder (TIM4)
-    toggle_underline_items(group, current_select);
-
-	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+    if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);
-
         menu_nav_reset(UI_MIDI_TRANSPOSE_SELECT, 0);
         threads_display_notify(FLAG_TRANSPOSE);
-
         return;
     }
 
-    // Repaint only if selection changed or any tracked field mutated
+    toggle_underline_items(group, current_select);
     if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, group, current_select)) {
         threads_display_notify(FLAG_TRANSPOSE);
     }
 }
+
 
 void screen_update_midi_transpose(void)
 {

@@ -54,11 +54,11 @@ void update_value(save_field_t field, uint8_t multiplier);
 
 
 
-void update_select(uint8_t *value,
-                   int32_t min,
-                   int32_t max,
-                   uint8_t multiplier,
-                   uint8_t wrap);
+uint8_t update_select(ui_state_field_t field,
+                      ui_group_t       group,
+                      uint8_t          tail_extra,   // e.g. 1 for “About” in SETTINGS, else 0
+                      uint8_t          multiplier,
+                      uint8_t          wrap);
 
 void update_contrast(save_field_t f, uint8_t step);
 void update_channel_filter(save_field_t field, uint8_t bit_index);

@@ -69,27 +69,43 @@ static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-void update_select(uint8_t *value,
-                   int32_t  min,
-                   int32_t  max,
-                   uint8_t  multiplier,
-                   uint8_t  wrap)
+
+
+uint8_t update_select(ui_state_field_t field,
+                      ui_group_t       group,
+                      uint8_t          tail_extra,   // e.g. 1 for “About” in SETTINGS, else 0
+                      uint8_t          multiplier,
+                      uint8_t          wrap)
 {
     TIM_HandleTypeDef *timer = &htim3;
 
+    // Read current persisted selection for this UI field
+    uint8_t sel = menu_nav_get_select(field);
+
+    // Optional speed-up when Btn2 is held
     uint8_t active_mult = 1;
     if (multiplier != 1) {
         uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
         active_mult = (Btn2State == 0) ? multiplier : 1;
     }
 
+    // Encoder step from TIM3
     int8_t step = encoder_read_step(timer);
-    if (step == 0) return;
+    if (step == 0) {
+        return sel; // no change
+    }
 
-    int32_t next = (int32_t)(*value) + step * active_mult;
+    // Dynamic bounds from menu structure (+ optional non-interactive tail rows)
+    uint8_t rows = build_select_states(group, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
+    int32_t min = 0;
+    int32_t max = (rows == 0) ? 0 : ((int32_t)rows - 1 + (int32_t)tail_extra);
+
+    int32_t next = (int32_t)sel + (int32_t)step * (int32_t)active_mult;
     next = wrap_or_clamp_i32(next, min, max, wrap);
-    *value = (uint8_t)next;
+    return (uint8_t)next;  // Persisted later via menu_nav_end()
 }
+
+
 
 
 void no_update(save_field_t field, uint8_t arg) {

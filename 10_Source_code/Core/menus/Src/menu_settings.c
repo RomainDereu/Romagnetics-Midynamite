@@ -30,9 +30,52 @@
 extern const Message *message;
 
 
+static void saving_settings_ui(void){
+    write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+    screen_driver_UpdateScreen();
+
+    save_struct s;
+    s.midi_tempo_data     = save_snapshot_tempo();
+    s.midi_modify_data    = save_snapshot_modify();
+    s.midi_transpose_data = save_snapshot_transpose();
+    s.settings_data       = save_snapshot_settings();
+    s.check_data_validity = DATA_VALIDITY_CHECKSUM;
+
+    (void)store_settings(&s);
+
+    write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+    screen_driver_UpdateScreen();
+    osDelay(1000);
+    write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+    screen_driver_UpdateScreen();
+}
 
 
-/* ---------- section renderers ---------- */
+
+void settings_update_menu(void)
+{
+    ui_group_t group = UI_GROUP_SETTINGS;
+    menu_nav_begin(group);
+    uint8_t current_select = update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS, 1, 1, WRAP);
+
+
+    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
+        saving_settings_ui();
+    }
+
+    toggle_underline_items(group, current_select);
+
+    if (menu_nav_end(UI_SETTINGS_SELECT, group, current_select)) {
+        threads_display_notify(FLAG_SETTINGS);
+    }
+}
+
+
+
+
+
+
+
 
 static void screen_update_global_settings1(uint8_t *select_states){
     menu_display(message->global_settings_1);
@@ -70,7 +113,7 @@ static void screen_update_global_settings2(uint8_t *select_states){
 
     // MIDI filter enable
     write_68(message->MIDI_Filter, TEXT_LEFT_START, LINE_3_VERT);
-    write_underline_68_2(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], 80, LINE_3_VERT, select_states[idx++]);
+    write_underline_68(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], 80, LINE_3_VERT, select_states[idx++]);
 }
 
 static void screen_update_midi_filter(uint8_t *select_states)
@@ -89,7 +132,7 @@ static void screen_update_midi_filter(uint8_t *select_states)
         uint8_t base_idx  = (uint8_t)(SETTINGS_FIRST_FILTER - SETTINGS_START_MENU);
         uint8_t underline = select_states[base_idx + i];
 
-        write_underline_68(label, x, y, underline);
+        write_underline_68_2(label, x, y, underline);
     }
 }
 
@@ -150,57 +193,8 @@ void screen_update_settings(void)
 
 
 
-/* ---------- save sequence ---------- */
-
-static void saving_settings_ui(void){
-    write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-
-    save_struct s;
-    s.midi_tempo_data     = save_snapshot_tempo();
-    s.midi_modify_data    = save_snapshot_modify();
-    s.midi_transpose_data = save_snapshot_transpose();
-    s.settings_data       = save_snapshot_settings();
-    s.check_data_validity = DATA_VALIDITY_CHECKSUM;
-
-    (void)store_settings(&s);
-
-    write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-    osDelay(1000);
-    write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-}
 
 
 
 
-void settings_update_menu(void)
-{
-    // Begin frame: track only active settings fields on this page
-    menu_nav_begin(UI_GROUP_SETTINGS);
 
-    const uint8_t count  = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-    const uint8_t total = (uint8_t)(count + 1); // +1 for “About”
-
-    // Selection update
-    uint8_t current_select = menu_nav_update_and_get(
-        UI_SETTINGS_SELECT,
-        /*min=*/0,
-        /*max=*/(uint8_t)(total - 1),
-        /*step=*/1,
-        /*wrap=*/WRAP
-    );
-
-    toggle_underline_items(UI_GROUP_SETTINGS, current_select);
-
-    // Save on Btn1
-    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-        saving_settings_ui();
-    }
-
-    // End frame: repaint if selection changed or any tracked field mutated
-    if (menu_nav_end(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS, current_select)) {
-        threads_display_notify(FLAG_SETTINGS);
-    }
-}

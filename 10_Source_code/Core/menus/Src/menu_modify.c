@@ -30,37 +30,34 @@ extern const Message * message;
 // midi modify menu
 void midi_modify_update_menu(void)
 {
-    uint8_t type = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+    uint8_t type  = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
     ui_group_t group = (type == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
-
     menu_nav_begin(group);
-
-    // Selection handling
     uint8_t count = build_select_states(group, /*current_select=*/0, NULL, 0);
-    uint8_t current_select = menu_nav_update_and_get(UI_MIDI_MODIFY_SELECT,
-                                          /*min=*/0, /*max=*/count - 1,
-                                          /*step=*/1, /*wrap=*/WRAP);
+    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group, 0, 1, WRAP);
 
-    // Drive the selected row via the table handler (step sizes come from menu_items_parameters)
-    toggle_underline_items(group, current_select);
 
-    // Mode toggle: last row toggles velocity type, other rows toggle change/split
+    // Toggle: change/split unless on last row (then velocity type)
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        if (current_select < count - 1) {
+        if (current_select < (uint8_t)(count - 1)) {
             save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
         } else {
-            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
+            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE,   SAVE_MODIFY_INCREMENT, 0);
         }
         menu_nav_reset(UI_MIDI_MODIFY_SELECT, 0);
         threads_display_notify(FLAG_MODIFY);
         return;
     }
 
-    // End: repaint if selection changed or any tracked field mutated
+
+
+    toggle_underline_items(group, current_select);
     if (menu_nav_end(UI_MIDI_MODIFY_SELECT, group, current_select)) {
         threads_display_notify(FLAG_MODIFY);
     }
 }
+
+
 
 
 // -------- Display helpers (read from save_*, no struct param) --------

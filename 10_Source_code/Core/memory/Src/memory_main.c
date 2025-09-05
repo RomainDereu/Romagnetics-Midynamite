@@ -349,18 +349,6 @@ uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_s
     return (sel_changed || data_changed);
 }
 
-uint8_t menu_nav_update_and_get(ui_state_field_t field,
-                                uint8_t min, uint8_t max,
-                                uint8_t step, uint8_t wrap)
-{
-    if (field >= UI_STATE_FIELD_COUNT) return min;
-    uint8_t sel = s_menu_selects[field];
-
-    update_select(&sel, min, max, step, wrap);
-
-    return sel;
-}
-
 
 void menu_nav_reset(ui_state_field_t field, uint8_t value)
 {
