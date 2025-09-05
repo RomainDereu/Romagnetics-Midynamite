@@ -29,37 +29,35 @@
 
 void midi_transpose_update_menu(void)
 {
-    // Optional: same UX as before — toggle SHIFT/SCALED with the button combo
-    if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+
+
+	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);
-        // after a mode toggle, it's nicer to land on the first row
+
         menu_nav_reset(UI_MIDI_TRANSPOSE_SELECT, 0);
-        // let the next frame rebuild; no early return needed
+        threads_display_notify(FLAG_TRANSPOSE);
+
+        return;
     }
 
     // Decide which variant page is active right now
     uint8_t type  = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-    ui_group_t g  = (type == MIDI_TRANSPOSE_SHIFT)
-                  ? UI_GROUP_TRANSPOSE_SHIFT
-                  : UI_GROUP_TRANSPOSE_SCALED;
+    ui_group_t group  = (type == MIDI_TRANSPOSE_SHIFT) ? UI_GROUP_TRANSPOSE_SHIFT  : UI_GROUP_TRANSPOSE_SCALED;
 
     // Track only fields visible on this page
-    menu_nav_begin(g);
+    menu_nav_begin(group);
 
     // Row count for this page
     uint8_t count = build_select_states(g, /*current_select=*/0, NULL, 0);
-    if (count == 0) count = 1;
-
-    // Move selection with left encoder (TIM3) and persist internally
-    uint8_t sel = menu_nav_update_and_get(UI_MIDI_TRANSPOSE_SELECT,
+    uint8_t current_select = menu_nav_update_and_get(UI_MIDI_TRANSPOSE_SELECT,
                                           /*min=*/0, /*max=*/(uint8_t)(count - 1),
                                           /*step=*/1, /*wrap=*/WRAP);
 
     // Apply edits to the focused row with right encoder (TIM4)
-    toggle_underline_items(g, sel);
+    toggle_underline_items(g, current_select);
 
     // Repaint only if selection changed or any tracked field mutated
-    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, g, sel)) {
+    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, g, current_select)) {
         threads_display_notify(FLAG_TRANSPOSE);
     }
 }

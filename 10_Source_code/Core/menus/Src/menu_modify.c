@@ -48,13 +48,9 @@ void midi_modify_update_menu(void)
         } else {
             save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
         }
-        ui_state_modify(UI_MIDI_MODIFY_SELECT, UI_MODIFY_SET, 0);
-
-        // Recompute group if mode changed
-        current_select = 0;
-        menu_nav_set_select(UI_MIDI_MODIFY_SELECT, current_select);
-
-
+        menu_nav_reset(UI_MIDI_MODIFY_SELECT, 0);
+        threads_display_notify(FLAG_MODIFY);
+        return;
     }
 
     // Drive the selected row via the table handler (step sizes come from menu_items_parameters)

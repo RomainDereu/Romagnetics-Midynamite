@@ -325,11 +325,7 @@ uint8_t menu_nav_get_select(ui_state_field_t field)
     return s_menu_selects[field];
 }
 
-void menu_nav_set_select(ui_state_field_t field, uint8_t v)
-{
-    if (field >= UI_STATE_FIELD_COUNT) return;
-    s_menu_selects[field] = v;
-}
+
 
 uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select)
 {

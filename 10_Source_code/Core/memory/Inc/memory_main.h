@@ -251,7 +251,6 @@ void    menu_nav_begin(ui_group_t group);
 
 // Get/set the persisted "current select" for a menu select field (per-page).
 uint8_t menu_nav_get_select(ui_state_field_t field);
-void    menu_nav_set_select(ui_state_field_t field, uint8_t v);
 
 // Read-persist helper: apply selection delta and return the new index.
 uint8_t menu_nav_update_and_get(ui_state_field_t field,
