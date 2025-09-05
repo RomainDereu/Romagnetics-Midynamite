@@ -29,17 +29,6 @@
 
 void midi_transpose_update_menu(void)
 {
-
-
-	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);
-
-        menu_nav_reset(UI_MIDI_TRANSPOSE_SELECT, 0);
-        threads_display_notify(FLAG_TRANSPOSE);
-
-        return;
-    }
-
     // Decide which variant page is active right now
     uint8_t type  = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
     ui_group_t group  = (type == MIDI_TRANSPOSE_SHIFT) ? UI_GROUP_TRANSPOSE_SHIFT  : UI_GROUP_TRANSPOSE_SCALED;
@@ -56,6 +45,15 @@ void midi_transpose_update_menu(void)
     // Apply edits to the focused row with right encoder (TIM4)
     toggle_underline_items(group, current_select);
 
+	if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+        save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);
+
+        menu_nav_reset(UI_MIDI_TRANSPOSE_SELECT, 0);
+        threads_display_notify(FLAG_TRANSPOSE);
+
+        return;
+    }
+
     // Repaint only if selection changed or any tracked field mutated
     if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, group, current_select)) {
         threads_display_notify(FLAG_TRANSPOSE);
@@ -66,7 +64,7 @@ void screen_update_midi_transpose(void)
 {
     // Build underline states for the *current* selection on the active page
     uint8_t type = save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-    ui_group_t g = (type == MIDI_TRANSPOSE_SHIFT)
+    ui_group_t group = (type == MIDI_TRANSPOSE_SHIFT)
                  ? UI_GROUP_TRANSPOSE_SHIFT
                  : UI_GROUP_TRANSPOSE_SCALED;
 
@@ -74,7 +72,7 @@ void screen_update_midi_transpose(void)
 
     // enough for the worst-case page (SCALED has 4 rows; SHIFT has 2)
     uint8_t select_states[5] = {0};
-    (void)build_select_states(g, sel, select_states, sizeof select_states);
+    (void)build_select_states(group, sel, select_states, sizeof select_states);
 
     screen_driver_Fill(Black);
     menu_display(message->midi_transpose);

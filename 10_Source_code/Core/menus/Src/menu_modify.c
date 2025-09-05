@@ -30,8 +30,8 @@ extern const Message * message;
 // midi modify menu
 void midi_modify_update_menu(void)
 {
-    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
+    uint8_t type = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+    ui_group_t group = (type == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
 
     menu_nav_begin(group);
 
@@ -40,6 +40,9 @@ void midi_modify_update_menu(void)
     uint8_t current_select = menu_nav_update_and_get(UI_MIDI_MODIFY_SELECT,
                                           /*min=*/0, /*max=*/count - 1,
                                           /*step=*/1, /*wrap=*/WRAP);
+
+    // Drive the selected row via the table handler (step sizes come from menu_items_parameters)
+    toggle_underline_items(group, current_select);
 
     // Mode toggle: last row toggles velocity type, other rows toggle change/split
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
@@ -52,9 +55,6 @@ void midi_modify_update_menu(void)
         threads_display_notify(FLAG_MODIFY);
         return;
     }
-
-    // Drive the selected row via the table handler (step sizes come from menu_items_parameters)
-    toggle_underline_items(group, current_select);
 
     // End: repaint if selection changed or any tracked field mutated
     if (menu_nav_end(UI_MIDI_MODIFY_SELECT, group, current_select)) {

@@ -29,17 +29,8 @@
 
 extern const Message *message;
 
-/* ---------- helpers ---------- */
 
-/* number of interactive rows derived from UI_GROUP_SETTINGS */
-static inline uint8_t settings_row_count(void) {
-    return build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-}
 
-/* total selectable items = interactive rows + 1 "About" row */
-static inline uint8_t settings_total_items(void) {
-    return (uint8_t)(settings_row_count() + 1);
-}
 
 /* ---------- section renderers ---------- */
 
@@ -113,12 +104,15 @@ static void screen_update_settings_about(void){
 
 void screen_update_settings(void)
 {
-    const uint8_t rows  = settings_row_count();
-    const uint8_t total = (uint8_t)(rows + 1); // +1 About
+    // how many interactive rows (derived from UI_GROUP_SETTINGS)
+    const uint8_t rows = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
+    // “About” is a synthetic extra row at the end
+    const uint8_t total = (uint8_t)(rows + 1);
+
     uint8_t current_select = menu_nav_get_select(UI_SETTINGS_SELECT);
     if (current_select >= total) current_select = (uint8_t)(total - 1);
 
-    // Build underline map only for interactive rows
+    // underline map only for interactive rows
     uint8_t select_states[rows ? rows : 1];
     if (rows) {
         (void)build_select_states(UI_GROUP_SETTINGS, current_select, select_states, rows);
@@ -127,8 +121,7 @@ void screen_update_settings(void)
     screen_driver_Fill(Black);
 
     if (current_select < rows) {
-        // Decide which section to render based on the selected index mapping
-        // These ranges mirror your previous screen grouping:
+        // decide which section to render (same index ranges as before)
         if (current_select >= (SETTINGS_FIRST_GLOBAL1 - SETTINGS_START_MENU) &&
             current_select <= (SETTINGS_LAST_GLOBAL1   - SETTINGS_START_MENU)) {
             screen_update_global_settings1(select_states);
@@ -142,7 +135,7 @@ void screen_update_settings(void)
             screen_update_midi_filter(select_states);
         }
         else {
-            // Fallback if grouping changes
+            // fallback if grouping changes
             screen_update_global_settings1(select_states);
         }
     } else {
@@ -154,6 +147,8 @@ void screen_update_settings(void)
     write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();
 }
+
+
 
 /* ---------- save sequence ---------- */
 
@@ -177,15 +172,18 @@ static void saving_settings_ui(void){
     screen_driver_UpdateScreen();
 }
 
-/* ---------- controller ---------- */
+
+
 
 void settings_update_menu(void)
 {
-    // Begin frame: track only active settings fields
+    // Begin frame: track only active settings fields on this page
     menu_nav_begin(UI_GROUP_SETTINGS);
 
-    const uint8_t rows  = settings_row_count();
-    const uint8_t total = (uint8_t)(rows + 1); // +1 About
+    const uint8_t count  = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
+    const uint8_t total = (uint8_t)(count + 1); // +1 for “About”
+
+    // Selection update
     uint8_t current_select = menu_nav_update_and_get(
         UI_SETTINGS_SELECT,
         /*min=*/0,
@@ -194,17 +192,14 @@ void settings_update_menu(void)
         /*wrap=*/WRAP
     );
 
-    // Drive the selected row only if it’s an interactive settings item
-    if (current_select < rows) {
-        toggle_underline_items(UI_GROUP_SETTINGS, current_select);
-    }
+    toggle_underline_items(UI_GROUP_SETTINGS, current_select);
 
     // Save on Btn1
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();
     }
 
-    // End frame: if selection changed or any tracked field changed, repaint
+    // End frame: repaint if selection changed or any tracked field mutated
     if (menu_nav_end(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS, current_select)) {
         threads_display_notify(FLAG_SETTINGS);
     }
