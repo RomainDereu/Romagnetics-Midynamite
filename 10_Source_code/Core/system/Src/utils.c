@@ -73,44 +73,51 @@ static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
 
 uint8_t update_select(ui_state_field_t field,
                       ui_group_t       group,
-                      uint8_t          tail_extra,
                       uint8_t          multiplier,
                       uint8_t          wrap)
 {
     TIM_HandleTypeDef *timer = &htim3;
 
-    // Read current persisted selection for this UI field
+    // Use the same source your last working version used
     uint8_t sel = ui_state_get(field);
 
-    // Compute dynamic bounds from menu structure (+ optional tail rows)
-    const uint8_t rows  = build_select_states(group, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-    const int32_t total = (int32_t)rows + (int32_t)tail_extra;
-    const int32_t max   = (total == 0) ? 0 : (total - 1);
+    // Compute total rows directly from the active group(s)
+    const uint8_t rows = build_select_states(group, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
+    const int32_t total = (int32_t)rows;
+    const int32_t max   = (total <= 0) ? 0 : (total - 1);
 
-    // Clamp stale selection into the new bounds immediately
+    // Sanitize stale selection immediately
     if ((int32_t)sel > max) sel = (uint8_t)max;
+    if (total <= 0) return 0;
 
-    // If nothing to select, bail out consistently
-    if (total == 0) return 0;
-
-    // Optional speed-up when Btn2 is held
+    // Optional speed-up when Btn2 is held (active-low)
     uint8_t active_mult = 1;
     if (multiplier != 1) {
-        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        active_mult = (Btn2State == 0) ? multiplier : 1;
+        active_mult = (HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0) ? multiplier : 1;
     }
 
-    // Encoder step from TIM3
-    int8_t step = encoder_read_step(timer);
-    if (step == 0) {
-        return sel; // no change, but 'sel' is already clamped
+    // Encoder step
+    const int8_t step = encoder_read_step(timer);
+    if (step == 0) return sel; // already clamped
+
+    // Apply delta
+    int32_t v = (int32_t)sel + (int32_t)step * (int32_t)active_mult;
+
+    // Wrap/Clamp explicitly
+    if (wrap) {
+        if (total > 0) {
+            int32_t m = v % total;
+            if (m < 0) m += total;
+            v = m;
+        } else {
+            v = 0;
+        }
+    } else {
+        if (v < 0) v = 0;
+        if (v > max) v = max;
     }
 
-    // Apply delta and wrap/clamp
-    int32_t next = (int32_t)sel + (int32_t)step * (int32_t)active_mult;
-    next = wrap_or_clamp_i32(next, /*min=*/0, /*max=*/max, /*wrap=*/wrap);
-
-    return (uint8_t)next;  // Persisted later via menu_nav_end()
+    return (uint8_t)v;  // persisted later via menu_nav_end()
 }
 
 
