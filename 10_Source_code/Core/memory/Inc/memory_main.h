@@ -12,9 +12,6 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
 
-// ---------------------
-// menu parameters visible to c and tests
-// ---------------------
 
 
 // ---------------------
@@ -183,6 +180,8 @@ typedef struct {
     ui_group_t ui_group;
 } menu_items_parameters_t;
 
+
+
 // (Your encoder constants still live here if you need them across modules)
 #define ENCODER_CENTER     32768
 #define ENCODER_THRESHOLD  4
@@ -212,6 +211,19 @@ typedef enum {
     FLAG_TRANSPOSE  = (1 << 2),
     FLAG_SETTINGS   = (1 << 3)
 } DisplayFlags_t;
+
+
+
+// ---------------------
+// The following expositions are for memory_flash.c
+// ---------------------
+
+extern int32_t* u32_fields[SAVE_FIELD_COUNT];
+extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
+
+extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
+
+
 
 // ---------------------
 // API
@@ -253,9 +265,6 @@ void memory_init_defaults(void);
 void memory_overwrite_modify(const midi_modify_data_struct *src);
 
 void memory_set_midi_thru(uint8_t v);
-
-
-extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
 
 
 #endif
