@@ -3,10 +3,16 @@
 #include "usb_device.h"
 #include "memory_ui_state.h"
 #include "memory_main.h"
+
 #include "menu.h"
+#include "menu_tempo.h"
+#include "menu_modify.h"
+
+#include "midi_transform.h"
 #include "midi_tempo.h"
-#include "midi_modify.h"
-#include "settings.h"
+
+
+#include "menu_settings.h"
 #include "utils.h"
 #include "stm32f4xx_hal.h"  // HAL types
 

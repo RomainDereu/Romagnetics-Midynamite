@@ -1,5 +1,5 @@
 /*
- * midi_modify.c
+ * menu_modify.c
  *
  *  Created on: Feb 27, 2025
  *      Author: Romain Dereu
@@ -11,10 +11,13 @@
 #include "memory_ui_state.h"
 #include "memory_main.h"
 
+#include "menu_modify.h"
+
+#include "midi_transform.h"
+
 
 //under_here_header_checks
 #include "menu.h"
-#include "midi_modify.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"
 #include "text.h"

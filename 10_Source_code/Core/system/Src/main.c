@@ -16,10 +16,10 @@
 #include "screen_driver_fonts.h"
 #include "memory_ui_state.h"
 #include "menu.h"
+
+#include "midi_transform.h"
 #include "midi_tempo.h"
-#include "midi_modify.h"
-#include "memory_main.h"
-#include "settings.h"
+
 #include "utils.h"
 #include "threads.h"
 

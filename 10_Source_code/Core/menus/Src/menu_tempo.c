@@ -1,5 +1,5 @@
 /*
- * midi_tempo.c
+ * menu_tempo.c
  *
  *  Created on: Feb 1, 2025
  *      Author: Romain Dereu
@@ -12,9 +12,12 @@
 #include "memory_ui_state.h"
 #include "memory_main.h"
 
-//under_here_header_checks
-#include "midi_tempo.h"
 #include "menu.h"
+#include "menu_tempo.h"
+
+#include "midi_tempo.h"
+
+//under_here_header_checks
 #include "midi_usb.h"
 #include "screen_driver.h"
 #include "screen_driver_fonts.h"

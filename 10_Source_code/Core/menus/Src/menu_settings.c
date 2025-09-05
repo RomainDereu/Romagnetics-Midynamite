@@ -1,5 +1,5 @@
 /*
- * settings.c
+ * menu_settings.c
  *
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "menu_settings.h"
 
 #include "memory_ui_state.h"
 #include "memory_main.h"
@@ -18,7 +19,6 @@
 
 #include "menu.h"
 #include "utils.h"
-#include "settings.h"
 #include "text.h"
 #include "threads.h"
 
