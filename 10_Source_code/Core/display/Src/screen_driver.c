@@ -571,27 +571,26 @@ void write_68(const char* str, uint8_t x_align, uint8_t y_align){
 }
 
 void write_1118(const char* str, uint8_t x_align, uint8_t y_align){
-
 	screen_driver_SetCursor_WriteString(str, Font_11x18 , White, x_align, y_align);
 }
 
 
 void write_underline_68(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined){
-
 	screen_driver_underline_WriteString(str, Font_6x8 , White, x_align, y_align, underlined);
-
 }
+
+void write_underline_68_2(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined){
+	screen_driver_underline_WriteString(str, Font_6x8_2 , White, x_align, y_align, underlined);
+}
+
 
 void write_underline_1624(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined){
-
 	screen_driver_underline_WriteString(str, Font_16x24 , White, x_align, y_align, underlined);
-
 }
 
+
 void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
-
 	screen_driver_Line(x1, y1, x2, y2, White );
-
 }
 
 

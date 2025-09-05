@@ -79,7 +79,7 @@ static void screen_update_global_settings2(uint8_t *select_states){
 
     // MIDI filter enable
     write_68(message->MIDI_Filter, TEXT_LEFT_START, LINE_3_VERT);
-    write_underline_68(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], 80, LINE_3_VERT, select_states[idx++]);
+    write_underline_68_2(message->choices.off_on[save_get(SETTINGS_CHANNEL_FILTER)], 80, LINE_3_VERT, select_states[idx++]);
 }
 
 static void screen_update_midi_filter(uint8_t *select_states)

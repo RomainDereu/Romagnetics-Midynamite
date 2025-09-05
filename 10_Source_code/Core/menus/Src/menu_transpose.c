@@ -48,16 +48,16 @@ void midi_transpose_update_menu(void)
     menu_nav_begin(group);
 
     // Row count for this page
-    uint8_t count = build_select_states(g, /*current_select=*/0, NULL, 0);
+    uint8_t count = build_select_states(group, /*current_select=*/0, NULL, 0);
     uint8_t current_select = menu_nav_update_and_get(UI_MIDI_TRANSPOSE_SELECT,
                                           /*min=*/0, /*max=*/(uint8_t)(count - 1),
                                           /*step=*/1, /*wrap=*/WRAP);
 
     // Apply edits to the focused row with right encoder (TIM4)
-    toggle_underline_items(g, current_select);
+    toggle_underline_items(group, current_select);
 
     // Repaint only if selection changed or any tracked field mutated
-    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, g, current_select)) {
+    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, group, current_select)) {
         threads_display_notify(FLAG_TRANSPOSE);
     }
 }

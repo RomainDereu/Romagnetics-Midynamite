@@ -39,6 +39,7 @@ uint8_t ui_state_get(ui_state_field_t field) {
     switch (field) {
         case UI_CURRENT_MENU:           value = ui_state.current_menu; break;
         case UI_OLD_MENU:               value = ui_state.old_menu; break;
+        default:                        value = 0;   break;
     }
 
     ui_state_unlock();
@@ -53,10 +54,9 @@ uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
     }
 
     switch (field) {
-        case UI_CURRENT_MENU:
-            ui_state.current_menu = value; break;
-        case UI_OLD_MENU:
-            ui_state.old_menu = value; break;
+        case UI_CURRENT_MENU: ui_state.current_menu = value; break;
+        case UI_OLD_MENU: ui_state.old_menu = value; break;
+        default:                        value = 0;   break;
     }
 
     ui_state_unlock();
