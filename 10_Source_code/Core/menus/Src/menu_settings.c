@@ -54,10 +54,9 @@ static void saving_settings_ui(void){
 
 void settings_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_SETTINGS; // family root
+    ui_group_t group = UI_GROUP_SETTINGS;
     menu_nav_begin(group);
-
-    uint8_t current_select = update_select(UI_SETTINGS_SELECT, group, /*tail_extra=*/1, /*mult=*/1, WRAP);
+    uint8_t current_select = update_select(UI_SETTINGS_SELECT, group, /*tail_extra=*/0, /*mult=*/1, WRAP);
 
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();
@@ -69,11 +68,6 @@ void settings_update_menu(void)
         threads_display_notify(FLAG_SETTINGS);
     }
 }
-
-
-
-
-
 
 
 
@@ -148,15 +142,12 @@ static void screen_update_settings_about(void){
 
 void screen_update_settings(void)
 {
-    // how many interactive rows (derived from UI_GROUP_SETTINGS)
+    // rows now includes ABOUT because SETTINGS_ABOUT is in UI_GROUP_SETTINGS
     const uint8_t rows = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-    // “About” is a synthetic extra row at the end
-    const uint8_t total = (uint8_t)(rows + 1);
-
     uint8_t current_select = ui_state_get(UI_SETTINGS_SELECT);
-    if (current_select >= total) current_select = (uint8_t)(total - 1);
+    if (rows == 0) current_select = 0;
+    else if (current_select >= rows) current_select = (uint8_t)(rows - 1);
 
-    // underline map only for interactive rows
     uint8_t select_states[rows ? rows : 1];
     if (rows) {
         (void)build_select_states(UI_GROUP_SETTINGS, current_select, select_states, rows);
@@ -164,38 +155,31 @@ void screen_update_settings(void)
 
     screen_driver_Fill(Black);
 
-    if (current_select < rows) {
-        // decide which section to render (same index ranges as before)
-        if (current_select >= (SETTINGS_FIRST_GLOBAL1 - SETTINGS_START_MENU) &&
-            current_select <= (SETTINGS_LAST_GLOBAL1   - SETTINGS_START_MENU)) {
-            screen_update_global_settings1(select_states);
-        }
-        else if (current_select >= (SETTINGS_FIRST_GLOBAL2 - SETTINGS_START_MENU) &&
-                 current_select <= (SETTINGS_LAST_GLOBAL2   - SETTINGS_START_MENU)) {
-            screen_update_global_settings2(select_states);
-        }
-        else if (current_select >= (SETTINGS_FIRST_FILTER - SETTINGS_START_MENU) &&
-                 current_select <  (SETTINGS_FIRST_FILTER - SETTINGS_START_MENU) + 16) {
-            screen_update_midi_filter(select_states);
-        }
-        else {
-            // fallback if grouping changes
-            screen_update_global_settings1(select_states);
-        }
-    } else {
-        // “About” row
+    // index of ABOUT within the settings rows
+    const uint8_t about_idx = (uint8_t)(SETTINGS_ABOUT - SETTINGS_START_MENU);
+
+    if (rows && current_select == about_idx) {
+        // ABOUT row (now a real item)
         screen_update_settings_about();
+    }
+    else if (current_select >= (SETTINGS_FIRST_GLOBAL1 - SETTINGS_START_MENU) &&
+             current_select <= (SETTINGS_LAST_GLOBAL1   - SETTINGS_START_MENU)) {
+        screen_update_global_settings1(select_states);
+    }
+    else if (current_select >= (SETTINGS_FIRST_GLOBAL2 - SETTINGS_START_MENU) &&
+             current_select <= (SETTINGS_LAST_GLOBAL2   - SETTINGS_START_MENU)) {
+        screen_update_global_settings2(select_states);
+    }
+    else if (current_select >= (SETTINGS_FIRST_FILTER - SETTINGS_START_MENU) &&
+             current_select <  (SETTINGS_FIRST_FILTER - SETTINGS_START_MENU) + 16) {
+        screen_update_midi_filter(select_states);
+    }
+    else {
+        // fallback if grouping shifts
+        screen_update_global_settings1(select_states);
     }
 
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
     write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();
 }
-
-
-
-
-
-
-
-

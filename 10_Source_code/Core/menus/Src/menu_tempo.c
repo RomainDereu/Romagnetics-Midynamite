@@ -80,8 +80,15 @@ void screen_update_midi_tempo(void)
     const char *midi_send_out = message->choices.midi_outs[ save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT) ];
     write_underline_68(midi_send_out, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
 
-    // On/Off indicator
-    midi_display_on_off(save_get(MIDI_TEMPO_CURRENTLY_SENDING), 63);
+    //Stop/Sending status
+    uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
+
+    if(currently_sending == 0){
+  	  write_1118(message->off, 15, 42);
+    }
+    else if (currently_sending == 1){
+  	  write_1118(message->on, 15, 42);
+    }
 
     screen_driver_UpdateScreen();
 }
