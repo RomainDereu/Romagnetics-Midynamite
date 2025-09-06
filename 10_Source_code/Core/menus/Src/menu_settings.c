@@ -34,7 +34,7 @@ static void saving_settings_ui(void){
     write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();
 
-    (void)store_settings(NULL);  // takes an internal snapshot and saves it
+    store_settings();
 
     write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();

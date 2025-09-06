@@ -69,16 +69,9 @@ typedef struct {
     int32_t filtered_channels;
 } settings_data_struct;
 
-// ---------------------
-// Combined Save Struct
-// ---------------------
-typedef struct {
-    midi_tempo_data_struct     midi_tempo_data;
-    midi_modify_data_struct    midi_modify_data;
-    midi_transpose_data_struct midi_transpose_data;
-    settings_data_struct       settings_data;
-    uint32_t                   check_data_validity;
-} save_struct;
+
+
+
 
 
 
@@ -200,7 +193,7 @@ extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 //Save functions
 void save_load_from_flash(void);
-HAL_StatusTypeDef store_settings(const save_struct *data);
+HAL_StatusTypeDef store_settings(void);
 
 
 
@@ -216,16 +209,6 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
 uint8_t save_modify_u8 (save_field_t field, save_modify_op_t op, uint8_t  value_if_set);
 
 
-
-
-
-
-// Original helpers (unchanged signatures)
-save_struct make_default_settings(void);
-save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
-                          midi_modify_data_struct * midi_modify_data_to_save,
-                          midi_transpose_data_struct * midi_transpose_data_to_save,
-                          settings_data_struct *settings_data_to_save);
 
 #ifdef UNIT_TEST
 void memory_init_defaults(void);

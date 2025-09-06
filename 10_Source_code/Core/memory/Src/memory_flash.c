@@ -14,6 +14,16 @@
 #include "utils.h"
 
 
+typedef struct {
+    midi_tempo_data_struct     midi_tempo_data;
+    midi_modify_data_struct    midi_modify_data;
+    midi_transpose_data_struct midi_transpose_data;
+    settings_data_struct       settings_data;
+    uint32_t                   check_data_validity;
+} save_struct;
+
+
+
 static save_struct save_data;
 
 
@@ -72,19 +82,9 @@ static void save_init_field_pointers(void) {
 // ---------------------
 // Load / store from flash
 // ---------------------
-HAL_StatusTypeDef store_settings(const save_struct *data)
+HAL_StatusTypeDef store_settings(void)
 {
-    save_struct local;
-
-    if (data) {
-        local = *data;  // caller-provided snapshot
-    } else {
-        // snapshot current memory atomically into a local struct
-        // (optional: wrap with your save_lock if available)
-        local = save_data;
-    }
-
-    // Always stamp validity on what we persist
+    save_struct local = save_data;
     local.check_data_validity = DATA_VALIDITY_CHECKSUM;
 
     HAL_StatusTypeDef status;
@@ -117,28 +117,6 @@ HAL_StatusTypeDef store_settings(const save_struct *data)
     HAL_FLASH_Lock();
     return HAL_OK;
 }
-
-
-static save_struct* read_setting_memory(void) {
-    return (save_struct*)FLASH_SECTOR7_ADDR;
-}
-
-void save_load_from_flash(void) {
-    save_struct* flash_ptr = read_setting_memory();
-
-    if (flash_ptr->check_data_validity == DATA_VALIDITY_CHECKSUM) {
-        save_data = *flash_ptr;  // copy from flash
-    } else {
-        save_data = make_default_settings();
-    }
-
-    save_init_field_pointers();
-    save_mark_all_changed();
-}
-
-// ---------------------
-// Original helpers
-// ---------------------
 
 
 static void save_set_field_default(save_struct *s, save_field_t f) {
@@ -190,7 +168,9 @@ static void save_set_field_default(save_struct *s, save_field_t f) {
 
 
 
-save_struct make_default_settings(void) {
+
+
+static save_struct make_default_settings(void) {
     save_struct s;
     memset(&s, 0, sizeof(s));
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
@@ -201,19 +181,25 @@ save_struct make_default_settings(void) {
 
 
 
-save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
-                          midi_modify_data_struct * midi_modify_data_to_save,
-                          midi_transpose_data_struct * midi_transpose_data_to_save,
-                          settings_data_struct *settings_data_to_save)
-{
-    save_struct this_save;
-    this_save.midi_tempo_data      = *midi_tempo_data_to_save;
-    this_save.midi_modify_data     = *midi_modify_data_to_save;
-    this_save.midi_transpose_data  = *midi_transpose_data_to_save;
-    this_save.settings_data        = *settings_data_to_save;
-    this_save.check_data_validity  = DATA_VALIDITY_CHECKSUM;
-    return this_save;
+static save_struct* read_setting_memory(void) {
+    return (save_struct*)FLASH_SECTOR7_ADDR;
 }
+
+void save_load_from_flash(void) {
+    save_struct* flash_ptr = read_setting_memory();
+
+    if (flash_ptr->check_data_validity == DATA_VALIDITY_CHECKSUM) {
+        save_data = *flash_ptr;  // copy from flash
+    } else {
+        save_data = make_default_settings();
+    }
+
+    save_init_field_pointers();
+    save_mark_all_changed();
+}
+
+
+
 
 
 
