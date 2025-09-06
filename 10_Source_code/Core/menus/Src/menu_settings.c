@@ -144,7 +144,7 @@ void screen_update_settings(void)
 {
     // rows now includes ABOUT because SETTINGS_ABOUT is in UI_GROUP_SETTINGS
     const uint8_t rows = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-    uint8_t current_select = update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS);
+    uint8_t current_select = menu_nav_get_select(UI_SETTINGS_SELECT);
     if (rows == 0) current_select = 0;
     else if (current_select >= rows) current_select = (uint8_t)(rows - 1);
 

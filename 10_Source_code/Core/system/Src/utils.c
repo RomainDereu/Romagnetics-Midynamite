@@ -95,7 +95,7 @@ uint8_t update_select(ui_state_field_t field,
 	if (m < 0) m += rows;
 	v = m;
 
-    return (uint8_t)v;  // persisted by menu_nav_end(...)
+    return (uint8_t)v;
 }
 
 

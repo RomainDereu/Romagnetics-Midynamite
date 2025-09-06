@@ -120,7 +120,7 @@ void screen_update_midi_modify(void)
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
                                                     : UI_GROUP_MODIFY_SPLIT;
 
-    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
     (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);
