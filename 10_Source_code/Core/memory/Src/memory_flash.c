@@ -14,6 +14,62 @@
 #include "utils.h"
 
 
+// ---------------------
+// MIDI Tempo Data
+// ---------------------
+typedef struct {
+    int32_t current_tempo;
+    int32_t tempo_click_rate;
+    uint8_t currently_sending;
+    uint8_t send_to_midi_out;
+} midi_tempo_data_struct;
+
+// ---------------------
+// MIDI Modify Data
+// ---------------------
+typedef struct {
+    uint8_t change_or_split;
+    uint8_t velocity_type;
+    uint8_t send_to_midi_out;
+    uint8_t send_to_midi_channel_1;
+    uint8_t send_to_midi_channel_2;
+    uint8_t split_note;
+    uint8_t split_midi_channel_1;
+    uint8_t split_midi_channel_2;
+    int32_t velocity_plus_minus;
+    uint8_t velocity_absolute;
+    uint8_t currently_sending;
+} midi_modify_data_struct;
+
+// ---------------------
+// MIDI Transpose Data
+// ---------------------
+typedef struct {
+    uint8_t transpose_type;
+    int32_t midi_shift_value;
+    uint8_t send_original;
+    uint8_t transpose_base_note;
+    uint8_t transpose_interval;
+    uint8_t transpose_scale;
+    uint8_t currently_sending;
+} midi_transpose_data_struct;
+
+// ---------------------
+// Settings Data
+// ---------------------
+typedef struct {
+    uint8_t  start_menu;
+    uint8_t  send_to_usb;
+    uint8_t  brightness;
+    uint8_t  channel_filter;
+    uint8_t  midi_thru;
+    uint8_t  usb_thru;
+    int32_t filtered_channels;
+} settings_data_struct;
+
+
+
+
 typedef struct {
     midi_tempo_data_struct     midi_tempo_data;
     midi_modify_data_struct    midi_modify_data;
