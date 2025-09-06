@@ -9,11 +9,6 @@
 #ifndef INC_MENU_TEMPO_H_
 #define INC_MENU_TEMO_H_
 
-#include "memory_main.h"
-
-#include "cmsis_os.h"
-#include "screen_driver.h"
-
 void midi_tempo_update_menu();
 
 void screen_update_midi_tempo();

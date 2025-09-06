@@ -8,15 +8,7 @@
 #ifndef MIDI_INC_MIDI_TRANSFORM_H_
 #define MIDI_INC_MIDI_TRANSFORM_H_
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "menu_modify.h"
-#include "main.h"
-#include "midi_usb.h"
-#include "memory_main.h"
 
 typedef struct {
     uint8_t status;   ///< 0x8n = Note Off, 0x9n = Note On, etc.

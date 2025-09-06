@@ -8,7 +8,6 @@
 #ifndef SRC_UTILS_H_
 #define SRC_UTILS_H_
 
-#include "stdio.h"
 #include "memory_main.h"
 
 #define LINE_1_VERT 15

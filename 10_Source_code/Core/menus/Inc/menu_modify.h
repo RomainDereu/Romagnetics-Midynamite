@@ -8,12 +8,6 @@
 #ifndef INC_MIDI_MODIFY_H_
 #define INC_MIDI_MODIFY_H_
 
-#include "cmsis_os.h"
-#include "memory_main.h"
-#include "screen_driver.h"
-
-
-
 
 //midi_modify_menu
 void midi_modify_update_menu();

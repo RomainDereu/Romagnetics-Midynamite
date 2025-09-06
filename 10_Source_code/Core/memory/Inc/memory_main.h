@@ -8,11 +8,7 @@
 #ifndef MEMORY_SAVE_H_
 #define MEMORY_SAVE_H_
 
-#include <stdint.h>
-
-
 #include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_flash.h"
 
 
 // ---------------------

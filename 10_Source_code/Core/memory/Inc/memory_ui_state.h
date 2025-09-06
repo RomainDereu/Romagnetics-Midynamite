@@ -9,7 +9,6 @@
 #define MEMORY_INC_MEMORY_UI_STATE_H_
 
 #include "memory_main.h"
-#include "stm32f4xx_hal.h"
 
 //Menu list
 typedef enum {

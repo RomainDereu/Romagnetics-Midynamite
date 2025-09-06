@@ -8,9 +8,6 @@
 #ifndef INC_MENU_H_
 #define INC_MENU_H_
 
-#include "main.h"
-
-
 void menu_display(const char * menu_message);
 
 void menu_change_check();
