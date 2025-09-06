@@ -11,273 +11,255 @@
 #include "memory_ui_state.h"
 
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_flash.h"
+#include "menu.h"          // for menu_items_parameters[f].def
 #include "utils.h"
 
 
-// ---------------------
-// MIDI Tempo Data
-// ---------------------
+
+/* Map which SAVE_FIELDs are u32 vs u8 (counts derived from your enum usage) */
+enum {
+    /* u32 fields */
+    IDX_U32_TEMPO_CURRENT_TEMPO = 0,
+    IDX_U32_TEMPO_CLICK_RATE,
+    IDX_U32_MODIFY_VEL_PM,
+    IDX_U32_TRANSPOSE_SHIFT,
+    IDX_U32_SETTINGS_FILTERED_CHANNELS,
+    U32_COUNT   /* keep last */
+};
+
+enum {
+    /* u8 fields */
+    IDX_U8_TEMPO_CURRENTLY_SENDING = 0,
+    IDX_U8_TEMPO_SEND_TO_OUT,
+
+    IDX_U8_MODIFY_CHANGE_OR_SPLIT,
+    IDX_U8_MODIFY_VELOCITY_TYPE,
+    IDX_U8_MODIFY_SEND_TO_OUT,
+    IDX_U8_MODIFY_SEND_CH1,
+    IDX_U8_MODIFY_SEND_CH2,
+    IDX_U8_MODIFY_SPLIT_NOTE,
+    IDX_U8_MODIFY_SPLIT_CH1,
+    IDX_U8_MODIFY_SPLIT_CH2,
+    IDX_U8_MODIFY_VEL_ABS,
+    IDX_U8_MODIFY_CURRENTLY_SENDING,
+
+    IDX_U8_TRANSPOSE_TYPE,
+    IDX_U8_TRANSPOSE_BASE_NOTE,
+    IDX_U8_TRANSPOSE_INTERVAL,
+    IDX_U8_TRANSPOSE_SCALE,
+    IDX_U8_TRANSPOSE_SEND_ORIGINAL,
+    IDX_U8_TRANSPOSE_CURRENTLY_SENDING,
+
+    IDX_U8_SETTINGS_START_MENU,
+    IDX_U8_SETTINGS_SEND_USB,
+    IDX_U8_SETTINGS_BRIGHTNESS,
+    IDX_U8_SETTINGS_CHANNEL_FILTER,
+    IDX_U8_SETTINGS_MIDI_THRU,
+    IDX_U8_SETTINGS_USB_THRU,
+
+    U8_COUNT    /* keep last */
+};
+
+/* Private on-flash/in-RAM structure */
 typedef struct {
-    int32_t current_tempo;
-    int32_t tempo_click_rate;
-    uint8_t currently_sending;
-    uint8_t send_to_midi_out;
-} midi_tempo_data_struct;
-
-// ---------------------
-// MIDI Modify Data
-// ---------------------
-typedef struct {
-    uint8_t change_or_split;
-    uint8_t velocity_type;
-    uint8_t send_to_midi_out;
-    uint8_t send_to_midi_channel_1;
-    uint8_t send_to_midi_channel_2;
-    uint8_t split_note;
-    uint8_t split_midi_channel_1;
-    uint8_t split_midi_channel_2;
-    int32_t velocity_plus_minus;
-    uint8_t velocity_absolute;
-    uint8_t currently_sending;
-} midi_modify_data_struct;
-
-// ---------------------
-// MIDI Transpose Data
-// ---------------------
-typedef struct {
-    uint8_t transpose_type;
-    int32_t midi_shift_value;
-    uint8_t send_original;
-    uint8_t transpose_base_note;
-    uint8_t transpose_interval;
-    uint8_t transpose_scale;
-    uint8_t currently_sending;
-} midi_transpose_data_struct;
-
-// ---------------------
-// Settings Data
-// ---------------------
-typedef struct {
-    uint8_t  start_menu;
-    uint8_t  send_to_usb;
-    uint8_t  brightness;
-    uint8_t  channel_filter;
-    uint8_t  midi_thru;
-    uint8_t  usb_thru;
-    int32_t filtered_channels;
-} settings_data_struct;
-
-
-
-
-typedef struct {
-    midi_tempo_data_struct     midi_tempo_data;
-    midi_modify_data_struct    midi_modify_data;
-    midi_transpose_data_struct midi_transpose_data;
-    settings_data_struct       settings_data;
-    uint32_t                   check_data_validity;
+    uint32_t check_data_validity;     /* first for easy validation */
+    int32_t  u32_vals[U32_COUNT];
+    uint8_t  u8_vals[U8_COUNT];
 } save_struct;
 
-
+/* --------------------------------------------------------------------------
+   Module state
+   -------------------------------------------------------------------------- */
 
 static save_struct save_data;
 
-
-// ---------------------
-// Field pointers
-// ---------------------
-
+/* Exported pointer tables (declared extern in memory_main.h) */
 int32_t* u32_fields[SAVE_FIELD_COUNT] = {0};
-uint8_t*  u8_fields[SAVE_FIELD_COUNT] = {0};
+uint8_t* u8_fields [SAVE_FIELD_COUNT] = {0};
 
+/* --------------------------------------------------------------------------
+   Internal helpers
+   -------------------------------------------------------------------------- */
 
-// ---------------------
-// Initialize pointer arrays
-// ---------------------
-static void save_init_field_pointers(void) {
-    // u32 fields
-    u32_fields[MIDI_TEMPO_CURRENT_TEMPO]              = &save_data.midi_tempo_data.current_tempo;
-    u32_fields[MIDI_TEMPO_TEMPO_CLICK_RATE]           = &save_data.midi_tempo_data.tempo_click_rate;
-    u32_fields[MIDI_MODIFY_VELOCITY_PLUS_MINUS]       = &save_data.midi_modify_data.velocity_plus_minus;
-    u32_fields[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]       = &save_data.midi_transpose_data.midi_shift_value;
-    u32_fields[SETTINGS_FILTERED_CHANNELS]            = &save_data.settings_data.filtered_channels;
-    u32_fields[SAVE_DATA_VALIDITY]                    = (int32_t*)&save_data.check_data_validity;
+/* Bind pointer tables to a given save_struct instance */
+static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8tab)
+{
+    /* Initialize all to NULL */
+    for (int i = 0; i < SAVE_FIELD_COUNT; ++i) {
+        u32tab[i] = NULL;
+        u8tab[i]  = NULL;
+    }
 
-    // u8 fields
-    u8_fields[MIDI_TEMPO_CURRENTLY_SENDING]           = &save_data.midi_tempo_data.currently_sending;
-    u8_fields[MIDI_TEMPO_SEND_TO_MIDI_OUT]            = &save_data.midi_tempo_data.send_to_midi_out;
+    /* ---- u32 mappings ---- */
+    u32tab[MIDI_TEMPO_CURRENT_TEMPO]        = &s->u32_vals[IDX_U32_TEMPO_CURRENT_TEMPO];
+    u32tab[MIDI_TEMPO_TEMPO_CLICK_RATE]     = &s->u32_vals[IDX_U32_TEMPO_CLICK_RATE];
+    u32tab[MIDI_MODIFY_VELOCITY_PLUS_MINUS] = &s->u32_vals[IDX_U32_MODIFY_VEL_PM];
+    u32tab[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE] = &s->u32_vals[IDX_U32_TRANSPOSE_SHIFT];
+    u32tab[SETTINGS_FILTERED_CHANNELS]      = &s->u32_vals[IDX_U32_SETTINGS_FILTERED_CHANNELS];
 
-    u8_fields[MIDI_MODIFY_CHANGE_OR_SPLIT]            = &save_data.midi_modify_data.change_or_split;
-    u8_fields[MIDI_MODIFY_VELOCITY_TYPE]              = &save_data.midi_modify_data.velocity_type;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_OUT]           = &save_data.midi_modify_data.send_to_midi_out;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]     = &save_data.midi_modify_data.send_to_midi_channel_1;
-    u8_fields[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]     = &save_data.midi_modify_data.send_to_midi_channel_2;
-    u8_fields[MIDI_MODIFY_SPLIT_NOTE]                 = &save_data.midi_modify_data.split_note;
-    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]       = &save_data.midi_modify_data.split_midi_channel_1;
-    u8_fields[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]       = &save_data.midi_modify_data.split_midi_channel_2;
-    u8_fields[MIDI_MODIFY_VELOCITY_ABSOLUTE]          = &save_data.midi_modify_data.velocity_absolute;
-    u8_fields[MIDI_MODIFY_CURRENTLY_SENDING]          = &save_data.midi_modify_data.currently_sending;
+    /* CHECKSUM exposed via u32 path for readback tools */
+    u32tab[SAVE_DATA_VALIDITY]              = (int32_t*)&s->check_data_validity;
 
-    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_TYPE]          = &save_data.midi_transpose_data.transpose_type;
-    u8_fields[MIDI_TRANSPOSE_BASE_NOTE]               = &save_data.midi_transpose_data.transpose_base_note;
-    u8_fields[MIDI_TRANSPOSE_INTERVAL]                = &save_data.midi_transpose_data.transpose_interval;
-    u8_fields[MIDI_TRANSPOSE_TRANSPOSE_SCALE]         = &save_data.midi_transpose_data.transpose_scale;
-    u8_fields[MIDI_TRANSPOSE_SEND_ORIGINAL]           = &save_data.midi_transpose_data.send_original;
-    u8_fields[MIDI_TRANSPOSE_CURRENTLY_SENDING]       = &save_data.midi_transpose_data.currently_sending;
+    /* ---- u8 mappings ---- */
+    u8tab[MIDI_TEMPO_CURRENTLY_SENDING]     = &s->u8_vals[IDX_U8_TEMPO_CURRENTLY_SENDING];
+    u8tab[MIDI_TEMPO_SEND_TO_MIDI_OUT]      = &s->u8_vals[IDX_U8_TEMPO_SEND_TO_OUT];
 
-    u8_fields[SETTINGS_START_MENU]                    = &save_data.settings_data.start_menu;
-    u8_fields[SETTINGS_SEND_USB]                      = &save_data.settings_data.send_to_usb;
-    u8_fields[SETTINGS_BRIGHTNESS]                    = &save_data.settings_data.brightness;
-    u8_fields[SETTINGS_CHANNEL_FILTER]                = &save_data.settings_data.channel_filter;
-    u8_fields[SETTINGS_MIDI_THRU]                     = &save_data.settings_data.midi_thru;
-    u8_fields[SETTINGS_USB_THRU]                      = &save_data.settings_data.usb_thru;
+    u8tab[MIDI_MODIFY_CHANGE_OR_SPLIT]      = &s->u8_vals[IDX_U8_MODIFY_CHANGE_OR_SPLIT];
+    u8tab[MIDI_MODIFY_VELOCITY_TYPE]        = &s->u8_vals[IDX_U8_MODIFY_VELOCITY_TYPE];
+    u8tab[MIDI_MODIFY_SEND_TO_MIDI_OUT]     = &s->u8_vals[IDX_U8_MODIFY_SEND_TO_OUT];
+    u8tab[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH1];
+    u8tab[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH2];
+    u8tab[MIDI_MODIFY_SPLIT_NOTE]           = &s->u8_vals[IDX_U8_MODIFY_SPLIT_NOTE];
+    u8tab[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH1];
+    u8tab[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH2];
+    u8tab[MIDI_MODIFY_VELOCITY_ABSOLUTE]    = &s->u8_vals[IDX_U8_MODIFY_VEL_ABS];
+    u8tab[MIDI_MODIFY_CURRENTLY_SENDING]    = &s->u8_vals[IDX_U8_MODIFY_CURRENTLY_SENDING];
+
+    u8tab[MIDI_TRANSPOSE_TRANSPOSE_TYPE]    = &s->u8_vals[IDX_U8_TRANSPOSE_TYPE];
+    u8tab[MIDI_TRANSPOSE_BASE_NOTE]         = &s->u8_vals[IDX_U8_TRANSPOSE_BASE_NOTE];
+    u8tab[MIDI_TRANSPOSE_INTERVAL]          = &s->u8_vals[IDX_U8_TRANSPOSE_INTERVAL];
+    u8tab[MIDI_TRANSPOSE_TRANSPOSE_SCALE]   = &s->u8_vals[IDX_U8_TRANSPOSE_SCALE];
+    u8tab[MIDI_TRANSPOSE_SEND_ORIGINAL]     = &s->u8_vals[IDX_U8_TRANSPOSE_SEND_ORIGINAL];
+    u8tab[MIDI_TRANSPOSE_CURRENTLY_SENDING] = &s->u8_vals[IDX_U8_TRANSPOSE_CURRENTLY_SENDING];
+
+    u8tab[SETTINGS_START_MENU]              = &s->u8_vals[IDX_U8_SETTINGS_START_MENU];
+    u8tab[SETTINGS_SEND_USB]                = &s->u8_vals[IDX_U8_SETTINGS_SEND_USB];
+    u8tab[SETTINGS_BRIGHTNESS]              = &s->u8_vals[IDX_U8_SETTINGS_BRIGHTNESS];
+    u8tab[SETTINGS_CHANNEL_FILTER]          = &s->u8_vals[IDX_U8_SETTINGS_CHANNEL_FILTER];
+    u8tab[SETTINGS_MIDI_THRU]               = &s->u8_vals[IDX_U8_SETTINGS_MIDI_THRU];
+    u8tab[SETTINGS_USB_THRU]                = &s->u8_vals[IDX_U8_SETTINGS_USB_THRU];
 }
 
+/* Bind the module-global pointer tables to save_data */
+static void save_init_field_pointers(void)
+{
+    bind_field_pointers(&save_data, u32_fields, u8_fields);
+}
 
+/* Build a default-initialized save_struct using your parameter table */
+static save_struct make_default_settings(void)
+{
+    save_struct s;
+    memset(&s, 0, sizeof(s));
 
-// ---------------------
-// Load / store from flash
-// ---------------------
+    /* temporary local pointer tables bound to 's' */
+    int32_t* t_u32[SAVE_FIELD_COUNT];
+    uint8_t* t_u8 [SAVE_FIELD_COUNT];
+    bind_field_pointers(&s, t_u32, t_u8);
+
+    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
+        int32_t def = menu_items_parameters[f].def;   /* relies on menu.h */
+        if (t_u32[f]) {
+            *t_u32[f] = def;
+        } else if (t_u8[f]) {
+            *t_u8[f]  = (uint8_t)def;
+        } else {
+            /* no storage backing for e.g. SETTINGS_ABOUT etc. -> ignore */
+        }
+    }
+
+    s.check_data_validity = DATA_VALIDITY_CHECKSUM;
+    return s;
+}
+
+/* Flash reader as const (do not mutate flash via this pointer) */
+static inline const save_struct* read_setting_memory(void)
+{
+    return (const save_struct*)FLASH_SECTOR7_ADDR;
+}
+
+/* --------------------------------------------------------------------------
+   Public API
+   -------------------------------------------------------------------------- */
+
 HAL_StatusTypeDef store_settings(void)
 {
-    save_struct local = save_data;
+    if (!save_lock_with_retries()) return HAL_ERROR;
+
+    save_struct local = save_data;   /* atomic snapshot under lock */
+    save_unlock();
+
     local.check_data_validity = DATA_VALIDITY_CHECKSUM;
 
     HAL_StatusTypeDef status;
     uint32_t error_status = 0;
 
     HAL_FLASH_Unlock();
+
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR |
                            FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR |
                            FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
 
-    FLASH_EraseInitTypeDef flash_erase_struct = {0};
-    flash_erase_struct.TypeErase    = FLASH_TYPEERASE_SECTORS;
-    flash_erase_struct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    flash_erase_struct.Sector       = FLASH_SECTOR_7;
-    flash_erase_struct.NbSectors    = 1;
+    FLASH_EraseInitTypeDef erase = {0};
+    erase.TypeErase    = FLASH_TYPEERASE_SECTORS;
+    erase.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    erase.Sector       = FLASH_SECTOR_7;
+    erase.NbSectors    = 1;
 
-    status = HAL_FLASHEx_Erase(&flash_erase_struct, &error_status);
-    if (status != HAL_OK) { HAL_FLASH_Lock(); return status; }
+    status = HAL_FLASHEx_Erase(&erase, &error_status);
+    if (status != HAL_OK) {
+        HAL_FLASH_Lock();
+        return status;
+    }
 
-    const uint32_t *p = (const uint32_t*)&local;
-    uint32_t words = (sizeof(save_struct) + 3u) / 4u;
+    const uint32_t* p    = (const uint32_t*)&local;
+    const uint32_t  words = (sizeof(save_struct) + 3u) / 4u;
 
-    for (uint32_t i = 0; i < words; i++) {
+    for (uint32_t i = 0; i < words; ++i) {
         status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
                                    FLASH_SECTOR7_ADDR + i * 4u,
                                    p[i]);
-        if (status != HAL_OK) { HAL_FLASH_Lock(); return status; }
+        if (status != HAL_OK) {
+            HAL_FLASH_Lock();
+            return status;
+        }
     }
 
     HAL_FLASH_Lock();
     return HAL_OK;
 }
 
-
-static void save_set_field_default(save_struct *s, save_field_t f) {
-    int32_t d = menu_items_parameters[f].def;
-    switch (f) {
-        // --- midi_tempo_data ---
-        case MIDI_TEMPO_CURRENT_TEMPO:            s->midi_tempo_data.current_tempo = d; break;
-        case MIDI_TEMPO_TEMPO_CLICK_RATE:         s->midi_tempo_data.tempo_click_rate = d; break;
-        case MIDI_TEMPO_CURRENTLY_SENDING:        s->midi_tempo_data.currently_sending = (uint8_t)d; break;
-        case MIDI_TEMPO_SEND_TO_MIDI_OUT:         s->midi_tempo_data.send_to_midi_out = (uint8_t)d; break;
-
-        // --- midi_modify_data ---
-        case MIDI_MODIFY_CHANGE_OR_SPLIT:         s->midi_modify_data.change_or_split = (uint8_t)d; break;
-        case MIDI_MODIFY_VELOCITY_TYPE:           s->midi_modify_data.velocity_type = (uint8_t)d; break;
-        case MIDI_MODIFY_SEND_TO_MIDI_OUT:        s->midi_modify_data.send_to_midi_out = (uint8_t)d; break;
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1:  s->midi_modify_data.send_to_midi_channel_1 = (uint8_t)d; break;
-        case MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2:  s->midi_modify_data.send_to_midi_channel_2 = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_NOTE:              s->midi_modify_data.split_note = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1:    s->midi_modify_data.split_midi_channel_1 = (uint8_t)d; break;
-        case MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2:    s->midi_modify_data.split_midi_channel_2 = (uint8_t)d; break;
-        case MIDI_MODIFY_VELOCITY_PLUS_MINUS:     s->midi_modify_data.velocity_plus_minus = d; break;
-        case MIDI_MODIFY_VELOCITY_ABSOLUTE:       s->midi_modify_data.velocity_absolute = (uint8_t)d; break;
-        case MIDI_MODIFY_CURRENTLY_SENDING:       s->midi_modify_data.currently_sending = (uint8_t)d; break;
-
-        // --- midi_transpose_data ---
-        case MIDI_TRANSPOSE_TRANSPOSE_TYPE:       s->midi_transpose_data.transpose_type = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_MIDI_SHIFT_VALUE:     s->midi_transpose_data.midi_shift_value = d; break;
-        case MIDI_TRANSPOSE_BASE_NOTE:            s->midi_transpose_data.transpose_base_note = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_INTERVAL:             s->midi_transpose_data.transpose_interval = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_TRANSPOSE_SCALE:      s->midi_transpose_data.transpose_scale = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_SEND_ORIGINAL:        s->midi_transpose_data.send_original = (uint8_t)d; break;
-        case MIDI_TRANSPOSE_CURRENTLY_SENDING:    s->midi_transpose_data.currently_sending = (uint8_t)d; break;
-
-        // --- settings_data ---
-        case SETTINGS_START_MENU:                 s->settings_data.start_menu = (uint8_t)d; break;
-        case SETTINGS_SEND_USB:                   s->settings_data.send_to_usb = (uint8_t)d; break;
-        case SETTINGS_BRIGHTNESS:                 s->settings_data.brightness = (uint8_t)d; break;
-        case SETTINGS_MIDI_THRU:                  s->settings_data.midi_thru = (uint8_t)d; break;
-        case SETTINGS_USB_THRU:                   s->settings_data.usb_thru = (uint8_t)d; break;
-        case SETTINGS_CHANNEL_FILTER:             s->settings_data.channel_filter = (uint8_t)d; break;
-        case SETTINGS_FILTERED_CHANNELS:          s->settings_data.filtered_channels = d; break;
-
-        // --- checksum ---
-        case SAVE_DATA_VALIDITY:                  s->check_data_validity = (uint32_t)d; break;
-
-        default: break;
-    }
-}
-
-
-
-
-
-static save_struct make_default_settings(void) {
-    save_struct s;
-    memset(&s, 0, sizeof(s));
-    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        save_set_field_default(&s, (save_field_t)f);
-    }
-    return s;
-}
-
-
-
-static save_struct* read_setting_memory(void) {
-    return (save_struct*)FLASH_SECTOR7_ADDR;
-}
-
-void save_load_from_flash(void) {
-    save_struct* flash_ptr = read_setting_memory();
+void save_load_from_flash(void)
+{
+    const save_struct* flash_ptr = read_setting_memory();
 
     if (flash_ptr->check_data_validity == DATA_VALIDITY_CHECKSUM) {
-        save_data = *flash_ptr;  // copy from flash
+        save_data = *flash_ptr;    /* copy from flash */
     } else {
         save_data = make_default_settings();
+        /* Optional: persist defaults immediately
+           (void)store_settings(); */
     }
 
     save_init_field_pointers();
     save_mark_all_changed();
 }
 
-
-
-
-
-
+/* --------------------------------------------------------------------------
+   Unit test helpers
+   -------------------------------------------------------------------------- */
 #ifdef UNIT_TEST
-void memory_init_defaults(void) {
+void memory_init_defaults(void)
+{
     save_data = make_default_settings();
     save_init_field_pointers();
     save_mark_all_changed();
 }
 
-void memory_overwrite_modify(const midi_modify_data_struct *src) {
-    if (!src) return;
-    if (!save_lock_with_retries()) return;
-    save_data.midi_modify_data = *src;
-    save_unlock();
+/* Example UT helper retained from your prior API */
+void memory_overwrite_modify(const midi_modify_data_struct *src)
+{
+    (void)src; /* Option B removed nested structs; keep stub or re-map if still used */
 }
 
-void memory_set_midi_thru(uint8_t v) {
+void memory_set_midi_thru(uint8_t v)
+{
     if (!save_lock_with_retries()) return;
-    save_data.settings_data.midi_thru = v ? 1 : 0;
+    /* SETTINGS_MIDI_THRU is a u8 field */
+    if (u8_fields[SETTINGS_MIDI_THRU]) {
+        *u8_fields[SETTINGS_MIDI_THRU] = v ? 1u : 0u;
+    }
     save_unlock();
 }
 #endif
-
-

@@ -78,10 +78,11 @@ static int save_try_lock(void) {
     save_busy = 1;
     return 1;
 }
-static void save_unlock(void) { save_busy = 0; }
+
+void save_unlock(void) { save_busy = 0; }
 
 // (Optional) bounded retry for writers; cheap and unit-test friendly
-static int save_lock_with_retries(void) {
+uint8_t save_lock_with_retries(void) {
     for (int i = 0; i < 5; i++) {
         if (save_try_lock()) return 1;
         // short, bounded spin

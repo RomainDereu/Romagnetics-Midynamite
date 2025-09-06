@@ -22,7 +22,7 @@
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
 #define SAVE_U8_BUSY    ((uint8_t)0xFF)
 
-#define DATA_VALIDITY_CHECKSUM  0xA5A556A4u
+#define DATA_VALIDITY_CHECKSUM  0xA5A5C6A4u
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 // ---------------------
@@ -129,10 +129,9 @@ extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 
 
-//Save functions
-void save_load_from_flash(void);
-HAL_StatusTypeDef store_settings(void);
 
+void save_unlock(void);
+uint8_t save_lock_with_retries(void);
 
 
 
@@ -145,6 +144,12 @@ uint8_t save_get(save_field_t field);
 // Setters / modifiers
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set);
 uint8_t save_modify_u8 (save_field_t field, save_modify_op_t op, uint8_t  value_if_set);
+
+
+
+//Save functions in memory_flash
+void save_load_from_flash(void);
+HAL_StatusTypeDef store_settings(void);
 
 
 
