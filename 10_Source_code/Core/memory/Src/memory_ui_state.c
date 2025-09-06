@@ -217,7 +217,7 @@ void menu_nav_begin(ui_group_t group)
 
 
 
-uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select)
+uint8_t menu_nav_end(ui_state_field_t field, uint8_t current_select)
 {
     const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
     const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);

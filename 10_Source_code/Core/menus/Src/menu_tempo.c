@@ -39,7 +39,7 @@ void midi_tempo_update_menu(void)
     save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
 
     toggle_underline_items(group, current_select);
-    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, group, current_select)) {
+    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, current_select)) {
         threads_display_notify(FLAG_TEMPO);
     }
 }

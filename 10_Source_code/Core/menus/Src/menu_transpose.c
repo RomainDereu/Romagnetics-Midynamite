@@ -42,7 +42,7 @@ void midi_transpose_update_menu(void)
     }
 
     toggle_underline_items(group, current_select);
-    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, group, current_select)) {
+    if (menu_nav_end(UI_MIDI_TRANSPOSE_SELECT, current_select)) {
         threads_display_notify(FLAG_TRANSPOSE);
     }
 }

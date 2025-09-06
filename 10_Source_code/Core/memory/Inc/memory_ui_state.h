@@ -150,7 +150,7 @@ uint8_t build_select_states(ui_group_t group,
 // Begin a frame for a specific menu GROUP: snapshot only fields that are visible/active now.
 void    menu_nav_begin(ui_group_t group);
 
-uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select);
+uint8_t menu_nav_end(ui_state_field_t field, uint8_t current_select);
 void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
 

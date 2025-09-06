@@ -58,7 +58,7 @@ void settings_update_menu(void)
 
     toggle_underline_items(group, current_select);
 
-    if (menu_nav_end(UI_SETTINGS_SELECT, group, current_select)) {
+    if (menu_nav_end(UI_SETTINGS_SELECT, current_select)) {
         threads_display_notify(FLAG_SETTINGS);
     }
 }
