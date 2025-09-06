@@ -3,26 +3,14 @@
  *
  *      Author: Romain Dereu
  */
-
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
 #include "main.h"
-#include "cmsis_os.h"
-#include "usb_device.h"
-#include "screen_driver.h"
-
-
-#include "memory_ui_state.h"
-#include "menu.h"
-
+#include "memory_main.h"
 #include "midi_transform.h"
 #include "midi_tempo.h"
-
-#include "utils.h"
+#include "usb_device.h"
+#include "screen_driver.h"
 #include "threads.h"
+
 
 I2C_HandleTypeDef hi2c1;
 

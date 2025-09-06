@@ -5,28 +5,17 @@
  *      Author: Romain Dereu
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
-
 #include "memory_ui_state.h"
 #include "memory_main.h"
-
 #include "menu.h"
 #include "menu_tempo.h"
 #include "midi_tempo.h"
 #include "screen_driver.h"
-
-// under_here_header_checks
 #include "text.h"
 #include "threads.h"
-#include "utils.h"
+#include "utils.h" //Needed for text placement
 
-extern const Message * message;
-
-/* -------------------------
- * Controller
- * ------------------------- */
 void midi_tempo_update_menu(void)
 {
     ui_group_t group = UI_GROUP_TEMPO; // family root
@@ -44,12 +33,6 @@ void midi_tempo_update_menu(void)
     }
 }
 
-
-
-
-/* -------------------------
- * Painter
- * ------------------------- */
 void screen_update_midi_tempo(void)
 {
     // Current selection for underline map
@@ -93,4 +76,3 @@ void screen_update_midi_tempo(void)
 
     screen_driver_UpdateScreen();
 }
-

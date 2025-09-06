@@ -4,20 +4,15 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-#include <string.h>
-#include <stdio.h>
-
-#include "menu_settings.h"
-
 #include "memory_ui_state.h"
 #include "memory_main.h"
-#include "screen_driver.h"
-
-// under_here_header_checks
 #include "menu.h"
-#include "utils.h"
+#include "menu_settings.h"
+#include "screen_driver.h"
+#include "utils.h" //Needed for text placement
 #include "text.h"
 #include "threads.h"
+
 
 #define SETTINGS_FIRST_GLOBAL1  SETTINGS_START_MENU
 #define SETTINGS_LAST_GLOBAL1   SETTINGS_BRIGHTNESS

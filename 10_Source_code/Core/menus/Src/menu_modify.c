@@ -5,26 +5,16 @@
  *      Author: Romain Dereu
  */
 #include <stdio.h>
-#include <stdint.h>
-#include <inttypes.h>
 
 #include "memory_ui_state.h"
 #include "memory_main.h"
-
-#include "menu_modify.h"
-
-#include "midi_transform.h"
-
-
-#include "screen_driver.h"
-
-//under_here_header_checks
 #include "menu.h"
+#include "menu_modify.h"
+#include "midi_transform.h"
+#include "screen_driver.h"
 #include "text.h"
 #include "threads.h"
-#include "utils.h"
-
-extern const Message * message;
+#include "utils.h" //Needed for text placement
 
 
 // midi modify menu

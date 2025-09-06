@@ -4,8 +4,8 @@
  *  Created on: Sep 5, 2025
  *      Author: Astaa
  */
-#include "menu_tempo.h"
-#include "utils.h"
+#include "midi_tempo.h"
+#include "utils.h" //For enums
 #include "midi_usb.h"
 
 void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){

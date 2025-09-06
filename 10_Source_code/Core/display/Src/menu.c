@@ -6,15 +6,11 @@
  */
 
 
+#include "menu.h"
 #include "memory_ui_state.h"
 #include "screen_driver.h"
-
-//under_here_header_checks
-#include "cmsis_os.h"
-#include "menu.h"
-#include "main.h"
-#include "threads.h"
 #include "utils.h"
+
 
 void menu_display(const char * menu_message){
 	draw_line(0, 10, 127, 10);

@@ -6,13 +6,10 @@
  */
 
 #include <string.h>
-
 #include "memory_main.h"
 #include "memory_ui_state.h"
-
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
-#include "menu.h"          // for menu_items_parameters[f].def
 #include "utils.h"
 
 

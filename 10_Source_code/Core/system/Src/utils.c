@@ -4,29 +4,17 @@
  *  Created on: Jun 21, 2025
  *      Author: Romain Dereu
  */
-#include <stdio.h>
 #include <string.h>
-
-#include "utils.h"
 #include "cmsis_os.h"
-
-#include "screen_driver.h"
-
-
 #include "memory_main.h"
+#include "screen_driver.h"   //For setcontrast
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
-
 #include "text.h"
+#include "utils.h"
 
-// We now bind encoder helpers to fixed timers:
-//  - TIM3: selection (left encoder)
-//  - TIM4: value    (right encoder)
+
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-
-// (kept for other modules using it)
-extern osThreadId display_updateHandle;
-
 
 
 void list_of_UART_to_send_to(uint8_t send_channels,

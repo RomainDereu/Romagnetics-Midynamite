@@ -1,20 +1,19 @@
-#include "threads.h"
-
-#include "usb_device.h"
+#include "main.h"
 #include "memory_ui_state.h"
 #include "memory_main.h"
+#include "menu.h" //menu change check
 
-#include "menu.h"
 #include "menu_tempo.h"
 #include "menu_modify.h"
-
-#include "midi_transform.h"
-#include "midi_tempo.h"
-
-
 #include "menu_settings.h"
-#include "utils.h"
+
+#include "midi_tempo.h"
+#include "midi_transform.h"
+
 #include "stm32f4xx_hal.h"  // HAL types
+#include "threads.h"
+#include "usb_device.h"
+#include "utils.h"
 
 // Timers used inside threads (owned/initialized by CubeMX in main.c)
 extern TIM_HandleTypeDef htim2;

@@ -4,27 +4,15 @@
  *  Created on: Jul 10, 2025
  *      Author: Romain Dereu
  */
-
-
 #include <stdio.h>
-#include <stdint.h>
-
-#include "main.h"
 #include "memory_ui_state.h"
 #include "memory_main.h"
-
-#include "midi_transform.h"
-
-#include "screen_driver.h"
-
-//under_here_header_checks
 #include "menu.h"
-
-
+#include "midi_transform.h"
+#include "screen_driver.h"
 #include "text.h"
 #include "threads.h"
-#include "utils.h"
-
+#include "utils.h" //Needed for text placement
 
 
 void midi_transpose_update_menu(void)
@@ -46,7 +34,6 @@ void midi_transpose_update_menu(void)
         threads_display_notify(FLAG_TRANSPOSE);
     }
 }
-
 
 
 void screen_update_midi_transpose(void)
@@ -102,5 +89,3 @@ void screen_update_midi_transpose(void)
 
     screen_driver_UpdateScreen();
 }
-
-
