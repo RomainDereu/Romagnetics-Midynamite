@@ -98,7 +98,6 @@ void screen_update_midi_transpose(void)
         write_underline_68(send_base, 65, LINE_4_VERT, select_states[3]);
     }
 
-    // On/Off pill
     midi_display_on_off(save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING), 63);
 
     screen_driver_UpdateScreen();

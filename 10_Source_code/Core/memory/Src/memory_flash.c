@@ -247,19 +247,20 @@ void memory_init_defaults(void)
     save_mark_all_changed();
 }
 
-/* Example UT helper retained from your prior API */
-void memory_overwrite_modify(const midi_modify_data_struct *src)
-{
-    (void)src; /* Option B removed nested structs; keep stub or re-map if still used */
-}
-
 void memory_set_midi_thru(uint8_t v)
 {
-    if (!save_lock_with_retries()) return;
-    /* SETTINGS_MIDI_THRU is a u8 field */
-    if (u8_fields[SETTINGS_MIDI_THRU]) {
-        *u8_fields[SETTINGS_MIDI_THRU] = v ? 1u : 0u;
-    }
-    save_unlock();
+    (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1u : 0u);
+}
+
+// Optional generic helpers make tests concise and avoid touching internals.
+void ut_set_u8(save_field_t f, uint8_t v)
+{
+    (void)save_modify_u8(f, SAVE_MODIFY_SET, v);
+}
+
+void ut_set_u32(save_field_t f, uint32_t v)
+{
+    (void)save_modify_u32(f, SAVE_MODIFY_SET, v);
 }
 #endif
+

@@ -154,13 +154,16 @@ HAL_StatusTypeDef store_settings(void);
 
 
 #ifdef UNIT_TEST
+// Re-init RAM image to defaults and notify UI
 void memory_init_defaults(void);
 
-void memory_overwrite_modify(const midi_modify_data_struct *src);
-
+// Simple test helpers that write via the public API
 void memory_set_midi_thru(uint8_t v);
 
-
+// (Optional) generic setters if you want easy test wiring everywhere:
+void ut_set_u8(save_field_t f, uint8_t v);
+void ut_set_u32(save_field_t f, uint32_t v);
 #endif
+
 
 #endif /* MEMORY_SAVE_H_ */
