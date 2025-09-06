@@ -33,7 +33,8 @@ void midi_modify_update_menu(void)
     uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
     menu_nav_begin(group);
-    uint8_t current_select = menu_nav_update_select(UI_MIDI_MODIFY_SELECT, group);
+    menu_nav_update_select(UI_MIDI_MODIFY_SELECT, group);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_MODIFY_SELECT);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         // unchanged…
@@ -120,7 +121,7 @@ void screen_update_midi_modify(void)
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE
                                                     : UI_GROUP_MODIFY_SPLIT;
 
-    uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_MODIFY_SELECT);
     (void)build_select_states(group, current_select, select_states, 5);
 
     screen_driver_Fill(Black);

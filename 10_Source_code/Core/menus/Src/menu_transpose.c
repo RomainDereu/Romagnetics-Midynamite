@@ -31,7 +31,8 @@ void midi_transpose_update_menu(void)
 {
     ui_group_t group = UI_GROUP_TRANSPOSE_BOTH; // family root
     menu_nav_begin(group);
-    uint8_t current_select = menu_nav_update_select(UI_MIDI_TRANSPOSE_SELECT, UI_GROUP_TRANSPOSE_BOTH);
+    menu_nav_update_select(UI_MIDI_TRANSPOSE_SELECT, group);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_TRANSPOSE_SELECT);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);

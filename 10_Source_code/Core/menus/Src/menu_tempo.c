@@ -31,7 +31,8 @@ void midi_tempo_update_menu(void)
 {
     ui_group_t group = UI_GROUP_TEMPO; // family root
     menu_nav_begin(group);
-    uint8_t current_select = menu_nav_update_select(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO);
+    menu_nav_update_select(UI_MIDI_TEMPO_SELECT, group);
+    uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
 
 
     uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);

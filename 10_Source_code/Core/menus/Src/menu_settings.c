@@ -56,7 +56,8 @@ void settings_update_menu(void)
 {
     ui_group_t group = UI_GROUP_SETTINGS;
     menu_nav_begin(group);
-    uint8_t current_select = menu_nav_update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS);
+    menu_nav_update_select(UI_SETTINGS_SELECT, group);
+    uint8_t current_select = menu_nav_get_select(UI_SETTINGS_SELECT);
 
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();

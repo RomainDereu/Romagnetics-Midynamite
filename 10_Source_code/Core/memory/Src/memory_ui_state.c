@@ -20,7 +20,7 @@ static ui_state_t ui_state = {0};
 
 // Persisted select per menu page
 static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
-
+static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
 
 
 // Per-frame list of active fields (indices)
@@ -219,7 +219,7 @@ void menu_nav_begin(ui_group_t group)
 
 uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select)
 {
-    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
     const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
 
     uint8_t data_changed = 0;
@@ -259,31 +259,31 @@ uint8_t menu_nav_get_select(ui_state_field_t field) {
 
 
 
-uint8_t menu_nav_update_select(ui_state_field_t field,
-                      ui_group_t       group)
+void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 {
-    TIM_HandleTypeDef *timer = &htim3;
+    const int8_t step = encoder_read_step(&htim3);
 
-    // Start from the value persisted by menu_nav_end(...)
-    uint8_t sel = menu_nav_get_select(field);
-
-    // How many interactive rows are active
+    // compute active row count
     const uint8_t rows = build_select_states(group, 0, NULL, 0);
-    if (rows == 0) return 0;
-    if (sel >= rows) sel = (uint8_t)(rows - 1);   // sanitize stale
 
-    // Encoder step from TIM3
-    const int8_t step = encoder_read_step(timer);
-    if (step == 0) return sel;                    // keep sanitized
+    // snapshot previous (always) so menu_nav_end can compare reliably
+    uint8_t sel_prev = s_menu_selects[field];
+    s_prev_selects[field] = sel_prev;
 
-    int32_t v = (int32_t)sel + (int32_t)step;
+    if (rows == 0) { s_menu_selects[field] = 0; return; }
 
+    // sanitize current
+    if (sel_prev >= rows) sel_prev = (uint8_t)(rows - 1);
 
-	int32_t m = v % rows;
-	if (m < 0) m += rows;
-	v = m;
+    // no movement — keep persisted as-is (menu_nav_end will still compare prev vs current)
+    if (step == 0) return;
 
-    return (uint8_t)v;
+    // apply delta with wrap
+    int32_t v = (int32_t)sel_prev + (int32_t)step;
+    int32_t m = v % rows; if (m < 0) m += rows;
+
+    // persist new
+    s_menu_selects[field] = (uint8_t)m;
 }
 
 

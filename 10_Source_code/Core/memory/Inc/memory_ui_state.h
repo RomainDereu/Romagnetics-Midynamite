@@ -155,7 +155,7 @@ void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
 
 uint8_t menu_nav_get_select(ui_state_field_t field);
-uint8_t menu_nav_update_select(ui_state_field_t field, ui_group_t group);
+void menu_nav_update_select(ui_state_field_t field, ui_group_t group);
 
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
