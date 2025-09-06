@@ -34,14 +34,7 @@ static void saving_settings_ui(void){
     write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();
 
-    save_struct s;
-    s.midi_tempo_data     = save_snapshot_tempo();
-    s.midi_modify_data    = save_snapshot_modify();
-    s.midi_transpose_data = save_snapshot_transpose();
-    s.settings_data       = save_snapshot_settings();
-    s.check_data_validity = DATA_VALIDITY_CHECKSUM;
-
-    (void)store_settings(&s);
+    (void)store_settings(NULL);  // takes an internal snapshot and saves it
 
     write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     screen_driver_UpdateScreen();

@@ -72,21 +72,29 @@ static void save_init_field_pointers(void) {
 // ---------------------
 // Load / store from flash
 // ---------------------
-HAL_StatusTypeDef store_settings(save_struct *data) {
-    if (!data) return HAL_ERROR;
+HAL_StatusTypeDef store_settings(const save_struct *data)
+{
+    save_struct local;
+
+    if (data) {
+        local = *data;  // caller-provided snapshot
+    } else {
+        // snapshot current memory atomically into a local struct
+        // (optional: wrap with your save_lock if available)
+        local = save_data;
+    }
+
+    // Always stamp validity on what we persist
+    local.check_data_validity = DATA_VALIDITY_CHECKSUM;
 
     HAL_StatusTypeDef status;
     uint32_t error_status = 0;
 
-    // Unlock flash
     HAL_FLASH_Unlock();
-
-    // Clear flash flags
     __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR |
                            FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR |
                            FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
 
-    // Erase sector 7
     FLASH_EraseInitTypeDef flash_erase_struct = {0};
     flash_erase_struct.TypeErase    = FLASH_TYPEERASE_SECTORS;
     flash_erase_struct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
@@ -94,28 +102,22 @@ HAL_StatusTypeDef store_settings(save_struct *data) {
     flash_erase_struct.NbSectors    = 1;
 
     status = HAL_FLASHEx_Erase(&flash_erase_struct, &error_status);
-    if (status != HAL_OK) {
-        HAL_FLASH_Lock();
-        return status;
-    }
+    if (status != HAL_OK) { HAL_FLASH_Lock(); return status; }
 
-    // Program flash word-by-word
-    const uint32_t *data_ptr = (const uint32_t*)data;
+    const uint32_t *p = (const uint32_t*)&local;
     uint32_t words = (sizeof(save_struct) + 3u) / 4u;
 
     for (uint32_t i = 0; i < words; i++) {
         status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
                                    FLASH_SECTOR7_ADDR + i * 4u,
-                                   data_ptr[i]);
-        if (status != HAL_OK) {
-            HAL_FLASH_Lock();
-            return status;
-        }
+                                   p[i]);
+        if (status != HAL_OK) { HAL_FLASH_Lock(); return status; }
     }
 
     HAL_FLASH_Lock();
     return HAL_OK;
 }
+
 
 static save_struct* read_setting_memory(void) {
     return (save_struct*)FLASH_SECTOR7_ADDR;
@@ -214,33 +216,6 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
 }
 
 
-
-// ---------------------
-// Snapshot helpers
-// ---------------------
-midi_tempo_data_struct save_snapshot_tempo(void) {
-    midi_tempo_data_struct copy;
-    memcpy(&copy, &save_data.midi_tempo_data, sizeof(copy));
-    return copy;
-}
-
-midi_modify_data_struct save_snapshot_modify(void) {
-    midi_modify_data_struct copy;
-    memcpy(&copy, &save_data.midi_modify_data, sizeof(copy));
-    return copy;
-}
-
-midi_transpose_data_struct save_snapshot_transpose(void) {
-    midi_transpose_data_struct copy;
-    memcpy(&copy, &save_data.midi_transpose_data, sizeof(copy));
-    return copy;
-}
-
-settings_data_struct save_snapshot_settings(void) {
-    settings_data_struct copy;
-    memcpy(&copy, &save_data.settings_data, sizeof(copy));
-    return copy;
-}
 
 #ifdef UNIT_TEST
 void memory_init_defaults(void) {

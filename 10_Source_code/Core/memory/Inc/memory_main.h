@@ -200,7 +200,7 @@ extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 //Save functions
 void save_load_from_flash(void);
-HAL_StatusTypeDef store_settings(save_struct *data);
+HAL_StatusTypeDef store_settings(const save_struct *data);
 
 
 
@@ -226,11 +226,6 @@ save_struct creating_save(midi_tempo_data_struct * midi_tempo_data_to_save,
                           midi_modify_data_struct * midi_modify_data_to_save,
                           midi_transpose_data_struct * midi_transpose_data_to_save,
                           settings_data_struct *settings_data_to_save);
-
-midi_tempo_data_struct     save_snapshot_tempo(void);
-midi_modify_data_struct    save_snapshot_modify(void);
-midi_transpose_data_struct save_snapshot_transpose(void);
-settings_data_struct       save_snapshot_settings(void);
 
 #ifdef UNIT_TEST
 void memory_init_defaults(void);
