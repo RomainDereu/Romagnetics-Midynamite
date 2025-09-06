@@ -104,10 +104,10 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
 
     u8tab[MIDI_MODIFY_CHANGE_OR_SPLIT]      = &s->u8_vals[IDX_U8_MODIFY_CHANGE_OR_SPLIT];
     u8tab[MIDI_MODIFY_VELOCITY_TYPE]        = &s->u8_vals[IDX_U8_MODIFY_VELOCITY_TYPE];
-    u8tab[MIDI_MODIFY_SEND_TO_MIDI_OUT]     = &s->u8_vals[IDX_U8_MODIFY_SEND_TO_OUT];
     u8tab[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH1];
     u8tab[MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH2];
     u8tab[MIDI_MODIFY_SPLIT_NOTE]           = &s->u8_vals[IDX_U8_MODIFY_SPLIT_NOTE];
+    u8tab[MIDI_MODIFY_SEND_TO_MIDI_OUT]     = &s->u8_vals[IDX_U8_MODIFY_SEND_TO_OUT];
     u8tab[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH1];
     u8tab[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH2];
     u8tab[MIDI_MODIFY_VELOCITY_ABSOLUTE]    = &s->u8_vals[IDX_U8_MODIFY_VEL_ABS];

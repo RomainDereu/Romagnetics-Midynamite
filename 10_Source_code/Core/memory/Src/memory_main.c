@@ -29,11 +29,12 @@ const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
 
     [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]  = {    1,   16,     NO_WRAP,   1,   update_value   ,  1,      UI_GROUP_MODIFY_CHANGE },
     [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]  = {    0,   16,     NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_MODIFY_CHANGE },
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,      WRAP,      0,   update_value   ,  1,      UI_GROUP_MODIFY_BOTH },
 
 	[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]    = {    1,   16,     NO_WRAP,   1,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
     [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,     NO_WRAP,   2,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
 	[MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,    NO_WRAP,  60,   update_value   ,  12,     UI_GROUP_MODIFY_SPLIT },
+
+    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,      WRAP,      0,   update_value   ,  1,      UI_GROUP_MODIFY_BOTH },
 
 	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_CHANGED },
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_FIXED },
