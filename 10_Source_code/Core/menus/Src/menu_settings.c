@@ -56,7 +56,7 @@ void settings_update_menu(void)
 {
     ui_group_t group = UI_GROUP_SETTINGS;
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_SETTINGS_SELECT,       UI_GROUP_SETTINGS,       /*mult=*/1, WRAP);
+    uint8_t current_select = update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS);
 
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();
@@ -144,7 +144,7 @@ void screen_update_settings(void)
 {
     // rows now includes ABOUT because SETTINGS_ABOUT is in UI_GROUP_SETTINGS
     const uint8_t rows = build_select_states(UI_GROUP_SETTINGS, /*current_select=*/0, /*states=*/NULL, /*cap=*/0);
-    uint8_t current_select = update_select(UI_SETTINGS_SELECT,       UI_GROUP_SETTINGS,       /*mult=*/1, WRAP);
+    uint8_t current_select = update_select(UI_SETTINGS_SELECT, UI_GROUP_SETTINGS);
     if (rows == 0) current_select = 0;
     else if (current_select >= rows) current_select = (uint8_t)(rows - 1);
 

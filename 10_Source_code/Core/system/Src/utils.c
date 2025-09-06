@@ -72,9 +72,7 @@ static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
 
 
 uint8_t update_select(ui_state_field_t field,
-                      ui_group_t       group,
-                      uint8_t          multiplier,
-                      uint8_t          wrap)
+                      ui_group_t       group)
 {
     TIM_HandleTypeDef *timer = &htim3;
 
@@ -86,26 +84,16 @@ uint8_t update_select(ui_state_field_t field,
     if (rows == 0) return 0;
     if (sel >= rows) sel = (uint8_t)(rows - 1);   // sanitize stale
 
-    // Optional speed-up (active-low Btn2)
-    uint8_t active_mult = 1;
-    if (multiplier != 1) {
-        active_mult = (HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == 0) ? multiplier : 1;
-    }
-
     // Encoder step from TIM3
     const int8_t step = encoder_read_step(timer);
     if (step == 0) return sel;                    // keep sanitized
 
-    int32_t v = (int32_t)sel + (int32_t)step * (int32_t)active_mult;
+    int32_t v = (int32_t)sel + (int32_t)step;
 
-    if (wrap) {
-        int32_t m = v % rows;
-        if (m < 0) m += rows;
-        v = m;
-    } else {
-        if (v < 0) v = 0;
-        if (v >= rows) v = (int32_t)rows - 1;
-    }
+
+	int32_t m = v % rows;
+	if (m < 0) m += rows;
+	v = m;
 
     return (uint8_t)v;  // persisted by menu_nav_end(...)
 }

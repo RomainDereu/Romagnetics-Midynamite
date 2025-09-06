@@ -31,7 +31,7 @@ void midi_tempo_update_menu(void)
 {
     ui_group_t group = UI_GROUP_TEMPO; // family root
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT,     UI_GROUP_TEMPO,          /*mult=*/1, WRAP);
+    uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO);
 
 
     uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
@@ -52,7 +52,7 @@ void midi_tempo_update_menu(void)
 void screen_update_midi_tempo(void)
 {
     // Current selection for underline map
-	uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT,     UI_GROUP_TEMPO,          /*mult=*/1, WRAP);
+	uint8_t current_select = update_select(UI_MIDI_TEMPO_SELECT, UI_GROUP_TEMPO);
 
     // Build underline states matching current UI_GROUP_TEMPO rows
     uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
