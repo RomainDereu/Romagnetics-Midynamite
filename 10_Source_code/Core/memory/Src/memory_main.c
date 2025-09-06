@@ -57,7 +57,7 @@ const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
     [SETTINGS_USB_THRU]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
     [SETTINGS_CHANNEL_FILTER]             = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
     [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,  0,   update_channel_filter   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_ABOUT]                      = {    0,   0,      NO_WRAP,  0,     no_update              ,  1,      UI_GROUP_SETTINGS },
+    [SETTINGS_ABOUT]                      = {    0,   0,      NO_WRAP,  0,    no_update      ,  1,      UI_GROUP_SETTINGS },
 
 
     [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
@@ -355,6 +355,12 @@ void menu_nav_reset(ui_state_field_t field, uint8_t value)
     s_menu_selects[field] = value;
     ui_state_modify(field, UI_MODIFY_SET, value);
 }
+
+
+uint8_t menu_nav_get_select(ui_state_field_t field) {
+    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+}
+
 
 int32_t save_get_u32(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
