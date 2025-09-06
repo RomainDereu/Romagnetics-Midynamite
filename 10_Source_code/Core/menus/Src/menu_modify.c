@@ -33,7 +33,7 @@ void midi_modify_update_menu(void)
     uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
     ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
     menu_nav_begin(group);
-    uint8_t current_select = update_select(UI_MIDI_MODIFY_SELECT, group);
+    uint8_t current_select = menu_nav_update_select(UI_MIDI_MODIFY_SELECT, group);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
         // unchanged…

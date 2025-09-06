@@ -48,14 +48,12 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
-void no_update(save_field_t field, uint8_t arg);
+int8_t encoder_read_step(TIM_HandleTypeDef *timer);
 
+void no_update(save_field_t field, uint8_t arg);
 void update_value(save_field_t field, uint8_t multiplier);
 
 
-
-uint8_t update_select(ui_state_field_t field,
-                      ui_group_t       group);
 
 void update_contrast(save_field_t f, uint8_t step);
 void update_channel_filter(save_field_t field, uint8_t bit_index);

@@ -62,7 +62,7 @@ void list_of_UART_to_send_to(uint8_t send_channels,
  * Encoder helpers
  * --------------------------- */
 
-static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
+int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
     if (delta <= -ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return -1; }
     if (delta >=  ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return +1; }
@@ -71,32 +71,6 @@ static inline int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
 
 
 
-uint8_t update_select(ui_state_field_t field,
-                      ui_group_t       group)
-{
-    TIM_HandleTypeDef *timer = &htim3;
-
-    // Start from the value persisted by menu_nav_end(...)
-    uint8_t sel = menu_nav_get_select(field);
-
-    // How many interactive rows are active
-    const uint8_t rows = build_select_states(group, 0, NULL, 0);
-    if (rows == 0) return 0;
-    if (sel >= rows) sel = (uint8_t)(rows - 1);   // sanitize stale
-
-    // Encoder step from TIM3
-    const int8_t step = encoder_read_step(timer);
-    if (step == 0) return sel;                    // keep sanitized
-
-    int32_t v = (int32_t)sel + (int32_t)step;
-
-
-	int32_t m = v % rows;
-	if (m < 0) m += rows;
-	v = m;
-
-    return (uint8_t)v;
-}
 
 
 

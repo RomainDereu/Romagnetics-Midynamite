@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-#include "memory_ui_state.h" //for ui_state_field
 
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
@@ -81,27 +80,8 @@ typedef struct {
     uint32_t                   check_data_validity;
 } save_struct;
 
-// ---------------------
-// UI submenu id
-// ---------------------
-typedef enum {
-    UI_GROUP_TEMPO = 0,
-    UI_GROUP_MODIFY,
 
-    UI_GROUP_TRANSPOSE_SHIFT,
-    UI_GROUP_TRANSPOSE_SCALED,
-	UI_GROUP_TRANSPOSE_BOTH,
 
-    UI_GROUP_MODIFY_CHANGE,
-    UI_GROUP_MODIFY_SPLIT,
-    UI_GROUP_MODIFY_BOTH,
-
-	UI_GROUP_MODIFY_VEL_CHANGED,
-	UI_GROUP_MODIFY_VEL_FIXED,
-
-    UI_GROUP_SETTINGS,
-    UI_GROUP_NONE = 0xFF
-} ui_group_t;
 
 
 // ---------------------
@@ -173,16 +153,7 @@ typedef enum {
     SAVE_FIELD_COUNT
 } save_field_t;
 
-typedef struct {
-    int32_t min;
-    int32_t max;
-    uint8_t wrap;   // 0 = clamp, 1 = wrap
-    int32_t def;
 
-    void (*handler)(save_field_t field, uint8_t arg);
-    uint8_t handler_arg;
-    ui_group_t ui_group;
-} menu_items_parameters_t;
 
 
 
@@ -225,44 +196,14 @@ typedef enum {
 extern int32_t* u32_fields[SAVE_FIELD_COUNT];
 extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
-extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
 
-
-
-// ---------------------
-// API
-// ---------------------
-void toggle_underline_items(ui_group_t group, uint8_t index);
-
-uint8_t build_select_states(ui_group_t group,
-                            uint8_t current_select,
-                            uint8_t *states,
-                            uint8_t states_cap);
 
 //Save functions
 void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(save_struct *data);
 
-void save_mark_all_changed(void);
 
 
-
-// Begin a frame for a specific menu GROUP: snapshot only fields that are visible/active now.
-void    menu_nav_begin(ui_group_t group);
-
-// Read-persist helper: apply selection delta and return the new index.
-uint8_t menu_nav_update_and_get(ui_state_field_t field,
-                                uint8_t min, uint8_t max,
-                                uint8_t step, uint8_t wrap);
-
-// Reset persisted selection (usually to 0) for a given menu page.
-void    menu_nav_reset(ui_state_field_t field, uint8_t value);
-
-uint8_t menu_nav_get_select(ui_state_field_t field);
-
-
-// Returns 1 if anything changed (selection or any tracked save field), else 0.
-uint8_t menu_nav_end(ui_state_field_t field, ui_group_t group, uint8_t current_select);
 
 // Getters return int32_t so they can return SAVE_STATE_BUSY
 int32_t save_get_u32(save_field_t field);

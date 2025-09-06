@@ -8,6 +8,8 @@
 #include <string.h>
 
 #include "memory_main.h"
+#include "memory_ui_state.h"
+
 #include "stm32f4xx_hal.h"
 #include "utils.h"
 
