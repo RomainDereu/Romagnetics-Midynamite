@@ -62,19 +62,6 @@ typedef enum {
 
 
 
-typedef struct {
-    uint8_t min;
-    uint8_t max;
-    uint8_t wrap;  // if 1, loop back to min when exceeding max
-} ui_field_limits_t;
-
-static const ui_field_limits_t ui_limits[] = {
-    [UI_MIDI_TEMPO_SELECT]    = {TEMPO_PRINT, AMOUNT_OF_TEMPO_ITEMS -1, 1},
-    [UI_MIDI_MODIFY_SELECT]   = {0, 5, 1},   // 0–5 looping
-    [UI_MIDI_TRANSPOSE_SELECT]= {0, 11, 1},  // 12 steps looping
-    [UI_SETTINGS_SELECT]      = {0, 3, 1},   // 4 settings
-    [UI_CURRENT_MENU]         = {MIDI_TEMPO, AMOUNT_OF_MENUS -1, 1},
-};
 
 typedef enum {
     UI_MODIFY_INCREMENT = 0,

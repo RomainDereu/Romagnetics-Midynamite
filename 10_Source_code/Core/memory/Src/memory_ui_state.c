@@ -226,22 +226,22 @@ uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
 
 static uint8_t ui_state_increment(ui_state_field_t field) {
     uint8_t value = ui_state_get(field);
-    if (value == UI_STATE_BUSY) {
-        return UI_STATE_BUSY;
+    if (value == UI_STATE_BUSY) return UI_STATE_BUSY;
+
+    switch (field) {
+        case UI_CURRENT_MENU:
+            value = (uint8_t)((value + 1u) % AMOUNT_OF_MENUS);
+            break;
+        case UI_OLD_MENU:
+            // We never increment OLD_MENU; keep as-is
+            return 1; // no change
+        default:
+            // Select fields are not incremented here anymore (handled by menu_nav_*).
+            return 1; // no change
     }
-
-    value++;
-
-    if (value > ui_limits[field].max) {
-        if (ui_limits[field].wrap) {
-            value = ui_limits[field].min; // wrap
-        } else {
-            value = ui_limits[field].max; // clamp
-        }
-    }
-
     return ui_state_set(field, value);
 }
+
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set) {
     switch(op) {
