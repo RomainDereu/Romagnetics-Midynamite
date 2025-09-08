@@ -9,7 +9,6 @@
 #include "utils.h"
 
 extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim4;
 
 
 typedef struct {
@@ -27,7 +26,7 @@ static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
 
 // Per-frame list of active fields (indices)
 #ifndef ACTIVE_LIST_CAP
-#define ACTIVE_LIST_CAP 64  // more than enough for your visible rows
+#define ACTIVE_LIST_CAP 64
 #endif
 static uint16_t s_active_list[ACTIVE_LIST_CAP];
 static uint8_t  s_active_count = 0;
@@ -252,8 +251,4 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
     }
     return 0; // unknown op
 }
-
-
-void    ui_state_note_select_changed(void);
-uint8_t ui_state_toggle_select_changed(void);
 
