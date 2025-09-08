@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "_menu_controller.h"
 #include "memory_main.h"
-#include "menu.h"
+#include "_menu_ui.h"
 #include "menu_tempo.h"
 #include "midi_tempo.h"
 #include "screen_driver.h"
