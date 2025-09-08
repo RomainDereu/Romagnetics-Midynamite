@@ -1,5 +1,5 @@
 /*
- * memory_main.c
+ * memory_flash.c
  *
  *  Created on: Sep 05, 2025
  *      Author: Romain Dereu
@@ -146,7 +146,7 @@ static save_struct make_default_settings(void)
     bind_field_pointers(&s, t_u32, t_u8);
 
     for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        int32_t def = menu_items_parameters[f].def;   /* relies on menu.h */
+        int32_t def = save_limits[f].def;   /* relies on menu.h */
         if (t_u32[f]) {
             *t_u32[f] = def;
         } else if (t_u8[f]) {

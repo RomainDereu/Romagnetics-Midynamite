@@ -5,6 +5,7 @@
  *      Author: Astaa
  */
 #include "memory_ui_state.h"
+#include "menu_controller.h"
 #include "utils.h"
 
 extern TIM_HandleTypeDef htim3;
@@ -16,6 +17,7 @@ typedef struct {
     uint8_t old_menu;
 } ui_state_t;
 
+static volatile uint8_t ui_state_busy = 0;
 static ui_state_t ui_state = {0};
 
 // Persisted select per menu page
@@ -63,106 +65,12 @@ void mark_field_changed(save_field_t f) {
 
 
 
-// Family definitions
-static const ui_group_t kTempoAlways[] = { UI_GROUP_TEMPO };
-static const MenuDef kMenuTempo = { kTempoAlways, 1, NULL, 0 };
-
-static const ui_group_t kSettingsAlways[] = { UI_GROUP_SETTINGS };
-static const MenuDef kMenuSettings = { kSettingsAlways, 1, NULL, 0 };
-
-// Transpose: one selector (SHIFT vs SCALED) + BOTH
-static const ui_group_t kTransposeAlways[] = { UI_GROUP_TRANSPOSE_BOTH };
-static const ui_group_t kTransposeOpts[]   = { UI_GROUP_TRANSPOSE_SHIFT, UI_GROUP_TRANSPOSE_SCALED };
-static const VariantSelector kTransposeSel[] = {
-    { MIDI_TRANSPOSE_TRANSPOSE_TYPE, kTransposeOpts, 2 },
-};
-static const MenuDef kMenuTranspose = { kTransposeAlways, 1, kTransposeSel, 1 };
-
-// Modify: two selectors (CHANGE/SPLIT) and (VEL_CHANGED/VEL_FIXED) + BOTH
-static const ui_group_t kModifyAlways[] = { UI_GROUP_MODIFY_BOTH };
-static const ui_group_t kModifyPageOpts[] = { UI_GROUP_MODIFY_CHANGE, UI_GROUP_MODIFY_SPLIT };
-static const ui_group_t kModifyVelOpts[]  = { UI_GROUP_MODIFY_VEL_CHANGED, UI_GROUP_MODIFY_VEL_FIXED };
-static const VariantSelector kModifySel[] = {
-    { MIDI_MODIFY_CHANGE_OR_SPLIT, kModifyPageOpts, 2 },
-    { MIDI_MODIFY_VELOCITY_TYPE,   kModifyVelOpts,  2 },
-};
-static const MenuDef kMenuModify = { kModifyAlways, 1, kModifySel, 2 };
-
-
-
-// Helper: an item is a 16-bit virtual strip if its handler is update_channel_filter
-static inline uint8_t is_bits_item(save_field_t f) {
-    return menu_items_parameters[f].handler == update_channel_filter;
-}
-
-// Build active group set for the family, combining "always" groups and variant-selected groups
-static uint8_t build_active_groups(const MenuDef *def, ui_group_t *out, uint8_t cap) {
-    uint8_t n = 0;
-    for (uint8_t i = 0; i < def->always_count && n < cap; ++i) out[n++] = def->always_groups[i];
-
-    for (uint8_t s = 0; s < def->selector_count; ++s) {
-        int v = (int)save_get(def->selectors[s].key);
-        if (v < 0) v = 0;
-        if (v >= def->selectors[s].option_count) v = def->selectors[s].option_count - 1;
-        if (n < cap) out[n++] = def->selectors[s].options[v];
-    }
-    return n;
-}
-
-static inline uint8_t group_is_active(ui_group_t g, const ui_group_t *act, uint8_t n) {
-    if (g == UI_GROUP_NONE) return 0; // do NOT render uncategorized items
-    for (uint8_t i = 0; i < n; ++i) if (act[i] == g) return 1;
-    return 0;
-}
-
-static inline const MenuDef* menu_def_for(ui_group_t group) {
-    switch (group) {
-        case UI_GROUP_TEMPO:             return &kMenuTempo;
-        case UI_GROUP_SETTINGS:          return &kMenuSettings;
-
-        case UI_GROUP_TRANSPOSE_SHIFT:
-        case UI_GROUP_TRANSPOSE_SCALED:
-        case UI_GROUP_TRANSPOSE_BOTH:    return &kMenuTranspose;
-
-        case UI_GROUP_MODIFY_CHANGE:
-        case UI_GROUP_MODIFY_SPLIT:
-        case UI_GROUP_MODIFY_BOTH:
-        case UI_GROUP_MODIFY_VEL_CHANGED:
-        case UI_GROUP_MODIFY_VEL_FIXED:  return &kMenuModify;
-
-        default:                         return &kMenuTempo;
-    }
-}
-
-
 void toggle_underline_items(ui_group_t group, uint8_t index)
 {
-    const MenuDef *def = menu_def_for(group);
-
-    ui_group_t active[8];
-    uint8_t act_n = build_active_groups(def, active, 8);
-
-    uint8_t row = 0;
-
-    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!group_is_active(p->ui_group, active, act_n)) continue;
-
-        if (is_bits_item((save_field_t)f)) {
-            if (index >= row && index < (uint8_t)(row + 16)) {
-                uint8_t bit = (uint8_t)(index - row);
-                update_channel_filter((save_field_t)f, bit);
-                return;
-            }
-            row = (uint8_t)(row + 16);
-        } else {
-            if (row == index) {
-                if (p->handler) p->handler((save_field_t)f, p->handler_arg);
-                return;
-            }
-            row++;
-        }
-    }
+    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
+    CtrlActiveList list;
+    ctrl_build_active_fields(mask, &list);
+    ctrl_toggle_row(&list, index);
 }
 
 
@@ -172,47 +80,29 @@ uint8_t build_select_states(ui_group_t group,
                             uint8_t *states,
                             uint8_t states_cap)
 {
-    const MenuDef *def = menu_def_for(group);
+    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
+    CtrlActiveList list;
+    ctrl_build_active_fields(mask, &list);
 
-    ui_group_t active[8];
-    uint8_t act_n = build_active_groups(def, active, 8);
-
-    uint8_t rows = 0;
+    const uint8_t rows = ctrl_row_count(&list);
     if (states && states_cap) {
         for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
-    }
-
-    for (int f = 0; f < SAVE_FIELD_COUNT; ++f) {
-        const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!group_is_active(p->ui_group, active, act_n)) continue;
-
-        if (is_bits_item((save_field_t)f)) {
-            for (uint8_t b = 0; b < 16; ++b) {
-                if (states && rows == current_select && rows < states_cap) states[rows] = 1;
-                rows++;
-            }
-        } else {
-            if (states && rows == current_select && rows < states_cap) states[rows] = 1;
-            rows++;
-        }
+        if (rows && current_select < states_cap) states[current_select] = 1;
     }
     return rows;
 }
 
-
 void menu_nav_begin(ui_group_t group)
 {
     s_active_count = 0;
-
-    const MenuDef *def = menu_def_for(group);
-    ui_group_t active[8];
-    const uint8_t act_n = build_active_groups(def, active, 8);
-
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && s_active_count < ACTIVE_LIST_CAP; ++f) {
-        const menu_items_parameters_t *p = &menu_items_parameters[f];
-        if (!group_is_active(p->ui_group, active, act_n)) continue;
-        s_active_list[s_active_count++] = f;
+    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
+    CtrlActiveList list;
+    ctrl_build_active_fields(mask, &list);
+    // cache into existing arrays so the rest of your code stays intact
+    for (uint8_t i = 0; i < list.count && i < ACTIVE_LIST_CAP; ++i) {
+        s_active_list[i] = list.fields_idx[i];
     }
+    s_active_count = list.count;
 }
 
 

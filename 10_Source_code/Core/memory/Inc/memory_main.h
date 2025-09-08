@@ -21,9 +21,27 @@
 #define DATA_VALIDITY_CHECKSUM  0xA5A5C6A4u
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
+
+
+
+
+
+
+
+typedef struct {
+    int32_t min;
+    int32_t max;
+    int32_t def;
+} save_limits_t;
+
+
+
+
 // ---------------------
 // Modify op
 // ---------------------
+
+
 typedef enum {
     SAVE_MODIFY_INCREMENT = 0,
     SAVE_MODIFY_SET
@@ -83,7 +101,9 @@ typedef enum {
 
 
 
-
+extern const save_limits_t save_limits[SAVE_FIELD_COUNT];
+extern int32_t* u32_fields[SAVE_FIELD_COUNT];
+extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 // (Your encoder constants still live here if you need them across modules)
 #define ENCODER_CENTER     32768
@@ -120,10 +140,6 @@ typedef enum {
 // ---------------------
 // The following expositions are for memory_flash.c
 // ---------------------
-
-extern int32_t* u32_fields[SAVE_FIELD_COUNT];
-extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
-
 
 
 
