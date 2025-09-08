@@ -36,8 +36,7 @@
 #define TEXT_LEFT_START 5
 
 
-#define WRAP     1
-#define NO_WRAP  0
+
 
 
 

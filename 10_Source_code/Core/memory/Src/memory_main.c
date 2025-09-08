@@ -17,6 +17,7 @@
 
 // Expose for tests
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
+		                                //min,   max,  default
     [MIDI_TEMPO_CURRENT_TEMPO]         = {  20,   300, 120 },
     [MIDI_TEMPO_TEMPO_CLICK_RATE]      = {   1, 50000,  24 },
     [MIDI_TEMPO_CURRENTLY_SENDING]     = {   0,     1,   0 },
@@ -149,6 +150,31 @@ uint8_t save_get(save_field_t field) {
 // ---------------------
 // Increment / set (u32 / u8)
 // ---------------------
+static void mark_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
+    s_field_change_bits[f >> 5] |= (1u << (f & 31));
+}
+
+
+
+uint8_t save_toggle(save_field_t field) {
+    if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
+    if (!u8_fields[field]) return 0;
+    if (!save_lock_with_retries()) return 0;
+
+    uint8_t old_v = *u8_fields[field];
+    uint8_t new_v = (old_v == 0) ? 1 : 0;
+
+    if (new_v != old_v) {
+        *u8_fields[field] = new_v;
+        mark_field_changed(field);
+    }
+
+    save_unlock();
+    return new_v;
+}
+
+
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     if (!u32_fields[field]) return 0;
@@ -219,4 +245,3 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     save_unlock();
     return 1;
 }
-

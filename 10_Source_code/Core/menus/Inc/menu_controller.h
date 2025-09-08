@@ -12,13 +12,17 @@
 #include "memory_main.h"
 #include "memory_ui_state.h"
 
+
+#define NO_WRAP  0
+#define WRAP     1
+
 typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
 
 typedef struct {
-    uint8_t      wrap;          // WRAP / NO_WRAP
-    save_handler_t handler;     // update_value / update_contrast / update_channel_filter / no_update
-    uint8_t       handler_arg;  // e.g. 1, 10, 12...
-    uint32_t       groups;      // controller group bitmask (CTRL_G_*)
+    uint8_t      wrap;
+    save_handler_t handler;
+    uint8_t       handler_arg;
+    uint32_t       groups;
 } menu_controls_t;
 
 

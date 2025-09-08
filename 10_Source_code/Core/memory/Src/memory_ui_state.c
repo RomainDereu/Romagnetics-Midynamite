@@ -38,9 +38,8 @@ static uint8_t  s_active_count = 0;
 // ---------------------
 
 // ---- Field-change tracking (one bit per save_field_t) ----
-#define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
 
-static uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
+uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
 static inline uint8_t test_field_changed(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
@@ -58,10 +57,6 @@ void save_mark_all_changed(void) {
 }
 
 
-void mark_field_changed(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
-    s_field_change_bits[f >> 5] |= (1u << (f & 31));
-}
 
 
 

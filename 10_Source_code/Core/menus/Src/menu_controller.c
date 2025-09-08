@@ -10,8 +10,8 @@
 #include "utils.h"
 
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
+                                             //wrap,   handler,    handler_arg, group
     [MIDI_TEMPO_CURRENT_TEMPO]           = { NO_WRAP, update_value,         10, CTRL_G_TEMPO },
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]        = { NO_WRAP, no_update,             0, 0 },
     [MIDI_TEMPO_CURRENTLY_SENDING]       = {   WRAP,  no_update,             0, 0 },
     [MIDI_TEMPO_SEND_TO_MIDI_OUT]        = {   WRAP,  update_value,          1, CTRL_G_TEMPO },
 
@@ -47,9 +47,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_USB_THRU]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
     [SETTINGS_CHANNEL_FILTER]            = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
     [SETTINGS_FILTERED_CHANNELS]         = {   WRAP,  update_channel_filter, 1, CTRL_G_SETTINGS }, // 16-bit strip
-    [SETTINGS_ABOUT]                     = { NO_WRAP, no_update,             1, CTRL_G_SETTINGS },
-
-    [SAVE_DATA_VALIDITY]                 = { NO_WRAP, no_update,             0, 0 },
 };
 
 

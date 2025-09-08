@@ -22,12 +22,6 @@
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 
-
-
-
-
-
-
 typedef struct {
     int32_t min;
     int32_t max;
@@ -40,8 +34,6 @@ typedef struct {
 // ---------------------
 // Modify op
 // ---------------------
-
-
 typedef enum {
     SAVE_MODIFY_INCREMENT = 0,
     SAVE_MODIFY_SET
@@ -141,6 +133,7 @@ typedef enum {
 // The following expositions are for memory_flash.c
 // ---------------------
 
+void save_mark_all_changed(void);
 
 
 void save_unlock(void);

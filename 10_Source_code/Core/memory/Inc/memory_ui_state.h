@@ -84,15 +84,14 @@ typedef enum {
 
 
 
-
-
+#define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
+extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 
 // ---------------------
 // API
 // ---------------------
 
-void save_mark_all_changed(void);
-void mark_field_changed(save_field_t f);
+
 
 void toggle_underline_items(ui_group_t group, uint8_t index);
 
