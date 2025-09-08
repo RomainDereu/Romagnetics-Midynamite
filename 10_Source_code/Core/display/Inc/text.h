@@ -136,7 +136,8 @@ typedef struct {
     struct {
         const char *change_split[2];
         const char *change_fixed[2];
-        const char *midi_outs[4];
+        const char *midi_outs[3];
+        const char *midi_outs_split[4];
         const char *transpose_modes[2];
         const char *scales[7];
         const char *intervals[10];

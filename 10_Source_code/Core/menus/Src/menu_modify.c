@@ -62,7 +62,7 @@ static void screen_update_channel_change(uint8_t * select_states){
     write_underline_68(ch2, 50, LINE_2_VERT, select_states[1]);
 
     write_68(message->output_sem, TEXT_LEFT_START, LINE_3_VERT);
-    const char *out = message->choices.midi_outs[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
+    const char *out = message->choices.midi_outs_split[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
     write_underline_68(out, 50, LINE_3_VERT, select_states[2]);
 }
 
@@ -83,7 +83,7 @@ static void screen_update_channel_split(uint8_t * select_states){
     write_underline_68(note_to_write, 40, LINE_2_VERT, select_states[2]);
 
     write_68(message->output_sem, TEXT_LEFT_START, LINE_3_VERT);
-    const char *out = message->choices.midi_outs[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
+    const char *out = message->choices.midi_outs_split[ save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT) ];
     write_underline_68(out, 50, LINE_3_VERT, select_states[3]);
 }
 

@@ -7,6 +7,7 @@
 #include <string.h>
 #include "cmsis_os.h"
 #include "memory_main.h"
+#include "_menu_controller.h"
 #include "screen_driver.h"   //For setcontrast
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
@@ -81,17 +82,24 @@ void update_value(save_field_t field, uint8_t multiplier)
     int8_t step = encoder_read_step(timer);
     if (step == 0) return;
 
-    // Try u32 field first
-    int32_t cur32  = (int32_t)save_get_u32(field);
-    int32_t next32 = cur32 + step * active_mult;
-    if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) return;
+    const save_limits_t   lim = save_limits[field];
+    const menu_controls_t mt  = menu_controls[field];
+    const int32_t delta = (int32_t)step * (int32_t)active_mult;
 
-    // Fallback to u8
-    uint8_t cur8  = save_get(field);
-    int32_t next8 = (int32_t)cur8 + step * active_mult;
-    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
+    // Try u32 field first (compute next in signed, wrap/clamp in signed, THEN cast)
+    {
+        int32_t cur32  = (int32_t)save_get_u32(field);
+        int32_t next32 = wrap_or_clamp_i32(cur32 + delta, lim.min, lim.max, mt.wrap);
+        if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) return;
+    }
+
+    // Fallback to u8 (same rule: wrap before casting)
+    {
+        int32_t cur8  = (int32_t)save_get(field);
+        int32_t next8 = wrap_or_clamp_i32(cur8 + delta, lim.min, lim.max, mt.wrap);
+        (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
+    }
 }
-
 
 
 
