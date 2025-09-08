@@ -5,7 +5,7 @@
  *      Author: Romain Dereu
  */
 #include <stdio.h>
-#include "_menu_ui.h"
+#include "_menu_controller.h"
 #include "memory_main.h"
 #include "menu.h"
 #include "midi_transform.h"

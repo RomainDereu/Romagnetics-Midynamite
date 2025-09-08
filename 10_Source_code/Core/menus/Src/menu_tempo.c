@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include "_menu_ui.h"
+#include "_menu_controller.h"
 #include "memory_main.h"
 #include "menu.h"
 #include "menu_tempo.h"
@@ -56,13 +56,13 @@ void screen_update_midi_tempo(void)
     char tempo_print[6];
     snprintf(tempo_print, sizeof tempo_print, "%lu",
              (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
-    write_underline_1624(tempo_print, 80, 20, select_states[TEMPO_PRINT]);
+    write_underline_1624(tempo_print, 80, 20, (count > 0) ? select_states[0] : 0);
     write_68(message->bpm, 80, 48);
 
     // Send target
     write_68(message->target, TEXT_LEFT_START, 15);
     const char *midi_send_out = message->choices.midi_outs[ save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT) ];
-    write_underline_68(midi_send_out, TEXT_LEFT_START, 25, select_states[MIDI_OUT_PRINT]);
+    write_underline_68(midi_send_out, TEXT_LEFT_START, 25, (count > 1) ? select_states[1] : 0);
 
     //Stop/Sending status
     uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);

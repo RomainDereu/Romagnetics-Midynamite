@@ -1,5 +1,5 @@
 /*
- * _menu_controller.h
+ * menu_controller.h
  *
  *  Created on: Sep 8, 2025
  *      Author: Astaa
@@ -10,29 +10,99 @@
 
 #include <stdint.h>
 #include "memory_main.h"
-#include "_menu_ui.h"
+
+// ---------------------
+// Menu list
+// ---------------------
+typedef enum {
+    MIDI_TEMPO = 0,
+    MIDI_MODIFY,
+    MIDI_TRANSPOSE,
+    SETTINGS,
+    AMOUNT_OF_MENUS
+} menu_list_t;
+
+typedef enum {
+    TEMPO_PRINT = 0,
+    MIDI_OUT_PRINT,
+    AMOUNT_OF_TEMPO_ITEMS
+} midi_tempo_ui_states_t;
 
 
+// ---------------------
+// UI state
+// ---------------------
+#define UI_STATE_BUSY 0xFF
+
+typedef enum {
+    UI_MIDI_TEMPO_SELECT,
+    UI_MIDI_MODIFY_SELECT,
+    UI_MIDI_TRANSPOSE_SELECT,
+    UI_SETTINGS_SELECT,
+    UI_CURRENT_MENU,
+    UI_OLD_MENU,
+    UI_STATE_FIELD_COUNT
+} ui_state_field_t;
+
+// ---------------------
+// UI submenu id
+// ---------------------
+typedef enum {
+    UI_GROUP_TEMPO = 0,
+    UI_GROUP_MODIFY,
+
+    UI_GROUP_TRANSPOSE_SHIFT,
+    UI_GROUP_TRANSPOSE_SCALED,
+    UI_GROUP_TRANSPOSE_BOTH,
+
+    UI_GROUP_MODIFY_CHANGE,
+    UI_GROUP_MODIFY_SPLIT,
+    UI_GROUP_MODIFY_BOTH,
+
+    UI_GROUP_MODIFY_VEL_CHANGED,
+    UI_GROUP_MODIFY_VEL_FIXED,
+
+    UI_GROUP_SETTINGS,
+    UI_GROUP_NONE = 0xFF
+} ui_group_t;
+
+// ---------------------
+// Modify ops
+// ---------------------
+typedef enum {
+    UI_MODIFY_INCREMENT = 0,
+    UI_MODIFY_SET,
+} ui_modify_op_t;
+
+// ---------------------
+// Field change bits
+// ---------------------
+#define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
+extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
+
+// ---------------------
+// Wrapping options
+// ---------------------
 #define NO_WRAP  0
 #define WRAP     1
 
+// ---------------------
+// Menu controls
+// ---------------------
 typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
 
 typedef struct {
-    uint8_t      wrap;
+    uint8_t        wrap;
     save_handler_t handler;
-    uint8_t       handler_arg;
+    uint8_t        handler_arg;
     uint32_t       groups;
 } menu_controls_t;
 
-
-
-
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
-// ---- Controller API ----
-
-// Bit-flags for controller groups (decoupled from UI enums)
+// ---------------------
+// Controller groups (bit flags)
+// ---------------------
 typedef enum {
     CTRL_G_TEMPO               = 1u << 0,
     CTRL_G_SETTINGS            = 1u << 1,
@@ -49,6 +119,9 @@ typedef enum {
     CTRL_G_MODIFY_VEL_FIXED    = 1u << 9,
 } ctrl_group_flag_t;
 
+// ---------------------
+// Active list
+// ---------------------
 #ifndef MENU_ACTIVE_LIST_CAP
 #define MENU_ACTIVE_LIST_CAP 64
 #endif
@@ -58,18 +131,32 @@ typedef struct {
     uint8_t  count;
 } CtrlActiveList;
 
-// Build active groups mask from a UI "family" request.
-// We accept your existing ui_group_t so views don't change much.
+// ---------------------
+// UI API
+// ---------------------
+void toggle_underline_items(ui_group_t group, uint8_t index);
+
+uint8_t build_select_states(ui_group_t group,
+                            uint8_t current_select,
+                            uint8_t *states,
+                            uint8_t states_cap);
+
+void    menu_nav_begin(ui_group_t group);
+uint8_t menu_nav_end(ui_state_field_t field, uint8_t current_select);
+void    menu_nav_reset(ui_state_field_t field, uint8_t value);
+
+uint8_t menu_nav_get_select(ui_state_field_t field);
+void    menu_nav_update_select(ui_state_field_t field, ui_group_t group);
+
+uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t ui_state_get(ui_state_field_t field);
+
+// ---------------------
+// Controller API
+// ---------------------
 uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested);
-
-// Build an active field list from a group mask (uses internal field→group mapping).
-void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
-
-// Count rows (expands 16-bit virtual strip for SETTINGS_FILTERED_CHANNELS).
-uint8_t ctrl_row_count(const CtrlActiveList *list);
-
-// Apply "click/toggle" at a row (invokes handler or toggles a bit in channel filter).
-void ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index);
-
+void     ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
+uint8_t  ctrl_row_count(const CtrlActiveList *list);
+void     ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
