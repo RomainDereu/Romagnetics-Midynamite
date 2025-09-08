@@ -1,5 +1,5 @@
 /*
- * menu_controller.h
+ * _menu_controller.h
  *
  *  Created on: Sep 8, 2025
  *      Author: Astaa
@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include "memory_main.h"
-#include "memory_ui_state.h"
+#include "_menu_ui.h"
 
 
 #define NO_WRAP  0

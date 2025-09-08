@@ -1,12 +1,12 @@
 /*
- * memory_ui_state.h
+ * _menu_ui.h
  *
  *  Created on: Aug 23, 2025
  *      Author: Astaa
  */
 
-#ifndef MEMORY_INC_MEMORY_UI_STATE_H_
-#define MEMORY_INC_MEMORY_UI_STATE_H_
+#ifndef MENU_INC_MENU_UI_H_
+#define MENU_INC_MENU_UI_H_
 
 #include "memory_main.h"
 
@@ -102,4 +102,4 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
 uint8_t ui_state_get(ui_state_field_t field);
 
 
-#endif /* MEMORY_INC_MEMORY_UI_STATE_H_ */
+#endif /* MENU_INC_MENU_UI_H_ */

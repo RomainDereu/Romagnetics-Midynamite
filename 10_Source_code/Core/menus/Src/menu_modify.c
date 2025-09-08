@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 
-#include "memory_ui_state.h"
+#include "_menu_ui.h"
 #include "memory_main.h"
 #include "menu.h"
 #include "menu_modify.h"

@@ -1,11 +1,11 @@
 /*
- * memory_ui_state.c
+ * _menu_ui.c
  *
  *  Created on: Aug 23, 2025
  *      Author: Astaa
  */
-#include "memory_ui_state.h"
-#include "menu_controller.h"
+#include "_menu_ui.h"
+#include "_menu_controller.h"
 #include "utils.h"
 
 extern TIM_HandleTypeDef htim3;
