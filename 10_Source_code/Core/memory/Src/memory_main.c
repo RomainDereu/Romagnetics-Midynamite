@@ -9,59 +9,54 @@
 
 #include "memory_main.h"
 #include "memory_ui_state.h"
+#include "menu_controller.h"
 #include "stm32f4xx_hal.h"
 #include "utils.h"
 
 
 
 // Expose for tests
-const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT] = {
+const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
+    [MIDI_TEMPO_CURRENT_TEMPO]         = {  20,   300, 120 },
+    [MIDI_TEMPO_TEMPO_CLICK_RATE]      = {   1, 50000,  24 },
+    [MIDI_TEMPO_CURRENTLY_SENDING]     = {   0,     1,   0 },
+    [MIDI_TEMPO_SEND_TO_MIDI_OUT]      = {   0,     2,   0 },
 
-    //                                         min    max     wrap     def    handler       handler_arg   ui_group
-    [MIDI_TEMPO_CURRENT_TEMPO]            = {   20,   300,    NO_WRAP, 120,   update_value   , 10,      UI_GROUP_TEMPO },
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]         = {    1,   50000,  NO_WRAP,  24,   no_update      ,  0,      UI_GROUP_NONE },
-    [MIDI_TEMPO_CURRENTLY_SENDING]        = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]         = {    0,   2,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TEMPO },
+    [MIDI_MODIFY_CHANGE_OR_SPLIT]      = {   0,     1,   1 },
+    [MIDI_MODIFY_VELOCITY_TYPE]        = {   0,     1,   0 },
 
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1] = { 1,   16,   1 },
+    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2] = { 0,   16,   0 },
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]         = {    0,   1,      WRAP,      1,   no_update      ,  0,      UI_GROUP_NONE },
-    [MIDI_MODIFY_VELOCITY_TYPE]           = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1] = {  1,    16,   1 },
+    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2] = {  1,    16,   2 },
+    [MIDI_MODIFY_SPLIT_NOTE]           = {  0,   127,  60 },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1]  = {    1,   16,     NO_WRAP,   1,   update_value   ,  1,      UI_GROUP_MODIFY_CHANGE },
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2]  = {    0,   16,     NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_MODIFY_CHANGE },
+    [MIDI_MODIFY_SEND_TO_MIDI_OUT]     = {  0,     3,   0 },
 
-	[MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]    = {    1,   16,     NO_WRAP,   1,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]    = {    1,   16,     NO_WRAP,   2,   update_value   ,  1,      UI_GROUP_MODIFY_SPLIT },
-	[MIDI_MODIFY_SPLIT_NOTE]              = {    0,   127,    NO_WRAP,  60,   update_value   ,  12,     UI_GROUP_MODIFY_SPLIT },
+    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]  = { -127, 127,   0 },
+    [MIDI_MODIFY_VELOCITY_ABSOLUTE]    = {   0,  127,  64 },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]        = {    0,   3,      WRAP,      0,   update_value   ,  1,      UI_GROUP_MODIFY_BOTH },
+    [MIDI_MODIFY_CURRENTLY_SENDING]    = {   0,     1,   0 },
 
-	[MIDI_MODIFY_VELOCITY_PLUS_MINUS]     = { -127,   127,    NO_WRAP,   0,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_CHANGED },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]       = {    0,   127,    NO_WRAP,  64,   update_value   ,  10,     UI_GROUP_MODIFY_VEL_FIXED },
+    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]    = {   0,     1,   0 },
+    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]  = { -127,  127,  0 },
+    [MIDI_TRANSPOSE_BASE_NOTE]         = {   0,    11,  0 },
+    [MIDI_TRANSPOSE_INTERVAL]          = {   0,     9,  0 },
+    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]   = {   0,     6,  0 },
+    [MIDI_TRANSPOSE_SEND_ORIGINAL]     = {   0,     1,  0 },
+    [MIDI_TRANSPOSE_CURRENTLY_SENDING] = {   0,     1,  0 },
 
-	[MIDI_MODIFY_CURRENTLY_SENDING]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
+    [SETTINGS_START_MENU]              = {   0,     3,  0 },
+    [SETTINGS_SEND_USB]                = {   0,     1,  0 },
+    [SETTINGS_BRIGHTNESS]              = {   0,     9,  6 },
+    [SETTINGS_MIDI_THRU]               = {   0,     1,  0 },
+    [SETTINGS_USB_THRU]                = {   0,     1,  0 },
+    [SETTINGS_CHANNEL_FILTER]          = {   0,     1,  0 },
+    [SETTINGS_FILTERED_CHANNELS]       = {   0, 0x0000FFFF, 0 },
+    [SETTINGS_ABOUT]                   = {   0,     0,  0 },
 
-
-	[MIDI_TRANSPOSE_TRANSPOSE_TYPE]       = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
-	[MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]     = { -127, 127,      NO_WRAP,   0,   update_value   , 12,      UI_GROUP_TRANSPOSE_SHIFT },
-    [MIDI_TRANSPOSE_BASE_NOTE]            = {    0,   11,     NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_INTERVAL]             = {    0,   9,      NO_WRAP,   0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]      = {    0,   6,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_SCALED  },
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]        = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_TRANSPOSE_BOTH },
-    [MIDI_TRANSPOSE_CURRENTLY_SENDING]    = {    0,   1,      WRAP,      0,   no_update      ,  0,      UI_GROUP_NONE },
-
-
-    [SETTINGS_START_MENU]                 = {    0,   3,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_SEND_USB]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_BRIGHTNESS]                 = {    0,   9,      NO_WRAP,   6,   update_contrast,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_MIDI_THRU]                  = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_USB_THRU]                   = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_CHANNEL_FILTER]             = {    0,   1,      WRAP,      0,   update_value   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_FILTERED_CHANNELS]          = {    0,   0x0000FFFF, WRAP,  0,   update_channel_filter   ,  1,      UI_GROUP_SETTINGS },
-    [SETTINGS_ABOUT]                      = {    0,   0,      NO_WRAP,  0,    no_update      ,  1,      UI_GROUP_SETTINGS },
-
-
-    [SAVE_DATA_VALIDITY]                  = {    0,   0xFFFFFFFF, NO_WRAP, DATA_VALIDITY_CHECKSUM, no_update, 0, UI_GROUP_NONE },
+    [SAVE_DATA_VALIDITY]               = {   0, 0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },
 };
 
 
@@ -128,7 +123,7 @@ int32_t save_get_u32(save_field_t field) {
     }
 
     int32_t v = *p;
-    const menu_items_parameters_t lim = menu_items_parameters[field];
+    const save_limits_t   lim = save_limits[field];
     return clamp_i32(v, lim.min, lim.max);
 }
 
@@ -143,7 +138,7 @@ uint8_t save_get(save_field_t field) {
     }
 
     int32_t v = (int32_t)(*p);
-    const menu_items_parameters_t lim = menu_items_parameters[field];
+    const save_limits_t   lim = save_limits[field];
     return (uint8_t)clamp_i32(v, lim.min, lim.max);
 }
 
@@ -159,7 +154,8 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
     if (!u32_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
 
-    const menu_items_parameters_t lim = menu_items_parameters[field];
+    const save_limits_t   lim = save_limits[field];
+    const menu_controls_t mt  = menu_controls[field];
     int32_t old_v = *u32_fields[field];
     int32_t v = old_v;
 
@@ -169,7 +165,7 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
         default: save_unlock(); return 0;
     }
 
-    v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
+    v = wrap_or_clamp_i32(v, lim.min, lim.max, mt.wrap);
 
     if (v != old_v) {
         *u32_fields[field] = v;
@@ -185,14 +181,16 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     if (!u8_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
 
-    const menu_items_parameters_t lim = menu_items_parameters[field];
+    const save_limits_t   lim = save_limits[field];
+    const menu_controls_t mt  = menu_controls[field];
+
     uint8_t old_v = *u8_fields[field];
     int32_t v = (int32_t)old_v;
 
     switch (op) {
         case SAVE_MODIFY_SET: {
             int32_t desired = (int32_t)value_if_set;
-            if (!lim.wrap) {
+            if (!mt.wrap) {
                 if (desired > lim.max && desired >= 128) v = lim.min;
                 else if (desired < lim.min)             v = lim.min;
                 else                                     v = desired;
@@ -210,7 +208,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
             return 0;
     }
 
-    v = wrap_or_clamp_i32(v, lim.min, lim.max, lim.wrap);
+    v = wrap_or_clamp_i32(v, lim.min, lim.max, mt.wrap);
     uint8_t new_v = (uint8_t)v;
 
     if (new_v != old_v) {

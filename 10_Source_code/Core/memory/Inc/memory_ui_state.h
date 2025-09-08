@@ -69,11 +69,11 @@ typedef struct {
 } ui_field_limits_t;
 
 static const ui_field_limits_t ui_limits[] = {
-    [UI_MIDI_TEMPO_SELECT]    = {TEMPO_PRINT, AMOUNT_OF_TEMPO_ITEMS, 1},
+    [UI_MIDI_TEMPO_SELECT]    = {TEMPO_PRINT, AMOUNT_OF_TEMPO_ITEMS -1, 1},
     [UI_MIDI_MODIFY_SELECT]   = {0, 5, 1},   // 0–5 looping
     [UI_MIDI_TRANSPOSE_SELECT]= {0, 11, 1},  // 12 steps looping
     [UI_SETTINGS_SELECT]      = {0, 3, 1},   // 4 settings
-    [UI_CURRENT_MENU]         = {MIDI_TEMPO, AMOUNT_OF_MENUS, 1},
+    [UI_CURRENT_MENU]         = {MIDI_TEMPO, AMOUNT_OF_MENUS -1, 1},
 };
 
 typedef enum {
@@ -83,51 +83,6 @@ typedef enum {
 
 
 
-
-
-typedef struct {
-    int32_t min;
-    int32_t max;
-    uint8_t wrap;   // 0 = clamp, 1 = wrap
-    int32_t def;
-
-    void (*handler)(save_field_t field, uint8_t arg);
-    uint8_t handler_arg;
-    ui_group_t ui_group;
-} menu_items_parameters_t;
-
-
-
-// ---------------------
-// UI structs
-// ---------------------
-
-
-
-
-// Variant selection per menu family
-typedef struct {
-    save_field_t key;               // field whose current value selects one option
-    const ui_group_t *options;      // array of groups; index by clamped key value
-    uint8_t option_count;           // number of options
-} VariantSelector;
-
-
-
-// Menu definition: always-active groups + independent variant selectors
-typedef struct {
-    const ui_group_t *always_groups;
-    uint8_t always_count;
-
-    const VariantSelector *selectors;
-    uint8_t selector_count;
-} MenuDef;
-
-
-
-
-static volatile uint8_t ui_state_busy = 0;
-extern const menu_items_parameters_t menu_items_parameters[SAVE_FIELD_COUNT];
 
 
 
