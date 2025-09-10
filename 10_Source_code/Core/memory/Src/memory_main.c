@@ -32,7 +32,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2] = {  1,    16,   2 },
     [MIDI_MODIFY_SPLIT_NOTE]           = {  0,   127,  60 },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]     = {  0,     3,   0 },
+    [MIDI_MODIFY_SEND_TO_MIDI_OUT]     = {  0,     2,   0 },
 
     [MIDI_MODIFY_VELOCITY_PLUS_MINUS]  = { -80, 80,   0 },
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]    = {   0,  127,  64 },
