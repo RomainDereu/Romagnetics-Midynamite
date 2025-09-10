@@ -136,6 +136,72 @@ static CtrlActiveList* list_for_root(ui_group_t root) {
     }
 }
 
+static inline uint32_t flag_from_id(uint32_t id) {
+    return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u;
+}
+
+
+static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
+{
+    uint32_t mask = 0;
+    switch (requested) {
+        case UI_GROUP_TEMPO:
+            mask |= flag_from_id(CTRL_G_TEMPO);
+            break;
+
+        case UI_GROUP_SETTINGS:
+            mask |= flag_from_id(CTRL_G_SETTINGS);
+            break;
+
+        case UI_GROUP_TRANSPOSE_BOTH: {
+            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
+            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
+            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
+                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
+                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
+        } break;
+
+        case UI_GROUP_MODIFY_BOTH: {
+            mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
+
+            int page = (int)save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+            mask |= (page == MIDI_MODIFY_SPLIT)
+                  ? flag_from_id(CTRL_G_MODIFY_SPLIT)
+                  : flag_from_id(CTRL_G_MODIFY_CHANGE);
+
+            int vel  = (int)save_get(MIDI_MODIFY_VELOCITY_TYPE);
+            mask |= (vel == MIDI_MODIFY_FIXED_VEL)
+                  ? flag_from_id(CTRL_G_MODIFY_VEL_FIXED)
+                  : flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
+        } break;
+
+        default:
+            mask |= flag_from_id(CTRL_G_TEMPO);
+            break;
+    }
+    return mask;
+
+}
+
+
+
+static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
+{
+    out->count = 0;
+    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && out->count < MENU_ACTIVE_LIST_CAP; ++f) {
+        const menu_controls_t mt = menu_controls[f];
+
+        // Visible only if its group is active
+        uint32_t gm = flag_from_id(mt.groups);
+        if ((gm & active_groups) == 0) continue;
+
+        // Non-interactive (display-only) items must not be selectable
+        if (mt.handler == no_update) continue;
+
+        out->fields_idx[out->count++] = f;
+    }
+}
+
 
 
 
@@ -165,8 +231,19 @@ static inline ui_group_t group_from_select_field(ui_state_field_t field) {
 }
 
 
-static inline uint32_t flag_from_id(uint32_t id) {
-    return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u;
+static inline uint8_t is_bits_item(save_field_t f) {
+    return menu_controls[f].handler == update_channel_filter;
+}
+
+
+static uint8_t ctrl_row_count(const CtrlActiveList *list)
+{
+    uint8_t rows = 0;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t f = (save_field_t)list->fields_idx[i];
+        rows += is_bits_item(f) ? 16 : 1;
+    }
+    return rows;
 }
 
 
@@ -248,26 +325,6 @@ uint8_t ui_is_field_selected(save_field_t f) {
     return 0;
 }
 
-uint8_t ui_is_field_active(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    uint32_t gid = menu_controls[f].groups;           // ID
-    ui_group_t root = select_group_for_field_id(gid); // map to root
-    if (root == UI_GROUP_TEMPO && gid != CTRL_G_TEMPO) return 0; // optional sanity
-
-    CtrlActiveList list;
-    ctrl_build_active_fields(ctrl_active_groups_from_ui_group(root), &list);
-    for (uint8_t i = 0; i < list.count; ++i) {
-        if ((save_field_t)list.fields_idx[i] == f) return 1;
-    }
-    return 0;
-}
-
-uint8_t ui_is_field_visible(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    uint32_t flag = flag_from_id(menu_controls[f].groups);
-    return (ui_active_groups() & flag) ? 1u : 0u;
-}
-
 
 
 
@@ -278,6 +335,30 @@ void menu_nav_begin_and_update(ui_state_field_t field) {
     menu_nav_update_select(field, g);
 }
 
+
+
+static void ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index)
+{
+    uint8_t row = 0;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t f = (save_field_t)list->fields_idx[i];
+        if (is_bits_item(f)) {
+            if (row_index >= row && row_index < (uint8_t)(row + 16)) {
+                uint8_t bit = (uint8_t)(row_index - row);
+                update_channel_filter(f, bit);
+                return;
+            }
+            row = (uint8_t)(row + 16);
+        } else {
+            if (row == row_index) {
+                const menu_controls_t mt = menu_controls[f];
+                if (mt.handler) mt.handler(f, mt.handler_arg);
+                return;
+            }
+            row++;
+        }
+    }
+}
 
 
 
@@ -363,102 +444,10 @@ uint8_t menu_nav_end_auto(ui_state_field_t field) {
 
 
 
-static inline uint8_t is_bits_item(save_field_t f) {
-    return menu_controls[f].handler == update_channel_filter;
-}
-
-uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
-{
-    uint32_t mask = 0;
-    switch (requested) {
-        case UI_GROUP_TEMPO:
-            mask |= flag_from_id(CTRL_G_TEMPO);
-            break;
-
-        case UI_GROUP_SETTINGS:
-            mask |= flag_from_id(CTRL_G_SETTINGS);
-            break;
-
-        case UI_GROUP_TRANSPOSE_BOTH: {
-            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
-            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
-                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
-                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
-        } break;
-
-        case UI_GROUP_MODIFY_BOTH: {
-            mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
-
-            int page = (int)save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-            mask |= (page == MIDI_MODIFY_SPLIT)
-                  ? flag_from_id(CTRL_G_MODIFY_SPLIT)
-                  : flag_from_id(CTRL_G_MODIFY_CHANGE);
-
-            int vel  = (int)save_get(MIDI_MODIFY_VELOCITY_TYPE);
-            mask |= (vel == MIDI_MODIFY_FIXED_VEL)
-                  ? flag_from_id(CTRL_G_MODIFY_VEL_FIXED)
-                  : flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
-        } break;
-
-        default:
-            mask |= flag_from_id(CTRL_G_TEMPO);
-            break;
-    }
-    return mask;
-
-}
-
-void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
-{
-    out->count = 0;
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && out->count < MENU_ACTIVE_LIST_CAP; ++f) {
-        const menu_controls_t mt = menu_controls[f];
-
-        // Visible only if its group is active
-        uint32_t gm = flag_from_id(mt.groups);
-        if ((gm & active_groups) == 0) continue;
-
-        // Non-interactive (display-only) items must not be selectable
-        if (mt.handler == no_update) continue;
-
-        out->fields_idx[out->count++] = f;
-    }
-}
 
 
-uint8_t ctrl_row_count(const CtrlActiveList *list)
-{
-    uint8_t rows = 0;
-    for (uint8_t i = 0; i < list->count; ++i) {
-        save_field_t f = (save_field_t)list->fields_idx[i];
-        rows += is_bits_item(f) ? 16 : 1;
-    }
-    return rows;
-}
 
-void ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index)
-{
-    uint8_t row = 0;
-    for (uint8_t i = 0; i < list->count; ++i) {
-        save_field_t f = (save_field_t)list->fields_idx[i];
-        if (is_bits_item(f)) {
-            if (row_index >= row && row_index < (uint8_t)(row + 16)) {
-                uint8_t bit = (uint8_t)(row_index - row);
-                update_channel_filter(f, bit);
-                return;
-            }
-            row = (uint8_t)(row + 16);
-        } else {
-            if (row == row_index) {
-                const menu_controls_t mt = menu_controls[f];
-                if (mt.handler) mt.handler(f, mt.handler_arg);
-                return;
-            }
-            row++;
-        }
-    }
-}
+
 
 // -------------------------
 // UI state & navigation (from original _menu_ui.c)
@@ -489,11 +478,6 @@ void menu_nav_begin(ui_group_t group)
 
 uint32_t ui_active_groups(void) {
     return ctrl_active_groups_from_ui_group(s_current_root_group);
-}
-
-uint8_t ui_is_group_active(uint32_t id_or_flag) {
-    uint32_t flag = (id_or_flag <= 31) ? flag_from_id(id_or_flag) : id_or_flag;
-    return (ui_active_groups() & flag) ? 1u : 0u;
 }
 
 

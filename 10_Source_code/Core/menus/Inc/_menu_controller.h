@@ -136,11 +136,8 @@ typedef struct {
 // ---------------------
 
 uint8_t ui_is_field_selected(save_field_t f);
-uint8_t ui_is_field_active(save_field_t f);
-uint8_t ui_is_field_visible(save_field_t f);
 
 uint32_t ui_active_groups(void);
-uint8_t  ui_is_group_active(uint32_t flags);
 
 
 void menu_nav_begin_and_update(ui_state_field_t field);
@@ -160,13 +157,5 @@ uint8_t menu_nav_get_select(ui_state_field_t field);
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t ui_state_get(ui_state_field_t field);
-
-// ---------------------
-// Controller API
-// ---------------------
-uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested);
-void     ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
-uint8_t  ctrl_row_count(const CtrlActiveList *list);
-void     ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
