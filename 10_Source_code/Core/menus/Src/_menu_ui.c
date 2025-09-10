@@ -49,28 +49,24 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 }
 
 
-// BEFORE (_menu_ui.c) — current render
-
 static inline uint32_t ui_safe_index(save_field_t f, int32_t v)
 {
-    const save_limits_t lim = save_limits[f];          // you already expose this
-    uint32_t idx = (lim.min < 0) ? (uint32_t)(v - lim.min) : (uint32_t)v;
-    uint32_t max_idx = (lim.min < 0)
-                     ? (uint32_t)(lim.max - lim.min)   // inclusive span for e.g. -80..+80
-                     : (uint32_t) lim.max;             // e.g. 127, 16, 2, etc.
-    if (idx > max_idx) idx = max_idx;
+    const save_limits_t lim = save_limits[f];
+    const uint32_t span = (uint32_t)(lim.max - lim.min);   // inclusive span, e.g. 160 for -80..+80
+    uint32_t idx = (uint32_t)(v - lim.min);                // normalize so min maps to 0
+    if (idx > span) idx = span;                            // clamp to max valid index
     return idx;
 }
 
 static inline void draw_item_row(const ui_element *e)
 {
     const save_field_t f = (save_field_t)e->save_item;
-    const int32_t v = save_get(f);                     // clamped to limits already
-    const uint32_t idx = ui_safe_index(f, v);
+    const uint32_t idx = ui_safe_index(f, save_get(f));    // save_get already clamps to limits
     const char *const *table = (const char *const *)e->text;
-    const uint8_t ul = ui_is_field_selected(f);
-    draw_text_ul(table[idx], e->x, e->y, e->font, ul ? 1 : 0);
+    draw_text_ul(table[idx], e->x, e->y, e->font, ui_is_field_selected(f) ? 1 : 0);
 }
+
+
 
 void menu_ui_render(const ui_element *elems, size_t count) {
     if (!elems || count == 0) return;
@@ -91,9 +87,6 @@ void menu_ui_render(const ui_element *elems, size_t count) {
         }
     }
 }
-
-
-
 
 
 void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
