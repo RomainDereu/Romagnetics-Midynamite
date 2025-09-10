@@ -66,6 +66,9 @@ typedef enum {
     UI_GROUP_NONE = 0xFF
 } ui_group_t;
 
+
+
+
 // ---------------------
 // Modify ops
 // ---------------------
@@ -134,7 +137,12 @@ typedef struct {
 // ---------------------
 // UI API
 // ---------------------
-void toggle_underline_items(ui_group_t group, uint8_t index);
+
+
+void menu_nav_begin_and_update(ui_state_field_t field);
+uint8_t menu_nav_end_auto(ui_state_field_t field);
+
+void save_mark_all_changed(void);
 
 uint8_t build_select_states(ui_group_t group,
                             uint8_t current_select,
@@ -142,11 +150,9 @@ uint8_t build_select_states(ui_group_t group,
                             uint8_t states_cap);
 
 void    menu_nav_begin(ui_group_t group);
-uint8_t menu_nav_end(ui_state_field_t field, uint8_t current_select);
 void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
 uint8_t menu_nav_get_select(ui_state_field_t field);
-void    menu_nav_update_select(ui_state_field_t field, ui_group_t group);
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t ui_state_get(ui_state_field_t field);

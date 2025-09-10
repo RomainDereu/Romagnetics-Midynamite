@@ -17,19 +17,12 @@
 
 void midi_tempo_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_TEMPO; // family root
-    menu_nav_begin(group);
-    menu_nav_update_select(UI_MIDI_TEMPO_SELECT, group);
-    uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
-
+    menu_nav_begin_and_update(UI_MIDI_TEMPO_SELECT);
 
     uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
     save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
 
-    toggle_underline_items(group, current_select);
-    if (menu_nav_end(UI_MIDI_TEMPO_SELECT, current_select)) {
-        threads_display_notify(FLAG_TEMPO);
-    }
+    (void)menu_nav_end_auto(UI_MIDI_TEMPO_SELECT);
 }
 
 void screen_update_midi_tempo(void)

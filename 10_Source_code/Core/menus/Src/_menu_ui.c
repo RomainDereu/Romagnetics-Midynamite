@@ -47,6 +47,8 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 
 
 void menu_ui_render(const ui_element *elems, size_t count) {
+    if (!elems || count == 0) return;
+
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
         switch (e->type) {
@@ -62,9 +64,12 @@ void menu_ui_render(const ui_element *elems, size_t count) {
             case UI_ELEM_TITLE:
                 if (e->text) menu_display(e->text);
                 break;
+            default:
+                break;
         }
     }
 }
+
 
 
 

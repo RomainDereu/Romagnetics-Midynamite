@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+
 // Fonts you already use via write_* functions
 typedef enum {
     UI_FONT_6x8,
@@ -39,6 +40,11 @@ typedef struct {
 } ui_element;
 
 
+
+
+// ---------------------
+// API
+// ---------------------
 void menu_display(const char * menu_message);
 void menu_change_check();
 

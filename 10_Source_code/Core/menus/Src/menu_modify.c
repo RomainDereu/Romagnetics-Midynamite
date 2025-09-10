@@ -18,30 +18,25 @@
 // midi modify menu
 void midi_modify_update_menu(void)
 {
-    uint8_t mode = save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-    ui_group_t group = (mode == MIDI_MODIFY_CHANGE) ? UI_GROUP_MODIFY_CHANGE : UI_GROUP_MODIFY_SPLIT;
-    menu_nav_begin(group);
-    menu_nav_update_select(UI_MIDI_MODIFY_SELECT, group);
-    uint8_t current_select = menu_nav_get_select(UI_MIDI_MODIFY_SELECT);
+    menu_nav_begin_and_update(UI_MIDI_MODIFY_SELECT);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        // unchanged…
-        uint8_t count = build_select_states(group, 0, NULL, 0);
-        if (current_select < (uint8_t)(count - 1)) {
-            save_modify_u8(MIDI_MODIFY_CHANGE_OR_SPLIT, SAVE_MODIFY_INCREMENT, 0);
-        } else {
-            save_modify_u8(MIDI_MODIFY_VELOCITY_TYPE, SAVE_MODIFY_INCREMENT, 0);
-        }
+        const uint8_t last = (uint8_t)(build_select_states(UI_GROUP_MODIFY_BOTH, 0, NULL, 0) - 1u);
+        const save_field_t target =
+            (menu_nav_get_select(UI_MIDI_MODIFY_SELECT) < last)
+            ? MIDI_MODIFY_CHANGE_OR_SPLIT
+            : MIDI_MODIFY_VELOCITY_TYPE;
+
+        save_modify_u8(target, SAVE_MODIFY_INCREMENT, 0);
         menu_nav_reset(UI_MIDI_MODIFY_SELECT, 0);
         threads_display_notify(FLAG_MODIFY);
         return;
     }
 
-    toggle_underline_items(group, current_select);
-    if (menu_nav_end(UI_MIDI_MODIFY_SELECT, current_select)) {
-        threads_display_notify(FLAG_MODIFY);
-    }
+
+    (void)menu_nav_end_auto(UI_MIDI_MODIFY_SELECT);
 }
+
 
 
 

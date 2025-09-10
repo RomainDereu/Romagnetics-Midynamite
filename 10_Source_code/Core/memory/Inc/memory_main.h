@@ -134,10 +134,6 @@ typedef enum {
 // ---------------------
 // The following expositions are for memory_flash.c
 // ---------------------
-
-void save_mark_all_changed(void);
-
-
 void save_unlock(void);
 uint8_t save_lock_with_retries(void);
 

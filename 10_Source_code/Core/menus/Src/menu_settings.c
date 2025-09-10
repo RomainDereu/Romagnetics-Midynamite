@@ -42,20 +42,13 @@ static void saving_settings_ui(void){
 
 void settings_update_menu(void)
 {
-    ui_group_t group = UI_GROUP_SETTINGS;
-    menu_nav_begin(group);
-    menu_nav_update_select(UI_SETTINGS_SELECT, group);
-    uint8_t current_select = menu_nav_get_select(UI_SETTINGS_SELECT);
+    menu_nav_begin_and_update(UI_SETTINGS_SELECT);
 
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
         saving_settings_ui();
     }
 
-    toggle_underline_items(group, current_select);
-
-    if (menu_nav_end(UI_SETTINGS_SELECT, current_select)) {
-        threads_display_notify(FLAG_SETTINGS);
-    }
+    (void)menu_nav_end_auto(UI_SETTINGS_SELECT);
 }
 
 

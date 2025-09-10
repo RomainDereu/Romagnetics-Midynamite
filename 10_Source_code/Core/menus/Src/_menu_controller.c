@@ -12,6 +12,30 @@
 #include "_menu_ui.h"
 #include "memory_main.h"
 #include "utils.h"
+#include "threads.h"
+
+extern TIM_HandleTypeDef htim3;
+
+typedef struct {
+    uint8_t current_menu;
+    uint8_t old_menu;
+} ui_state_t;
+
+static volatile uint8_t ui_state_busy = 0;
+static ui_state_t ui_state = {0};
+
+// Persisted select per menu page
+static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
+static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
+
+// Per-frame list of active fields (indices)
+static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
+static uint8_t  s_active_count = 0;
+
+
+// Field-change tracking
+uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
+
 
 // -------------------------
 // Controller (from original _menu_controller.c)
@@ -57,6 +81,200 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_FILTERED_CHANNELS]         = {   WRAP,  update_channel_filter, 1, CTRL_G_SETTINGS }, // 16-bit strip
 };
 
+typedef struct {
+    CtrlActiveList tempo_item_list;
+    CtrlActiveList modify_item_list;
+    CtrlActiveList transpose_item_list;
+    CtrlActiveList settings_item_list;
+} MenuActiveLists;
+
+static MenuActiveLists s_menu_lists;
+
+
+static ui_group_t root_group(ui_group_t g) {
+    switch (g) {
+        case UI_GROUP_TEMPO:      return UI_GROUP_TEMPO;
+        case UI_GROUP_SETTINGS:   return UI_GROUP_SETTINGS;
+
+        case UI_GROUP_MODIFY:     return UI_GROUP_MODIFY_BOTH;  // <— add this
+
+        case UI_GROUP_TRANSPOSE_SHIFT:
+        case UI_GROUP_TRANSPOSE_SCALED:
+        case UI_GROUP_TRANSPOSE_BOTH:
+            return UI_GROUP_TRANSPOSE_BOTH;
+
+        case UI_GROUP_MODIFY_CHANGE:
+        case UI_GROUP_MODIFY_SPLIT:
+        case UI_GROUP_MODIFY_BOTH:
+        case UI_GROUP_MODIFY_VEL_CHANGED:
+        case UI_GROUP_MODIFY_VEL_FIXED:
+            return UI_GROUP_MODIFY_BOTH;
+
+        default: return UI_GROUP_TEMPO;
+    }
+}
+
+// Map a select field to its display flag (for notify)
+static inline uint32_t display_flag_from_field(ui_state_field_t field) {
+    switch (field) {
+        case UI_MIDI_TEMPO_SELECT:     return FLAG_TEMPO;
+        case UI_MIDI_MODIFY_SELECT:    return FLAG_MODIFY;
+        case UI_MIDI_TRANSPOSE_SELECT: return FLAG_TRANSPOSE;
+        case UI_SETTINGS_SELECT:       return FLAG_SETTINGS;
+        default:                       return FLAG_TEMPO;
+    }
+}
+
+static CtrlActiveList* list_for_root(ui_group_t root) {
+    switch (root) {
+        case UI_GROUP_TEMPO:            return &s_menu_lists.tempo_item_list;
+        case UI_GROUP_SETTINGS:         return &s_menu_lists.settings_item_list;
+        case UI_GROUP_TRANSPOSE_BOTH:   return &s_menu_lists.transpose_item_list;
+        case UI_GROUP_MODIFY_BOTH:      return &s_menu_lists.modify_item_list;
+        default:                        return &s_menu_lists.tempo_item_list;
+    }
+}
+
+
+
+
+static void rebuild_list_for_group(ui_group_t group) {
+    ui_group_t root = root_group(group);
+    uint32_t mask   = ctrl_active_groups_from_ui_group(root);
+    CtrlActiveList* out = list_for_root(root);
+    ctrl_build_active_fields(mask, out);
+}
+
+static const CtrlActiveList* get_list_for_group(ui_group_t group) {
+    return list_for_root(root_group(group));
+}
+
+
+
+
+// Map a select field to its root UI group (so callers don't pass group explicitly)
+static inline ui_group_t group_from_select_field(ui_state_field_t field) {
+    switch (field) {
+        case UI_MIDI_TEMPO_SELECT:     return UI_GROUP_TEMPO;
+        case UI_MIDI_MODIFY_SELECT:    return UI_GROUP_MODIFY_BOTH;
+        case UI_MIDI_TRANSPOSE_SELECT: return UI_GROUP_TRANSPOSE_BOTH;
+        case UI_SETTINGS_SELECT:       return UI_GROUP_SETTINGS;
+        default:                       return UI_GROUP_TEMPO;
+    }
+}
+
+
+static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
+{
+    const int8_t step = encoder_read_step(&htim3);
+    const CtrlActiveList* list = get_list_for_group(group);
+    const uint8_t rows = ctrl_row_count(list);
+
+    uint8_t sel_prev = s_menu_selects[field];
+    s_prev_selects[field] = sel_prev;
+
+    if (rows == 0) { s_menu_selects[field] = 0; return; }
+    if (sel_prev >= rows) sel_prev = (uint8_t)(rows - 1);
+    if (step == 0) return;
+
+    int32_t v = (int32_t)sel_prev + (int32_t)step;
+    int32_t m = v % rows; if (m < 0) m += rows;
+    s_menu_selects[field] = (uint8_t)m;
+}
+
+
+// Begin + update select (single entry point)
+void menu_nav_begin_and_update(ui_state_field_t field) {
+    ui_group_t g = group_from_select_field(field);
+    menu_nav_begin(g);
+    menu_nav_update_select(field, g);
+}
+
+
+
+
+
+static void toggle_underline_items(ui_group_t group, uint8_t index)
+{
+    const CtrlActiveList* list = get_list_for_group(group);
+    ctrl_toggle_row(list, index);
+}
+
+
+uint8_t build_select_states(ui_group_t group,
+                            uint8_t current_select,
+                            uint8_t *states,
+                            uint8_t states_cap)
+{
+    rebuild_list_for_group(group);
+    const CtrlActiveList* list = get_list_for_group(group);
+
+    const uint8_t rows = ctrl_row_count(list);
+    if (states && states_cap) {
+        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
+        if (rows && current_select < states_cap) states[current_select] = 1;
+    }
+    return rows;
+}
+
+static inline uint8_t test_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    return (s_field_change_bits[f >> 5] >> (f & 31)) & 1u;
+}
+
+static inline void clear_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
+    s_field_change_bits[f >> 5] &= ~(1u << (f & 31));
+}
+
+static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
+{
+    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
+    const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
+
+    uint8_t data_changed = 0;
+    for (uint8_t i = 0; i < s_active_count; ++i) {
+        save_field_t f = (save_field_t)s_active_list[i];
+        if (test_field_changed(f)) { data_changed = 1; break; }
+    }
+
+    if (field < UI_STATE_FIELD_COUNT) {
+        s_menu_selects[field] = current_select;
+        ui_state_modify(field, UI_MODIFY_SET, current_select);
+    }
+
+    for (uint8_t i = 0; i < s_active_count; ++i) {
+        clear_field_changed((save_field_t)s_active_list[i]);
+    }
+
+    return (sel_changed || data_changed);
+}
+
+
+
+
+// End using only the field (reads current internal select)
+// End: toggle current, commit selection, and notify display if anything changed
+uint8_t menu_nav_end_auto(ui_state_field_t field) {
+    const ui_group_t g = group_from_select_field(field);
+    const uint8_t sel = menu_nav_get_select(field);
+
+    toggle_underline_items(g, sel);
+    const uint8_t changed = has_menu_changed(field, sel);
+
+    if (changed) {
+        threads_display_notify(display_flag_from_field(field));
+    }
+    return changed;
+}
+
+
+
+
+
+
+
+
 static inline uint8_t is_bits_item(save_field_t f) {
     return menu_controls[f].handler == update_channel_filter;
 }
@@ -83,6 +301,7 @@ uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             else                           mask |= CTRL_G_TRANSPOSE_SCALED;
         } break;
 
+        case UI_GROUP_MODIFY:
         case UI_GROUP_MODIFY_CHANGE:
         case UI_GROUP_MODIFY_SPLIT:
         case UI_GROUP_MODIFY_BOTH:
@@ -151,103 +370,28 @@ void ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index)
 // UI state & navigation (from original _menu_ui.c)
 // -------------------------
 
-extern TIM_HandleTypeDef htim3;
 
-typedef struct {
-    uint8_t current_menu;
-    uint8_t old_menu;
-} ui_state_t;
-
-static volatile uint8_t ui_state_busy = 0;
-static ui_state_t ui_state = {0};
-
-// Persisted select per menu page
-static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
-static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
-
-// Per-frame list of active fields (indices)
-#ifndef ACTIVE_LIST_CAP
-#define ACTIVE_LIST_CAP 64
-#endif
-static uint16_t s_active_list[ACTIVE_LIST_CAP];
-static uint8_t  s_active_count = 0;
-
-// Field-change tracking
-uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
-
-static inline uint8_t test_field_changed(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    return (s_field_change_bits[f >> 5] >> (f & 31)) & 1u;
-}
-
-static inline void clear_field_changed(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
-    s_field_change_bits[f >> 5] &= ~(1u << (f & 31));
-}
 
 void save_mark_all_changed(void) {
     for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFFu;
 }
 
-void toggle_underline_items(ui_group_t group, uint8_t index)
-{
-    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
-    CtrlActiveList list;
-    ctrl_build_active_fields(mask, &list);
-    ctrl_toggle_row(&list, index);
-}
 
-uint8_t build_select_states(ui_group_t group,
-                            uint8_t current_select,
-                            uint8_t *states,
-                            uint8_t states_cap)
-{
-    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
-    CtrlActiveList list;
-    ctrl_build_active_fields(mask, &list);
-
-    const uint8_t rows = ctrl_row_count(&list);
-    if (states && states_cap) {
-        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
-        if (rows && current_select < states_cap) states[current_select] = 1;
-    }
-    return rows;
-}
 
 void menu_nav_begin(ui_group_t group)
 {
     s_active_count = 0;
-    const uint32_t mask = ctrl_active_groups_from_ui_group(group);
-    CtrlActiveList list;
-    ctrl_build_active_fields(mask, &list);
-    for (uint8_t i = 0; i < list.count && i < ACTIVE_LIST_CAP; ++i) {
-        s_active_list[i] = list.fields_idx[i];
+
+    rebuild_list_for_group(group);
+    const CtrlActiveList* list = get_list_for_group(group);
+
+    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
+        s_active_list[i] = list->fields_idx[i];
     }
-    s_active_count = list.count;
+    s_active_count = list->count;
 }
 
-uint8_t menu_nav_end(ui_state_field_t field, uint8_t current_select)
-{
-    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
-    const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
 
-    uint8_t data_changed = 0;
-    for (uint8_t i = 0; i < s_active_count; ++i) {
-        save_field_t f = (save_field_t)s_active_list[i];
-        if (test_field_changed(f)) { data_changed = 1; break; }
-    }
-
-    if (field < UI_STATE_FIELD_COUNT) {
-        s_menu_selects[field] = current_select;
-        ui_state_modify(field, UI_MODIFY_SET, current_select);
-    }
-
-    for (uint8_t i = 0; i < s_active_count; ++i) {
-        clear_field_changed((save_field_t)s_active_list[i]);
-    }
-
-    return (sel_changed || data_changed);
-}
 
 void menu_nav_reset(ui_state_field_t field, uint8_t value)
 {
@@ -260,22 +404,7 @@ uint8_t menu_nav_get_select(ui_state_field_t field) {
     return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
 }
 
-void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
-{
-    const int8_t step = encoder_read_step(&htim3);
-    const uint8_t rows = build_select_states(group, 0, NULL, 0);
 
-    uint8_t sel_prev = s_menu_selects[field];
-    s_prev_selects[field] = sel_prev;
-
-    if (rows == 0) { s_menu_selects[field] = 0; return; }
-    if (sel_prev >= rows) sel_prev = (uint8_t)(rows - 1);
-    if (step == 0) return;
-
-    int32_t v = (int32_t)sel_prev + (int32_t)step;
-    int32_t m = v % rows; if (m < 0) m += rows;
-    s_menu_selects[field] = (uint8_t)m;
-}
 
 static int ui_state_try_lock(void) {
     if (ui_state_busy) return 0;
