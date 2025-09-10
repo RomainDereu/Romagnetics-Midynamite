@@ -50,7 +50,6 @@ typedef struct {
     // Transpose
     const char *type;
     const char *pitch_shift;
-    const char *transpose;
     const char *mode;
     const char *na;
     const char *send_base_note;
@@ -89,9 +88,7 @@ typedef struct {
 
     // Start Menu
     const char *start_menu;
-    const char *tempo;
-    const char *modify;
-    const char *settings;
+
 
     // Contrast
     const char *contrast;
@@ -147,6 +144,7 @@ typedef struct {
         const char *off_on[2];
         const char *usb_receive_send[2];
         const char *midi_channels[17];
+        const char *menu_list[4];
     } choices;
 
 } Message;

@@ -45,7 +45,7 @@ static const Message _message = {
     // Transpose
     .type = "Type",
     .pitch_shift = "Pitch Shift",
-    .transpose = "Transpose",
+
     .mode = "Mode",
     .na = "N/A",
     .send_base_note = "Send Base Note",
@@ -84,9 +84,7 @@ static const Message _message = {
 
     // Start Menu
     .start_menu = "Start Menu",
-    .tempo = "Tempo",
-    .modify = "Modify",
-    .settings = "Settings",
+
 
     // Contrast
     .contrast = "Contrast",
@@ -224,7 +222,8 @@ static const Message _message = {
             "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
             "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
             "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
-        }
+        },
+        .menu_list = { "Tempo", "Transpose", "Modify", "Settings"},
     }
 };
 
