@@ -37,30 +37,22 @@ void screen_update_midi_tempo(void)
     for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
     (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
 
+
+
     screen_driver_Fill(Black);
-
-    // Title + guides
     menu_display(message->send_midi_tempo);
+	screen_driver_Line(64, 10, 64, 64, White);
+	screen_driver_Line(0, 40, 64, 40, White);
 
 
 
-    // Tempo big number
-    const char *tempo_print = message->numbers_0_to_300[save_get(MIDI_TEMPO_CURRENT_TEMPO)];
-    write_underline_1624(tempo_print, 80, 20, (count > 0) ? select_states[0] : 0);
-    write_68(message->bpm, 80, 48);
 
-    // Send target
-    write_68(message->target, TEXT_LEFT_START, 15);
-    const char *midi_send_out = message->choices.midi_outs[ save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT) ];
-    write_underline_68(midi_send_out, TEXT_LEFT_START, 25, (count > 1) ? select_states[1] : 0);
-
-    //Stop/Sending status
-    uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
-    write_1118(message->choices.off_on[currently_sending], 15, 42);
-
-    static ui_element elems[] = {
-        { UI_ELEM_LINE,  64, 10, 64, 64, NULL, 0, 0 },
-        { UI_ELEM_LINE,   0, 40, 64, 40, NULL, 0, 0 },
+    ui_element elems[] = {
+    { UI_ELEM_UNDERL, MIDI_TEMPO_CURRENT_TEMPO, (const char*)message->numbers_0_to_300, UI_FONT_16x24, 80,  20, select_states[0] },
+    { UI_ELEM_TEXT  , 0                        ,message->bpm             , UI_FONT_6x8,   80,               48, 0 },
+    { UI_ELEM_TEXT  , 0                        ,message->target          , UI_FONT_6x8,   TEXT_LEFT_START , 15, 0 },
+    { UI_ELEM_UNDERL, MIDI_TEMPO_SEND_TO_MIDI_OUT, (const char*)message->choices.midi_outs, UI_FONT_6x8, TEXT_LEFT_START, 25, select_states[1] },
+    { UI_ELEM_SWITCH, MIDI_TEMPO_CURRENTLY_SENDING,(const char*)message->choices.off_on, UI_FONT_11x18, 15, 42, 0 },
     };
 
 

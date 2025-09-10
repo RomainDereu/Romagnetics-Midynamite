@@ -308,7 +308,7 @@ void screen_driver_SetCursor(uint8_t x, uint8_t y) {
 }
 
 /* Draw line by Bresenhem's algorithm */
-static void screen_driver_Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color) {
+void screen_driver_Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color) {
     int32_t deltaX = abs(x2 - x1);
     int32_t deltaY = abs(y2 - y1);
     int32_t signX = ((x1 < x2) ? 1 : -1);

@@ -164,6 +164,7 @@ void screen_driver_DrawPixel(uint8_t x, uint8_t y, screen_driver_COLOR color);
 char screen_driver_WriteChar(char ch, screen_driver_Font_t Font, screen_driver_COLOR color);
 
 void screen_driver_SetCursor(uint8_t x, uint8_t y);
+void screen_driver_Line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, screen_driver_COLOR color);
 
 void screen_driver_DrawArc(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, screen_driver_COLOR color);
 void screen_driver_DrawArcWithRadiusLine(uint8_t x, uint8_t y, uint8_t radius, uint16_t start_angle, uint16_t sweep, screen_driver_COLOR color);

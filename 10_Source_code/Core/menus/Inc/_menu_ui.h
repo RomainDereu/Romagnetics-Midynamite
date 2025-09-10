@@ -23,22 +23,22 @@ typedef enum {
 // What to render
 typedef enum {
     UI_ELEM_TEXT,
-    UI_ELEM_TEXT_UL,
-    UI_ELEM_LINE,
-    UI_ELEM_TITLE
+    UI_ELEM_UNDERL,
+	UI_ELEM_SWITCH,
 } ui_elem_type_t;
+
+#define UI_CHOICE(tbl) ((const char*)(tbl))
+#define UI_TEXT_NUM    ((const char*)-1)
 
 typedef struct {
     ui_elem_type_t type;
-    int16_t x;
-    int16_t y;
-    int16_t x2;
-    int16_t y2;
+    uint8_t save_item;
     const char *text;
     ui_font_t font;
-    uint8_t arg;
+    int16_t x;
+    int16_t y;
+    uint8_t underline;
 } ui_element;
-
 
 
 
@@ -46,7 +46,7 @@ typedef struct {
 // API
 // ---------------------
 void menu_display(const char * menu_message);
-void menu_change_check();
+void menu_change_check(void);
 
 
 // Render an array of elements in order.

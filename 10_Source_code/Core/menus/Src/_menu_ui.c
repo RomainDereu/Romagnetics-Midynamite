@@ -8,9 +8,12 @@
 #include "main.h"
 #include "_menu_ui.h"
 #include "_menu_controller.h"
+#include "memory_main.h"
 #include "screen_driver.h"
 #include "utils.h"
 #include "text.h"
+
+extern const Message *message;
 
 
 
@@ -53,20 +56,30 @@ void menu_ui_render(const ui_element *elems, size_t count) {
         const ui_element *e = &elems[i];
         switch (e->type) {
             case UI_ELEM_TEXT:
+                // literal text
                 draw_text(e->text, e->x, e->y, e->font);
                 break;
-            case UI_ELEM_TEXT_UL:
-                draw_text_ul(e->text, e->x, e->y, e->font, e->arg);
+
+            case UI_ELEM_SWITCH: {
+                // table lookup, no underline
+                int32_t v = save_get((save_field_t)e->save_item);
+                const char *const *table = (const char *const *)e->text;
+                draw_text(table[v], e->x, e->y, e->font);
                 break;
-            case UI_ELEM_LINE:
-                draw_line(e->x, e->y, e->x2, e->y2);
+            }
+
+            case UI_ELEM_UNDERL: {
+                // table lookup, with underline
+                int32_t v = save_get((save_field_t)e->save_item);
+                const char *const *table = (const char *const *)e->text;
+                draw_text_ul(table[v], e->x, e->y, e->font, e->underline);
                 break;
-            case UI_ELEM_TITLE:
-                if (e->text) menu_display(e->text);
-                break;
+            }
+
             default:
                 break;
         }
+
     }
 }
 
