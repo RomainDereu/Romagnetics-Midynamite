@@ -83,7 +83,7 @@ static void screen_update_channel_split(uint8_t * select_states){
 static void screen_update_velocity_change(uint8_t * select_states){
 	write_68(message->change_velocity, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
-    const uint16_t idx =  save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS) + 80; //minimum value of -80
+    const uint16_t idx =  save_get(MIDI_MODIFY_VELOCITY_PLUS_MINUS) + 80; //minimum value of -80
     const char *text_print = message->numbers_neg80_to_pos80[idx];
     write_underline_68(text_print, 100, BOTTOM_LINE_VERT, select_states[row]);
 }

@@ -19,7 +19,7 @@ void midi_tempo_update_menu(void)
 {
     menu_nav_begin_and_update(UI_MIDI_TEMPO_SELECT);
 
-    uint32_t bpm = save_get_u32(MIDI_TEMPO_CURRENT_TEMPO);
+    uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
     save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
 
     (void)menu_nav_end_auto(UI_MIDI_TEMPO_SELECT);
@@ -45,7 +45,7 @@ void screen_update_midi_tempo(void)
 
 
     // Tempo big number
-    const char *tempo_print = message->numbers_0_to_300[save_get_u32(MIDI_TEMPO_CURRENT_TEMPO)];
+    const char *tempo_print = message->numbers_0_to_300[save_get(MIDI_TEMPO_CURRENT_TEMPO)];
     write_underline_1624(tempo_print, 80, 20, (count > 0) ? select_states[0] : 0);
     write_68(message->bpm, 80, 48);
 

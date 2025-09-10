@@ -129,7 +129,7 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
     uint8_t channel = status_byte & 0x0F;
 
     if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
-        return (save_get_u32(SETTINGS_FILTERED_CHANNELS) >> channel) & 0x01;
+        return (save_get(SETTINGS_FILTERED_CHANNELS) >> channel) & 0x01;
     }
 
     return 0;
@@ -199,7 +199,7 @@ static void change_velocity(midi_note *midi_msg) {
     int32_t velocity = midi_msg->velocity;
 
     if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
-        velocity += save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
+        velocity += save_get(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
     } else if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
         velocity = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
     }
@@ -344,7 +344,7 @@ static void midi_pitch_shift(midi_note *midi_msg) {
             note = midi_transpose_notes((uint8_t)note);
         }
         else if (save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SHIFT) {
-            note += (int16_t)(int32_t)save_get_u32(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE);
+            note += (int16_t)(int32_t)save_get(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE);
         }
 
         if (note < 0)   note = 0;

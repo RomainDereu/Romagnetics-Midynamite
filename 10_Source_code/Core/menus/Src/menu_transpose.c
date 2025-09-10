@@ -49,7 +49,7 @@ void screen_update_midi_transpose(void)
     if (type == MIDI_TRANSPOSE_SHIFT) {
         // SHIFT page
         write_68(message->shift_by, TEXT_LEFT_START, LINE_1_VERT);
-        const uint16_t idx =  save_get_u32(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE) + 36; //minimum value of -36
+        const uint16_t idx =  save_get(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE) + 36; //minimum value of -36
         const char *modify_value = message->numbers_neg80_to_pos80[idx];
         write_underline_68(modify_value, 65, LINE_1_VERT, select_states[0]);
 

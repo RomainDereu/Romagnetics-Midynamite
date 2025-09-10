@@ -88,7 +88,7 @@ void update_value(save_field_t field, uint8_t multiplier)
 
     // Try u32 field first (compute next in signed, wrap/clamp in signed, THEN cast)
     {
-        int32_t cur32  = (int32_t)save_get_u32(field);
+        int32_t cur32  = (int32_t)save_get(field);
         int32_t next32 = wrap_or_clamp_i32(cur32 + delta, lim.min, lim.max, mt.wrap);
         if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) return;
     }
@@ -120,7 +120,7 @@ void update_channel_filter(save_field_t field, uint8_t bit_index)
     int8_t step = encoder_read_step(timer4);
     if (step == 0) return;
 
-    uint32_t mask = (uint32_t)save_get_u32(field);
+    uint32_t mask = (uint32_t)save_get(field);
     mask ^= (1UL << bit_index);  // toggle exactly this bit
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
 }

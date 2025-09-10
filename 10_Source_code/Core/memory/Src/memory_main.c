@@ -112,7 +112,7 @@ static inline int32_t clamp_i32(int32_t v, int32_t lo, int32_t hi) {
 
 
 
-int32_t save_get_u32(save_field_t field) {
+static int32_t save_get_u32(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     int32_t *p = u32_fields[field];
     if (!p) return 0;
@@ -123,11 +123,11 @@ int32_t save_get_u32(save_field_t field) {
     }
 
     int32_t v = *p;
-    const save_limits_t   lim = save_limits[field];
+    const save_limits_t lim = save_limits[field];
     return clamp_i32(v, lim.min, lim.max);
 }
 
-uint8_t save_get(save_field_t field) {
+static uint8_t save_get_8(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     uint8_t *p = u8_fields[field];
     if (!p) return 0;
@@ -138,9 +138,24 @@ uint8_t save_get(save_field_t field) {
     }
 
     int32_t v = (int32_t)(*p);
-    const save_limits_t   lim = save_limits[field];
+    const save_limits_t lim = save_limits[field];
     return (uint8_t)clamp_i32(v, lim.min, lim.max);
 }
+
+
+int32_t save_get(save_field_t field) {
+    if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
+
+    // Prefer exact width based on backing storage
+    if (u8_fields[field])  return (int32_t)save_get_8(field);
+    if (u32_fields[field]) return        save_get_u32(field);
+
+    return 0;
+}
+
+
+
+
 
 
 

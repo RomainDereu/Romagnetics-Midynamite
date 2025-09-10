@@ -99,7 +99,7 @@ static void screen_update_midi_filter(uint8_t *select_states)
 
     write_68(message->X_equals_ignore_channel, TEXT_LEFT_START, LINE_1_VERT);
 
-    uint32_t mask = save_get_u32(SETTINGS_FILTERED_CHANNELS);
+    uint32_t mask = save_get(SETTINGS_FILTERED_CHANNELS);
     for (uint8_t i = 0; i < 16; i++) {
         const char *label = (mask & ((uint32_t)1 << i)) ? "X" : message->one_to_sixteen[i];
 

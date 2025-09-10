@@ -138,10 +138,8 @@ void save_unlock(void);
 uint8_t save_lock_with_retries(void);
 
 
-
-// Getters return int32_t so they can return SAVE_STATE_BUSY
-int32_t save_get_u32(save_field_t field);
-uint8_t save_get(save_field_t field);
+// Main getter
+int32_t save_get(save_field_t field);
 
 
 
