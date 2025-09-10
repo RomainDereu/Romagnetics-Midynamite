@@ -49,35 +49,46 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 }
 
 
+// BEFORE (_menu_ui.c) — current render
+
+static inline uint32_t ui_safe_index(save_field_t f, int32_t v)
+{
+    const save_limits_t lim = save_limits[f];          // you already expose this
+    uint32_t idx = (lim.min < 0) ? (uint32_t)(v - lim.min) : (uint32_t)v;
+    uint32_t max_idx = (lim.min < 0)
+                     ? (uint32_t)(lim.max - lim.min)   // inclusive span for e.g. -80..+80
+                     : (uint32_t) lim.max;             // e.g. 127, 16, 2, etc.
+    if (idx > max_idx) idx = max_idx;
+    return idx;
+}
+
+static inline void draw_item_row(const ui_element *e)
+{
+    const save_field_t f = (save_field_t)e->save_item;
+    const int32_t v = save_get(f);                     // clamped to limits already
+    const uint32_t idx = ui_safe_index(f, v);
+    const char *const *table = (const char *const *)e->text;
+    const uint8_t ul = ui_is_field_selected(f);
+    draw_text_ul(table[idx], e->x, e->y, e->font, ul ? 1 : 0);
+}
+
 void menu_ui_render(const ui_element *elems, size_t count) {
     if (!elems || count == 0) return;
 
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
         switch (e->type) {
-            case UI_ELEM_TEXT: {
-                // Gated by group flags (if any)
-                if (e->save_item == 0 || ui_is_group_active((uint32_t)e->save_item)) {
-                    draw_text(e->text, e->x, e->y, e->font);
-                }
+            case UI_ELEM_TEXT:
+                draw_text(e->text, e->x, e->y, e->font);
                 break;
-            }
 
-            case UI_ELEM_ITEM: {
-                if (ui_is_field_visible((save_field_t)e->save_item)) {
-                    int32_t v = save_get((save_field_t)e->save_item);
-                    const char *const *table = (const char *const *)e->text;
-                    uint8_t ul = ui_is_field_selected((save_field_t)e->save_item); // 0 for display-only
-                    draw_text_ul(table[v], e->x, e->y, e->font, ul ? 1 : 0);
-                }
+            case UI_ELEM_ITEM:
+                // Arrays you pass are already mode-filtered; just draw.
+                draw_item_row(e);
                 break;
-            }
 
-            default:
-                break;
+            default: break;
         }
-
-
     }
 }
 
