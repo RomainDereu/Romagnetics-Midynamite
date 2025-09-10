@@ -583,6 +583,10 @@ void write_underline_68_2(const char* str, uint8_t x_align, uint8_t y_align, uin
 	screen_driver_underline_WriteString(str, Font_6x8_2 , White, x_align, y_align, underlined);
 }
 
+void write_underline_1118(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined){
+	screen_driver_underline_WriteString(str, Font_11x18 , White, x_align, y_align, underlined);
+}
+
 
 void write_underline_1624(const char* str, uint8_t x_align, uint8_t y_align, uint8_t underlined){
 	screen_driver_underline_WriteString(str, Font_16x24 , White, x_align, y_align, underlined);

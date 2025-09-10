@@ -27,37 +27,26 @@ void midi_tempo_update_menu(void)
 
 void screen_update_midi_tempo(void)
 {
-    // Current selection for underline map
-	uint8_t current_select = menu_nav_get_select(UI_MIDI_TEMPO_SELECT);
-
-    // Build underline states matching current UI_GROUP_TEMPO rows
-    uint8_t count = build_select_states(UI_GROUP_TEMPO, current_select, NULL, 0);
-
-    uint8_t select_states[count];
-    for (uint8_t i = 0; i < count; ++i) select_states[i] = 0;
-    (void)build_select_states(UI_GROUP_TEMPO, current_select, select_states, count);
-
-
-
     screen_driver_Fill(Black);
     menu_display(message->send_midi_tempo);
-	screen_driver_Line(64, 10, 64, 64, White);
+
+    screen_driver_Line(64, 10, 64, 64, White);
 	screen_driver_Line(0, 40, 64, 40, White);
 
+    menu_nav_begin_and_update(UI_MIDI_TEMPO_SELECT);
 
-
-
-    ui_element elems[] = {
-    { UI_ELEM_UNDERL, MIDI_TEMPO_CURRENT_TEMPO, (const char*)message->numbers_0_to_300, UI_FONT_16x24, 80,  20, select_states[0] },
-    { UI_ELEM_TEXT  , 0                        ,message->bpm             , UI_FONT_6x8,   80,               48, 0 },
-    { UI_ELEM_TEXT  , 0                        ,message->target          , UI_FONT_6x8,   TEXT_LEFT_START , 15, 0 },
-    { UI_ELEM_UNDERL, MIDI_TEMPO_SEND_TO_MIDI_OUT, (const char*)message->choices.midi_outs, UI_FONT_6x8, TEXT_LEFT_START, 25, select_states[1] },
-    { UI_ELEM_SWITCH, MIDI_TEMPO_CURRENTLY_SENDING,(const char*)message->choices.off_on, UI_FONT_11x18, 15, 42, 0 },
-    };
+	ui_element elems[] = {
+	    { UI_ELEM_ITEM, MIDI_TEMPO_CURRENT_TEMPO    , (const char*)message->numbers_0_to_300 , UI_FONT_16x24,  80            , 20 },
+	    { UI_ELEM_TEXT  , 0                         , message->bpm                           , UI_FONT_6x8  ,  80            , 48 },
+	    { UI_ELEM_TEXT  , 0                         , message->target                        , UI_FONT_6x8  ,  TEXT_LEFT_START, 15 },
+	    { UI_ELEM_ITEM, MIDI_TEMPO_SEND_TO_MIDI_OUT , (const char*)message->choices.midi_outs, UI_FONT_6x8  ,  TEXT_LEFT_START, 25 },
+	    { UI_ELEM_ITEM, MIDI_TEMPO_CURRENTLY_SENDING, (const char*)message->choices.off_on   , UI_FONT_11x18,  15            , 42  },
+	};
 
 
 
     menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
 
     screen_driver_UpdateScreen();
+    (void)menu_nav_end_auto(UI_MIDI_TEMPO_SELECT);
 }

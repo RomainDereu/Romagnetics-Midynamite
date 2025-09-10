@@ -43,7 +43,7 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 	if (!s) return;
     switch (font) {
         case UI_FONT_6x8:   write_underline_68(s, x, y, ul); break;
-        case UI_FONT_11x18: break;
+        case UI_FONT_11x18: write_underline_1118(s, x, y, ul); break;
         case UI_FONT_16x24: write_underline_1624(s, x, y, ul); break;
     }
 }
@@ -55,24 +55,21 @@ void menu_ui_render(const ui_element *elems, size_t count) {
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
         switch (e->type) {
-            case UI_ELEM_TEXT:
-                // literal text
-                draw_text(e->text, e->x, e->y, e->font);
-                break;
-
-            case UI_ELEM_SWITCH: {
-                // table lookup, no underline
-                int32_t v = save_get((save_field_t)e->save_item);
-                const char *const *table = (const char *const *)e->text;
-                draw_text(table[v], e->x, e->y, e->font);
+            case UI_ELEM_TEXT: {
+                // Gated by group flags (if any)
+                if (e->save_item == 0 || ui_is_group_active((uint32_t)e->save_item)) {
+                    draw_text(e->text, e->x, e->y, e->font);
+                }
                 break;
             }
 
-            case UI_ELEM_UNDERL: {
-                // table lookup, with underline
-                int32_t v = save_get((save_field_t)e->save_item);
-                const char *const *table = (const char *const *)e->text;
-                draw_text_ul(table[v], e->x, e->y, e->font, e->underline);
+            case UI_ELEM_ITEM: {
+                if (ui_is_field_visible((save_field_t)e->save_item)) {
+                    int32_t v = save_get((save_field_t)e->save_item);
+                    const char *const *table = (const char *const *)e->text;
+                    uint8_t ul = ui_is_field_selected((save_field_t)e->save_item); // 0 for display-only
+                    draw_text_ul(table[v], e->x, e->y, e->font, ul ? 1 : 0);
+                }
                 break;
             }
 
@@ -80,9 +77,9 @@ void menu_ui_render(const ui_element *elems, size_t count) {
                 break;
         }
 
+
     }
 }
-
 
 
 

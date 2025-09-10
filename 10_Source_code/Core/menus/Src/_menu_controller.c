@@ -31,6 +31,7 @@ static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
 // Per-frame list of active fields (indices)
 static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
 static uint8_t  s_active_count = 0;
+static ui_group_t s_current_root_group = 0;
 
 
 // Field-change tracking
@@ -44,7 +45,7 @@ uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
                                              //wrap,   handler,    handler_arg, group
     [MIDI_TEMPO_CURRENT_TEMPO]           = { NO_WRAP, update_value,         10, CTRL_G_TEMPO },
-    [MIDI_TEMPO_CURRENTLY_SENDING]       = {   WRAP,  no_update,             0, 0 },
+    [MIDI_TEMPO_CURRENTLY_SENDING]       = {   WRAP,  no_update,             0, CTRL_G_TEMPO },
     [MIDI_TEMPO_SEND_TO_MIDI_OUT]        = {   WRAP,  update_value,          1, CTRL_G_TEMPO },
 
     [MIDI_MODIFY_CHANGE_OR_SPLIT]        = {   WRAP,  no_update,             0, 0 }, // selector only
@@ -62,7 +63,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [MIDI_MODIFY_VELOCITY_PLUS_MINUS]    = { NO_WRAP, update_value,         10, CTRL_G_MODIFY_VEL_CHANGED },
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]      = { NO_WRAP, update_value,         10, CTRL_G_MODIFY_VEL_FIXED },
 
-    [MIDI_MODIFY_CURRENTLY_SENDING]      = {   WRAP,  no_update,             0, 0 },
+    [MIDI_MODIFY_CURRENTLY_SENDING]      = {   WRAP,  no_update,             0, CTRL_G_MODIFY_BOTH },
 
     [MIDI_TRANSPOSE_TRANSPOSE_TYPE]      = {   WRAP,  no_update,             0, 0 }, // selector only
     [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]    = { NO_WRAP, update_value,         12, CTRL_G_TRANSPOSE_SHIFT },
@@ -164,6 +165,11 @@ static inline ui_group_t group_from_select_field(ui_state_field_t field) {
 }
 
 
+static inline uint32_t flag_from_id(uint32_t id) {
+    return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u;
+}
+
+
 static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 {
     const int8_t step = encoder_read_step(&htim3);
@@ -181,6 +187,88 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
     int32_t m = v % rows; if (m < 0) m += rows;
     s_menu_selects[field] = (uint8_t)m;
 }
+
+
+
+
+// + paste this near other UI helpers
+
+// Replace select_group_for_field_mask(...) with this:
+static inline ui_group_t select_group_for_field_id(uint32_t id) {
+    switch (id) {
+        case CTRL_G_TEMPO:     return UI_GROUP_TEMPO;
+        case CTRL_G_SETTINGS:  return UI_GROUP_SETTINGS;
+
+        case CTRL_G_TRANSPOSE_SHIFT:
+        case CTRL_G_TRANSPOSE_SCALED:
+        case CTRL_G_TRANSPOSE_BOTH:
+            return UI_GROUP_TRANSPOSE_BOTH;
+
+        case CTRL_G_MODIFY_CHANGE:
+        case CTRL_G_MODIFY_SPLIT:
+        case CTRL_G_MODIFY_BOTH:
+        case CTRL_G_MODIFY_VEL_CHANGED:
+        case CTRL_G_MODIFY_VEL_FIXED:
+            return UI_GROUP_MODIFY_BOTH;
+
+        default:
+            return UI_GROUP_TEMPO;
+    }
+}
+
+static inline ui_state_field_t select_field_for_group(ui_group_t g) {
+    switch (g) {
+        case UI_GROUP_TEMPO:          return UI_MIDI_TEMPO_SELECT;
+        case UI_GROUP_SETTINGS:       return UI_SETTINGS_SELECT;
+        case UI_GROUP_TRANSPOSE_BOTH: return UI_MIDI_TRANSPOSE_SELECT;
+        case UI_GROUP_MODIFY_BOTH:    return UI_MIDI_MODIFY_SELECT;
+        default:                      return UI_MIDI_TEMPO_SELECT;
+    }
+}
+
+
+
+uint8_t ui_is_field_selected(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    uint32_t gid = menu_controls[f].groups;           // ID, not mask
+    ui_group_t root = select_group_for_field_id(gid); // use the new helper
+    ui_state_field_t sel_field = select_field_for_group(root);
+    uint8_t sel_idx = menu_nav_get_select(sel_field);
+
+    CtrlActiveList list;
+    ctrl_build_active_fields(ctrl_active_groups_from_ui_group(root), &list);
+
+    uint8_t row = 0;
+    for (uint8_t i = 0; i < list.count; ++i) {
+        save_field_t cur = (save_field_t)list.fields_idx[i];
+        uint8_t span = (menu_controls[cur].handler == update_channel_filter) ? 16 : 1;
+        if (cur == f) return (sel_idx == row) ? 1u : 0u;
+        row = (uint8_t)(row + span);
+    }
+    return 0;
+}
+
+uint8_t ui_is_field_active(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    uint32_t gid = menu_controls[f].groups;           // ID
+    ui_group_t root = select_group_for_field_id(gid); // map to root
+    if (root == UI_GROUP_TEMPO && gid != CTRL_G_TEMPO) return 0; // optional sanity
+
+    CtrlActiveList list;
+    ctrl_build_active_fields(ctrl_active_groups_from_ui_group(root), &list);
+    for (uint8_t i = 0; i < list.count; ++i) {
+        if ((save_field_t)list.fields_idx[i] == f) return 1;
+    }
+    return 0;
+}
+
+uint8_t ui_is_field_visible(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    uint32_t flag = flag_from_id(menu_controls[f].groups);
+    return (ui_active_groups() & flag) ? 1u : 0u;
+}
+
+
 
 
 // Begin + update select (single entry point)
@@ -282,56 +370,62 @@ static inline uint8_t is_bits_item(save_field_t f) {
 uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 {
     uint32_t mask = 0;
-
     switch (requested) {
         case UI_GROUP_TEMPO:
-            mask |= CTRL_G_TEMPO;
+            mask |= flag_from_id(CTRL_G_TEMPO);
             break;
 
         case UI_GROUP_SETTINGS:
-            mask |= CTRL_G_SETTINGS;
+            mask |= flag_from_id(CTRL_G_SETTINGS);
             break;
 
-        case UI_GROUP_TRANSPOSE_SHIFT:
-        case UI_GROUP_TRANSPOSE_SCALED:
         case UI_GROUP_TRANSPOSE_BOTH: {
-            mask |= CTRL_G_TRANSPOSE_BOTH;
-            int v = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-            if (v <= MIDI_TRANSPOSE_SHIFT) mask |= CTRL_G_TRANSPOSE_SHIFT;
-            else                           mask |= CTRL_G_TRANSPOSE_SCALED;
+            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
+            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
+            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
+                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
+                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
         } break;
 
-        case UI_GROUP_MODIFY:
-        case UI_GROUP_MODIFY_CHANGE:
-        case UI_GROUP_MODIFY_SPLIT:
-        case UI_GROUP_MODIFY_BOTH:
-        case UI_GROUP_MODIFY_VEL_CHANGED:
-        case UI_GROUP_MODIFY_VEL_FIXED: {
-            mask |= CTRL_G_MODIFY_BOTH;
+        case UI_GROUP_MODIFY_BOTH: {
+            mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
+
             int page = (int)save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-            mask |= (page == MIDI_MODIFY_SPLIT) ? CTRL_G_MODIFY_SPLIT : CTRL_G_MODIFY_CHANGE;
+            mask |= (page == MIDI_MODIFY_SPLIT)
+                  ? flag_from_id(CTRL_G_MODIFY_SPLIT)
+                  : flag_from_id(CTRL_G_MODIFY_CHANGE);
 
             int vel  = (int)save_get(MIDI_MODIFY_VELOCITY_TYPE);
-            mask |= (vel == MIDI_MODIFY_FIXED_VEL) ? CTRL_G_MODIFY_VEL_FIXED : CTRL_G_MODIFY_VEL_CHANGED;
+            mask |= (vel == MIDI_MODIFY_FIXED_VEL)
+                  ? flag_from_id(CTRL_G_MODIFY_VEL_FIXED)
+                  : flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
         } break;
 
         default:
-            mask |= CTRL_G_TEMPO;
+            mask |= flag_from_id(CTRL_G_TEMPO);
             break;
     }
-
     return mask;
+
 }
 
 void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
     out->count = 0;
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT && out->count < MENU_ACTIVE_LIST_CAP; ++f) {
-        uint32_t gm = menu_controls[f].groups;
+        const menu_controls_t mt = menu_controls[f];
+
+        // Visible only if its group is active
+        uint32_t gm = flag_from_id(mt.groups);
         if ((gm & active_groups) == 0) continue;
+
+        // Non-interactive (display-only) items must not be selectable
+        if (mt.handler == no_update) continue;
+
         out->fields_idx[out->count++] = f;
     }
 }
+
 
 uint8_t ctrl_row_count(const CtrlActiveList *list)
 {
@@ -382,13 +476,24 @@ void menu_nav_begin(ui_group_t group)
 {
     s_active_count = 0;
 
+    // remember root for this page/frame
+    s_current_root_group = root_group(group);
+
     rebuild_list_for_group(group);
     const CtrlActiveList* list = get_list_for_group(group);
-
     for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
         s_active_list[i] = list->fields_idx[i];
     }
     s_active_count = list->count;
+}
+
+uint32_t ui_active_groups(void) {
+    return ctrl_active_groups_from_ui_group(s_current_root_group);
+}
+
+uint8_t ui_is_group_active(uint32_t id_or_flag) {
+    uint32_t flag = (id_or_flag <= 31) ? flag_from_id(id_or_flag) : id_or_flag;
+    return (ui_active_groups() & flag) ? 1u : 0u;
 }
 
 

@@ -107,20 +107,17 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 // Controller groups (bit flags)
 // ---------------------
 typedef enum {
-    CTRL_G_TEMPO               = 1u << 0,
-    CTRL_G_SETTINGS            = 1u << 1,
-
-    CTRL_G_TRANSPOSE_SHIFT     = 1u << 2,
-    CTRL_G_TRANSPOSE_SCALED    = 1u << 3,
-    CTRL_G_TRANSPOSE_BOTH      = 1u << 4,
-
-    CTRL_G_MODIFY_CHANGE       = 1u << 5,
-    CTRL_G_MODIFY_SPLIT        = 1u << 6,
-    CTRL_G_MODIFY_BOTH         = 1u << 7,
-
-    CTRL_G_MODIFY_VEL_CHANGED  = 1u << 8,
-    CTRL_G_MODIFY_VEL_FIXED    = 1u << 9,
-} ctrl_group_flag_t;
+    CTRL_G_TEMPO = 1,
+    CTRL_G_SETTINGS,
+    CTRL_G_TRANSPOSE_SHIFT,
+    CTRL_G_TRANSPOSE_SCALED,
+    CTRL_G_TRANSPOSE_BOTH,
+    CTRL_G_MODIFY_CHANGE,
+    CTRL_G_MODIFY_SPLIT,
+    CTRL_G_MODIFY_BOTH,
+    CTRL_G_MODIFY_VEL_CHANGED,
+    CTRL_G_MODIFY_VEL_FIXED,
+} ctrl_group_id_t;
 
 // ---------------------
 // Active list
@@ -137,6 +134,13 @@ typedef struct {
 // ---------------------
 // UI API
 // ---------------------
+
+uint8_t ui_is_field_selected(save_field_t f);
+uint8_t ui_is_field_active(save_field_t f);
+uint8_t ui_is_field_visible(save_field_t f);
+
+uint32_t ui_active_groups(void);
+uint8_t  ui_is_group_active(uint32_t flags);
 
 
 void menu_nav_begin_and_update(ui_state_field_t field);
