@@ -34,13 +34,13 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [MIDI_MODIFY_SEND_TO_MIDI_OUT]     = {  0,     3,   0 },
 
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]  = { -127, 127,   0 },
+    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]  = { -80, 80,   0 },
     [MIDI_MODIFY_VELOCITY_ABSOLUTE]    = {   0,  127,  64 },
 
     [MIDI_MODIFY_CURRENTLY_SENDING]    = {   0,     1,   0 },
 
     [MIDI_TRANSPOSE_TRANSPOSE_TYPE]    = {   0,     1,   0 },
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]  = { -127,  127,  0 },
+    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]  = { -36,  36,  0 },
     [MIDI_TRANSPOSE_BASE_NOTE]         = {   0,    11,  0 },
     [MIDI_TRANSPOSE_INTERVAL]          = {   0,     9,  0 },
     [MIDI_TRANSPOSE_TRANSPOSE_SCALE]   = {   0,     6,  0 },

@@ -298,7 +298,7 @@ uint8_t ui_state_get(ui_state_field_t field) {
     return value;
 }
 
-uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
+static uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
     if (!ui_state_try_lock()) return 0;
 
     switch (field) {

@@ -196,10 +196,10 @@ static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_chann
 
 static void change_velocity(midi_note *midi_msg) {
     // int16 in case of overflow
-    int16_t velocity = midi_msg->velocity;
+    int32_t velocity = midi_msg->velocity;
 
     if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
-        velocity += (int16_t)(int32_t)save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
+        velocity += save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
     } else if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
         velocity = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
     }

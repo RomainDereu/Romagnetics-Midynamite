@@ -5,7 +5,6 @@
  *      Author: Romain Dereu
  */
 
-#include <stdio.h>
 #include "_menu_controller.h"
 #include "memory_main.h"
 #include "_menu_ui.h"
@@ -49,13 +48,11 @@ void screen_update_midi_tempo(void)
 
     // Title + guides
     menu_display(message->send_midi_tempo);
-    draw_line(64, 10, 64, 64);   // vertical
-    draw_line(0, 40, 64, 40);    // horizontal
+
+
 
     // Tempo big number
-    char tempo_print[6];
-    snprintf(tempo_print, sizeof tempo_print, "%lu",
-             (unsigned long)save_get_u32(MIDI_TEMPO_CURRENT_TEMPO));
+    const char *tempo_print = message->numbers_0_to_300[save_get_u32(MIDI_TEMPO_CURRENT_TEMPO)];
     write_underline_1624(tempo_print, 80, 20, (count > 0) ? select_states[0] : 0);
     write_68(message->bpm, 80, 48);
 
@@ -66,13 +63,16 @@ void screen_update_midi_tempo(void)
 
     //Stop/Sending status
     uint8_t currently_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
+    write_1118(message->choices.off_on[currently_sending], 15, 42);
 
-    if(currently_sending == 0){
-  	  write_1118(message->off, 15, 42);
-    }
-    else if (currently_sending == 1){
-  	  write_1118(message->on, 15, 42);
-    }
+    static ui_element elems[] = {
+        { UI_ELEM_LINE,  64, 10, 64, 64, NULL, 0, 0 },
+        { UI_ELEM_LINE,   0, 40, 64, 40, NULL, 0, 0 },
+    };
+
+
+
+    menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
 
     screen_driver_UpdateScreen();
 }

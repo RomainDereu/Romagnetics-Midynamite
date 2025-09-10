@@ -4,8 +4,6 @@
  *  Created on: Feb 27, 2025
  *      Author: Romain Dereu
  */
-#include <stdio.h>
-
 #include "_menu_controller.h"
 #include "memory_main.h"
 #include "_menu_ui.h"
@@ -68,14 +66,14 @@ static void screen_update_channel_change(uint8_t * select_states){
 
 static void screen_update_channel_split(uint8_t * select_states){
 	write_68(message->low_sem, TEXT_LEFT_START, LINE_1_VERT);
-    uint8_t low = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1);
-    static char low_txt[6];  sprintf(low_txt, "%u", low);
-    write_underline_68(low_txt, 30, LINE_1_VERT, select_states[0]);
+
+
+	const char * low_print = message->numbers_0_to_300[save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1)];
+    write_underline_68(low_print, 30, LINE_1_VERT, select_states[0]);
 
     write_68(message->high_sem, 45, LINE_1_VERT);
-    uint8_t high = save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2);
-    static char high_txt[6]; sprintf(high_txt, "%u", high);
-    write_underline_68(high_txt, 80, LINE_1_VERT, select_states[1]);
+    const char * high_print = message->numbers_0_to_300[save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2)];
+    write_underline_68(high_print, 80, LINE_1_VERT, select_states[1]);
 
     write_68(message->split, TEXT_LEFT_START, LINE_2_VERT);
     uint8_t split_note = save_get(MIDI_MODIFY_SPLIT_NOTE);
@@ -90,17 +88,16 @@ static void screen_update_channel_split(uint8_t * select_states){
 static void screen_update_velocity_change(uint8_t * select_states){
 	write_68(message->change_velocity, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
-    int8_t delta = (int8_t)(int32_t)save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
-    static char txt[6]; sprintf(txt, "%+d", delta);
-    write_underline_68(txt, 100, BOTTOM_LINE_VERT, select_states[row]);
+    const uint16_t idx =  save_get_u32(MIDI_MODIFY_VELOCITY_PLUS_MINUS) + 80; //minimum value of -80
+    const char *text_print = message->numbers_neg80_to_pos80[idx];
+    write_underline_68(text_print, 100, BOTTOM_LINE_VERT, select_states[row]);
 }
 
 static void screen_update_velocity_fixed(uint8_t * select_states){
 	write_68(message->fixed_velocity, TEXT_LEFT_START, BOTTOM_LINE_VERT);
     uint8_t row = (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) ? 3 : 4;
-    uint8_t v = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
-    static char txt[6]; sprintf(txt, "%u", v);
-    write_underline_68(txt, 100, LINE_4_VERT+3, select_states[row]);
+    const char *velocity_print = message->numbers_0_to_300[save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE)];
+    write_underline_68(velocity_print , 100, LINE_4_VERT+3, select_states[row]);
 }
 
 void screen_update_midi_modify(void)

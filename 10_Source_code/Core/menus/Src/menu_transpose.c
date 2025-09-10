@@ -4,7 +4,6 @@
  *  Created on: Jul 10, 2025
  *      Author: Romain Dereu
  */
-#include <stdio.h>
 #include "_menu_controller.h"
 #include "memory_main.h"
 #include "_menu_ui.h"
@@ -56,9 +55,8 @@ void screen_update_midi_transpose(void)
     if (type == MIDI_TRANSPOSE_SHIFT) {
         // SHIFT page
         write_68(message->shift_by, TEXT_LEFT_START, LINE_1_VERT);
-        char modify_value[6];
-        int8_t plus_minus_i8 = (int8_t)(int32_t)save_get_u32(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE);
-        sprintf(modify_value, "%+d", plus_minus_i8);
+        const uint16_t idx =  save_get_u32(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE) + 36; //minimum value of -36
+        const char *modify_value = message->numbers_neg80_to_pos80[idx];
         write_underline_68(modify_value, 65, LINE_1_VERT, select_states[0]);
 
         write_68(message->semitones, TEXT_LEFT_START, LINE_2_VERT);

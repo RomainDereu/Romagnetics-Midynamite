@@ -190,13 +190,8 @@ void panic_midi(UART_HandleTypeDef *huart1,
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 	draw_line(92, 10, 92, bottom_line);
 	uint8_t text_position = bottom_line/2;
-    if(on_or_off ==0){
-    	write_1118(message->off, 95, text_position);
-    }
-    else if (on_or_off ==1){
-    	write_1118(message->on, 95, text_position);
-    }
-
+    const char *text_print = message->choices.off_on[on_or_off];
+	write_1118(text_print, 95, text_position);
 }
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
