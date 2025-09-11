@@ -45,5 +45,4 @@ void screen_update_midi_tempo(void)
     };
 
     menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
-    screen_driver_UpdateScreen();
 }

@@ -67,7 +67,5 @@ void screen_update_midi_transpose(void)
           (const char*)message->choices.no_yes,
           UI_FONT_6x8, 65, LINE_4_VERT, CTRL_G_TRANSPOSE_BOTH },
     };
-
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
-    screen_driver_UpdateScreen();
 }

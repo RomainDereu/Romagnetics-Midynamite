@@ -92,8 +92,6 @@ void screen_update_settings(void)
         { UI_ELEM_TEXT, 0, message->about_version, UI_FONT_6x8, TEXT_LEFT_START, LINE_3_VERT, CTRL_G_SETTINGS_ABOUT },
     };
 
-    // Draw the flat, group-gated elements
-    menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 
     // -------- FILTER GRID (custom draw, but only when its group is active) --------
     if (active & (1u << (CTRL_G_SETTINGS_FILTER - 1))) {
@@ -116,6 +114,7 @@ void screen_update_settings(void)
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
     write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
 
-    screen_driver_UpdateScreen();
+    // Draw the flat, group-gated elements
+    menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 
 }

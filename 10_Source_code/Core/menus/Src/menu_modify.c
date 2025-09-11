@@ -79,5 +79,4 @@ void screen_update_midi_modify(void)
         { UI_ELEM_ITEM, MIDI_MODIFY_VELOCITY_ABSOLUTE, (const char*)message->numbers_0_to_300, UI_FONT_6x8, 100, BOTTOM_LINE_VERT, CTRL_G_MODIFY_VEL_FIXED },
     };
     menu_ui_render(elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
-    screen_driver_UpdateScreen();
 }

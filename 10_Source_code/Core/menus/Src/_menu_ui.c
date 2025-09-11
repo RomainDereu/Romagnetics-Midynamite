@@ -114,6 +114,7 @@ void menu_ui_render(const ui_element *elems, size_t count) {
                 break;
         }
     }
+    screen_driver_UpdateScreen();
 }
 
 
