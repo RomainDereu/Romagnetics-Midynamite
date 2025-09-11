@@ -269,11 +269,9 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT && out->count < MENU_ACTIVE_LIST_CAP; ++f) {
         const menu_controls_t mt = menu_controls[f];
 
-        // Visible only if its group is active
         uint32_t gm = flag_from_id(mt.groups);
         if ((gm & active_groups) == 0) continue;
 
-        // Non-interactive items are *not* selectable, EXCEPT ABOUT (acts as a section anchor)
         if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
 
         out->fields_idx[out->count++] = f;
@@ -431,27 +429,48 @@ static inline ui_state_field_t select_field_for_group(ui_group_t g) {
 
 
 
-uint8_t ui_is_field_selected(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+uint8_t menu_nav_get_select(ui_state_field_t field) {
+    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+}
 
-    uint32_t gid = menu_controls[f].groups;           // controller group ID
-    ui_group_t root = select_group_for_field_id(gid); // map to root UI page
-    ui_state_field_t sel_field = select_field_for_group(root);
-    uint8_t sel_idx = menu_nav_get_select(sel_field);
 
-    // Use the prebuilt nav list (spans all subsections for Settings)
-    const CtrlActiveList* list = get_list_for_group(root);
 
+static uint8_t row_index_in_root(ui_group_t root, save_field_t target, uint8_t *row_out) {
+    const uint32_t active = ctrl_active_groups_from_ui_group(root);
     uint8_t row = 0;
-    for (uint8_t i = 0; i < list->count; ++i) {
-        save_field_t cur = (save_field_t)list->fields_idx[i];
-        uint8_t span = is_bits_item(cur) ? 16 : 1;
-        if (cur == f) return (sel_idx == row) ? 1u : 0u;
+
+    for (uint16_t i = 0; i < SAVE_FIELD_COUNT; ++i) {
+        const menu_controls_t mt = menu_controls[i];
+
+        // must be in an active group
+        const uint32_t gm = flag_from_id(mt.groups);
+        if ((gm & active) == 0) continue;
+
+        // skip display-only items except the ABOUT anchor
+        if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
+
+        const uint8_t span = is_bits_item((save_field_t)i) ? 16u : 1u;
+
+        if ((save_field_t)i == target) {
+            if (row_out) *row_out = row;
+            return 1;
+        }
         row = (uint8_t)(row + span);
     }
     return 0;
 }
 
+uint8_t ui_is_field_selected(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+
+    const ui_group_t root = select_group_for_field_id(menu_controls[f].groups);
+    const ui_state_field_t sel_field = select_field_for_group(root);
+    const uint8_t sel_idx = menu_nav_get_select(sel_field);
+
+    uint8_t row = 0;
+    if (!row_index_in_root(root, f, &row)) return 0;
+    return (sel_idx == row) ? 1u : 0u;
+}
 
 
 
@@ -524,24 +543,33 @@ static inline void clear_field_changed(save_field_t f) {
     s_field_change_bits[f >> 5] &= ~(1u << (f & 31));
 }
 
+
+static inline uint8_t any_field_changed(void) {
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) {
+        if (s_field_change_bits[i]) return 1;
+    }
+    return 0;
+}
+static inline void clear_all_field_changed(void) {
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) {
+        s_field_change_bits[i] = 0;
+    }
+}
+
 static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 {
-    const uint8_t old_select = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
+    const uint8_t old_select  = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
     const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
 
-    uint8_t data_changed = 0;
-    for (uint8_t i = 0; i < s_active_count; ++i) {
-        save_field_t f = (save_field_t)s_active_list[i];
-        if (test_field_changed(f)) { data_changed = 1; break; }
-    }
+    const uint8_t data_changed = any_field_changed();
 
     if (field < UI_STATE_FIELD_COUNT) {
         s_menu_selects[field] = current_select;
         ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
-    for (uint8_t i = 0; i < s_active_count; ++i) {
-        clear_field_changed((save_field_t)s_active_list[i]);
+    if (data_changed) {
+        clear_all_field_changed();   // consume all pending field changes
     }
 
     return (sel_changed || data_changed);
@@ -593,18 +621,6 @@ uint32_t ui_active_groups(void) {
     return ctrl_active_groups_from_ui_group(s_current_root_group);
 }
 
-
-
-void menu_nav_reset(ui_state_field_t field, uint8_t value)
-{
-    if (field >= UI_STATE_FIELD_COUNT) return;
-    s_menu_selects[field] = value;
-    ui_state_modify(field, UI_MODIFY_SET, value);
-}
-
-uint8_t menu_nav_get_select(ui_state_field_t field) {
-    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
-}
 
 
 

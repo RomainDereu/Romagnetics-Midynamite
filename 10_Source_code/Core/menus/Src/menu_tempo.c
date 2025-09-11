@@ -33,7 +33,7 @@ void screen_update_midi_tempo(void)
     screen_driver_Line(64, 10, 64, 64, White);
     screen_driver_Line(0, 40, 64, 40, White);
 
-    ui_element elems[] = {
+    const ui_element elems[] = {
         //                type        save_item                     text                                   font          x               y    ctrl_group_id
         { UI_ELEM_TEXT ,  0,                           message->target,                           UI_FONT_6x8,    TEXT_LEFT_START, 15,  CTRL_G_TEMPO },
         { UI_ELEM_ITEM ,  MIDI_TEMPO_SEND_TO_MIDI_OUT, (const char*)message->choices.midi_outs,   UI_FONT_6x8,    TEXT_LEFT_START, 25,  CTRL_G_TEMPO },
@@ -45,7 +45,5 @@ void screen_update_midi_tempo(void)
     };
 
     menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
-
     screen_driver_UpdateScreen();
-
 }

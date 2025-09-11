@@ -30,9 +30,6 @@ void midi_modify_update_menu(void)
             : MIDI_MODIFY_VELOCITY_TYPE;
 
         save_modify_u8(target, SAVE_MODIFY_INCREMENT, 0);
-        menu_nav_reset(UI_MIDI_MODIFY_SELECT, 0);
-        threads_display_notify(FLAG_MODIFY);
-        return;
     }
 
     (void)menu_nav_end_auto(UI_MIDI_MODIFY_SELECT);
@@ -45,6 +42,7 @@ void screen_update_midi_modify(void)
 {
     screen_driver_Fill(Black);
     menu_display(message->midi_modify);
+
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
     midi_display_on_off(save_get(MIDI_MODIFY_CURRENTLY_SENDING), LINE_4_VERT);
 
@@ -80,8 +78,6 @@ void screen_update_midi_modify(void)
         { UI_ELEM_TEXT, 0, message->fixed_velocity, UI_FONT_6x8, TEXT_LEFT_START, BOTTOM_LINE_VERT, CTRL_G_MODIFY_VEL_FIXED },
         { UI_ELEM_ITEM, MIDI_MODIFY_VELOCITY_ABSOLUTE, (const char*)message->numbers_0_to_300, UI_FONT_6x8, 100, BOTTOM_LINE_VERT, CTRL_G_MODIFY_VEL_FIXED },
     };
-
-
     menu_ui_render(elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
     screen_driver_UpdateScreen();
 }
