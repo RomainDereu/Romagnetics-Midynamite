@@ -55,19 +55,25 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 }
 
 
-static inline uint32_t ui_safe_index(save_field_t f, int32_t v)
-{
-    const save_limits_t lim = save_limits[f];
-    const uint32_t span = (uint32_t)(lim.max - lim.min);   // inclusive span, e.g. 160 for -80..+80
-    uint32_t idx = (uint32_t)(v - lim.min);                // normalize so min maps to 0
-    if (idx > span) idx = span;                            // clamp to max valid index
-    return idx;
-}
-
 static inline void draw_item_row(const ui_element *e)
 {
-    const save_field_t f = (save_field_t)e->save_item;
-    const uint32_t idx = ui_safe_index(f, save_get(f));    // save_get already clamps to limits
+    const save_field_t  f   = (save_field_t)e->save_item;
+    const save_limits_t lim = save_limits[f];
+
+    // save_get() is already clamped to [min..max]
+    const int32_t v = save_get(f);
+
+    // Compute table index
+    uint32_t idx;
+    if (lim.min < 0) {idx = (uint32_t)(v - lim.min);}
+    else {idx = (uint32_t)v;}
+
+    // Clamp to table range implied by limits
+    const uint32_t last = (lim.min < 0)
+                        ? (uint32_t)(lim.max - lim.min)
+                        : (uint32_t) lim.max;
+    if (idx > last) idx = last;
+
     const char *const *table = (const char *const *)e->text;
     draw_text_ul(table[idx], e->x, e->y, e->font, ui_is_field_selected(f) ? 1 : 0);
 }
