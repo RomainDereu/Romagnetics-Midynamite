@@ -157,6 +157,8 @@ uint8_t save_modify_u8 (save_field_t field, save_modify_op_t op, uint8_t  value_
 void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(void);
 
+//clamp used only by tests
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
 
 
 #ifdef UNIT_TEST
