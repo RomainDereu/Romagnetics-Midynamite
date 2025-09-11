@@ -18,7 +18,7 @@ void midi_transpose_update_menu(void)
     menu_nav_begin_and_update(UI_MIDI_TRANSPOSE_SELECT);
 
     if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        save_modify_u8(MIDI_TRANSPOSE_TRANSPOSE_TYPE, SAVE_MODIFY_INCREMENT, 0);
+        select_press_menu_change(UI_MIDI_TRANSPOSE_SELECT);
     }
 
     (void)menu_nav_end_auto(UI_MIDI_TRANSPOSE_SELECT);

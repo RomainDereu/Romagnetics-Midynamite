@@ -143,6 +143,8 @@ typedef struct {
 // UI API
 // ---------------------
 
+void select_press_menu_change(ui_state_field_t sel_field);
+
 uint8_t ui_is_field_selected(save_field_t f);
 
 uint32_t ui_active_groups(void);
@@ -158,7 +160,6 @@ uint8_t build_select_states(ui_group_t group,
                             uint8_t *states,
                             uint8_t states_cap);
 
-void    menu_nav_begin(ui_group_t group);
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2);
 

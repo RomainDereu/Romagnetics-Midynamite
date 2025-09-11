@@ -11,6 +11,7 @@
 #include "screen_driver.h"
 #include "text.h"
 #include "threads.h"
+#include "utils.h" // For debounce
 
 
 #define SETTINGS_FIRST_GLOBAL1  SETTINGS_START_MENU

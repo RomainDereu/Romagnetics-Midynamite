@@ -148,29 +148,6 @@ static CtrlActiveList* list_for_root(ui_group_t root) {
 }
 
 
-uint8_t debounce_button(GPIO_TypeDef *port,
-		                uint16_t      pin,
-		                uint8_t     *prev_state,
-		                uint32_t      db_ms)
-{
-    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
-
-    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
-    // Otherwise, fire on cur==0 immediately.
-    if (cur == 0 && (!prev_state || *prev_state == 1)) {
-        osDelay(db_ms);
-        cur = HAL_GPIO_ReadPin(port, pin);
-        if (cur == 0) {
-            if (prev_state) *prev_state = 0;
-            return 1;
-        }
-    }
-
-    // remember state if tracking
-    if (prev_state) *prev_state = cur;
-    return 0;
-}
-
 
 
 
@@ -230,10 +207,10 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             uint8_t rows_g1 = 0, rows_g2 = 0, rows_f = 0;
             for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
                 const menu_controls_t mt = menu_controls[f];
-                const uint8_t span = (mt.handler == update_channel_filter) ? 16 : 1;
-                if      (mt.groups == CTRL_G_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + span);
-                else if (mt.groups == CTRL_G_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + span);
-                else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + span);
+                const uint8_t adv = is_bits_item((save_field_t)f) ? 16u : 1u;
+                if      (mt.groups == CTRL_G_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + adv);
+                else if (mt.groups == CTRL_G_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + adv);
+                else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
             }
 
             const uint8_t sel = s_menu_selects[UI_SETTINGS_SELECT];
@@ -435,45 +412,28 @@ uint8_t menu_nav_get_select(ui_state_field_t field) {
 
 
 
-static uint8_t row_index_in_root(ui_group_t root, save_field_t target, uint8_t *row_out) {
-    const uint32_t active = ctrl_active_groups_from_ui_group(root);
-    uint8_t row = 0;
 
-    for (uint16_t i = 0; i < SAVE_FIELD_COUNT; ++i) {
-        const menu_controls_t mt = menu_controls[i];
 
-        // must be in an active group
-        const uint32_t gm = flag_from_id(mt.groups);
-        if ((gm & active) == 0) continue;
 
-        // skip display-only items except the ABOUT anchor
-        if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
 
-        const uint8_t span = is_bits_item((save_field_t)i) ? 16u : 1u;
+static void menu_nav_begin(ui_group_t group)
+{
+    s_active_count = 0;
 
-        if ((save_field_t)i == target) {
-            if (row_out) *row_out = row;
-            return 1;
-        }
-        row = (uint8_t)(row + span);
+    // remember root for this page/frame
+    s_current_root_group = root_group(group);
+
+    rebuild_list_for_group(group);
+    const CtrlActiveList* list = get_list_for_group(group);
+    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
+        s_active_list[i] = list->fields_idx[i];
     }
-    return 0;
+    s_active_count = list->count;
 }
 
-uint8_t ui_is_field_selected(save_field_t f) {
-    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-
-    const ui_group_t root = select_group_for_field_id(menu_controls[f].groups);
-    const ui_state_field_t sel_field = select_field_for_group(root);
-    const uint8_t sel_idx = menu_nav_get_select(sel_field);
-
-    uint8_t row = 0;
-    if (!row_index_in_root(root, f, &row)) return 0;
-    return (sel_idx == row) ? 1u : 0u;
+uint32_t ui_active_groups(void) {
+    return ctrl_active_groups_from_ui_group(s_current_root_group);
 }
-
-
-
 
 // Begin + update select (single entry point)
 void menu_nav_begin_and_update(ui_state_field_t field) {
@@ -483,38 +443,110 @@ void menu_nav_begin_and_update(ui_state_field_t field) {
 }
 
 
+typedef struct {
+    ui_group_t   root;
+    uint8_t      row;       // selected row index on the page
+    save_field_t field;     // selected SAVE field (or INVALID)
+    uint8_t      is_bits;   // 1 if this row is a bit of a 16-bit strip
+    uint8_t      bit;       // which bit (0..15) if is_bits=1, else 0xFF
+    uint32_t     gid;       // menu_controls[field].groups (0 if INVALID)
+} NavSel;
 
-static void ctrl_toggle_row(const CtrlActiveList *list, uint8_t row_index)
-{
+/* Find the currently selected item (field/bit) for a given page select. */
+static inline NavSel nav_selection(ui_state_field_t sel_field) {
+    NavSel s = {0};
+    s.root = group_from_select_field(sel_field);
+    s.row  = menu_nav_get_select(sel_field);
+    s.bit  = 0xFF;
+    s.field = SAVE_FIELD_INVALID;
+
+    const CtrlActiveList *list = get_list_for_group(s.root);
     uint8_t row = 0;
+
     for (uint8_t i = 0; i < list->count; ++i) {
         save_field_t f = (save_field_t)list->fields_idx[i];
+
         if (is_bits_item(f)) {
-            if (row_index >= row && row_index < (uint8_t)(row + 16)) {
-                uint8_t bit = (uint8_t)(row_index - row);
-                update_channel_filter(f, bit);
-                return;
+            if (s.row >= row && s.row < (uint8_t)(row + 16u)) {
+                s.field   = f;
+                s.is_bits = 1;
+                s.bit     = (uint8_t)(s.row - row);
+                s.gid     = menu_controls[f].groups;
+                return s;
             }
-            row = (uint8_t)(row + 16);
+            row = (uint8_t)(row + 16u);
         } else {
-            if (row == row_index) {
-                const menu_controls_t mt = menu_controls[f];
-                if (mt.handler) mt.handler(f, mt.handler_arg);
-                return;
+            if (s.row == row) {
+                s.field   = f;
+                s.is_bits = 0;
+                s.gid     = menu_controls[f].groups;
+                return s;
             }
             row++;
         }
+    }
+    // nothing matched (empty page, etc.)
+    return s;
+}
+
+/* For press-to-toggle-page logic: map the selection to its page selector. */
+static inline save_field_t selector_for_press(const NavSel *s) {
+    if (s->field == SAVE_FIELD_INVALID) return SAVE_FIELD_INVALID;
+
+    if (s->root == UI_GROUP_TRANSPOSE_BOTH)
+        return MIDI_TRANSPOSE_TRANSPOSE_TYPE;
+
+    if (s->root == UI_GROUP_MODIFY_BOTH) {
+        if (s->gid == CTRL_G_MODIFY_VEL_CHANGED || s->gid == CTRL_G_MODIFY_VEL_FIXED)
+            return MIDI_MODIFY_VELOCITY_TYPE;
+        return MIDI_MODIFY_CHANGE_OR_SPLIT;
+    }
+    return SAVE_FIELD_INVALID;
+}
+
+
+
+void select_press_menu_change(ui_state_field_t sel_field) {
+    const NavSel s = nav_selection(sel_field);
+    const save_field_t tgt = selector_for_press(&s);
+    if (tgt != SAVE_FIELD_INVALID) {
+        save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
     }
 }
 
 
 
-
-static void toggle_underline_items(ui_group_t group, uint8_t index)
-{
-    const CtrlActiveList* list = get_list_for_group(group);
-    ctrl_toggle_row(list, index);
+/* Apply the row’s action (used for underline “calc step” and similar). */
+static inline void nav_apply_selection(const NavSel *s) {
+    if (s->field == SAVE_FIELD_INVALID) return;
+    if (s->is_bits) {
+        update_channel_filter(s->field, s->bit);
+    } else {
+        const menu_controls_t mt = menu_controls[s->field];
+        if (mt.handler) mt.handler(s->field, mt.handler_arg);
+    }
 }
+
+/* Tiny adapter to toggle the currently selected row. */
+static inline void toggle_selected_row(ui_state_field_t sel_field) {
+    NavSel s = nav_selection(sel_field);
+    nav_apply_selection(&s);
+}
+
+/* “Is this field selected?” simplified to a single compare. */
+uint8_t ui_is_field_selected(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    const ui_group_t  root      = select_group_for_field_id(menu_controls[f].groups);
+    const ui_state_field_t page = select_field_for_group(root);
+    const NavSel s = nav_selection(page);
+    return (s.field == f) ? 1u : 0u;
+}
+
+
+
+
+
+
 
 
 uint8_t build_select_states(ui_group_t group,
@@ -577,10 +609,9 @@ static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 
 
 uint8_t menu_nav_end_auto(ui_state_field_t field) {
-    const ui_group_t g = group_from_select_field(field);
-    const uint8_t sel = menu_nav_get_select(field);
+    toggle_selected_row(field);
 
-    toggle_underline_items(g, sel);
+    const uint8_t sel = menu_nav_get_select(field);
     const uint8_t changed = has_menu_changed(field, sel);
 
     if (changed) {
@@ -588,6 +619,7 @@ uint8_t menu_nav_end_auto(ui_state_field_t field) {
     }
     return changed;
 }
+
 
 
 // -------------------------
@@ -602,24 +634,7 @@ void save_mark_all_changed(void) {
 
 
 
-void menu_nav_begin(ui_group_t group)
-{
-    s_active_count = 0;
 
-    // remember root for this page/frame
-    s_current_root_group = root_group(group);
-
-    rebuild_list_for_group(group);
-    const CtrlActiveList* list = get_list_for_group(group);
-    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
-        s_active_list[i] = list->fields_idx[i];
-    }
-    s_active_count = list->count;
-}
-
-uint32_t ui_active_groups(void) {
-    return ctrl_active_groups_from_ui_group(s_current_root_group);
-}
 
 
 

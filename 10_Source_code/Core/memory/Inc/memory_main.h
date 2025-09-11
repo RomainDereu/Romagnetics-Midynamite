@@ -93,6 +93,7 @@ typedef enum {
     SAVE_FIELD_COUNT
 } save_field_t;
 
+#define SAVE_FIELD_INVALID ((save_field_t)SAVE_FIELD_COUNT)
 
 
 extern const save_limits_t save_limits[SAVE_FIELD_COUNT];
@@ -130,10 +131,7 @@ typedef enum {
 } DisplayFlags_t;
 
 
-uint8_t debounce_button(GPIO_TypeDef *port,
-		                uint16_t      pin,
-		                uint8_t     *prev_state,
-		                uint32_t      db_ms);
+
 
 // ---------------------
 // The following expositions are for memory_flash.c

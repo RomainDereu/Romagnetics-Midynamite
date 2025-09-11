@@ -176,10 +176,39 @@ void panic_midi(UART_HandleTypeDef *huart1,
 }
 
 
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms)
+{
+    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
+
+    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
+    // Otherwise, fire on cur==0 immediately.
+    if (cur == 0 && (!prev_state || *prev_state == 1)) {
+        osDelay(db_ms);
+        cur = HAL_GPIO_ReadPin(port, pin);
+        if (cur == 0) {
+            if (prev_state) *prev_state = 0;
+            return 1;
+        }
+    }
+
+    // remember state if tracking
+    if (prev_state) *prev_state = cur;
+    return 0;
+}
+
+
+
+
+
 
 /* ---------------------------
  * GUI helpers
  * --------------------------- */
+
+
 
 
 

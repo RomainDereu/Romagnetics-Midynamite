@@ -55,6 +55,13 @@ void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,
 
 
 
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms);
+
+
+
 void select_current_state(uint8_t *select_states,
                           uint8_t  amount,
                           uint8_t  current_select);
