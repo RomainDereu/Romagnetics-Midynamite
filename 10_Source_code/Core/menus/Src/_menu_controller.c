@@ -341,23 +341,23 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
     const CtrlActiveList* list = get_list_for_group(group);
     uint8_t rows = ctrl_row_count(list);
 
-    // ---- add this: ABOUT is a virtual extra page (no fields) ----
     if (group == UI_GROUP_SETTINGS) {
         rows = (uint8_t)(rows + 1);  // +1 virtual row for ABOUT
     }
-    // --------------------------------------------------------------
 
     uint8_t sel_prev = s_menu_selects[field];
     s_prev_selects[field] = sel_prev;
 
+    if (step == 0) return;
+
     if (rows == 0) { s_menu_selects[field] = 0; return; }
     if (sel_prev >= rows) sel_prev = (uint8_t)(rows - 1);
-    if (step == 0) return;
 
     int32_t v = (int32_t)sel_prev + (int32_t)step;
     int32_t m = v % rows; if (m < 0) m += rows;
     s_menu_selects[field] = (uint8_t)m;
 }
+
 
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
