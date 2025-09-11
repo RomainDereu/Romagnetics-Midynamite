@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "menu_modify.h"
+#include "menus.h"
 
 #include "midi_transform.h"
 

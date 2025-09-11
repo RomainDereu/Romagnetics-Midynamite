@@ -7,7 +7,7 @@
 #include "_menu_controller.h"
 #include "memory_main.h"
 #include "_menu_ui.h"
-#include "menu_settings.h"
+#include "menus.h"
 #include "screen_driver.h"
 #include "text.h"
 #include "threads.h"

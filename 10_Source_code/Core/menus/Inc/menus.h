@@ -1,12 +1,16 @@
 /*
- * midi_modify.h
+ * menus.h
  *
  *  Created on: Feb 27, 2025
  *      Author: Romain Dereu
  */
 
-#ifndef INC_MIDI_MODIFY_H_
-#define INC_MIDI_MODIFY_H_
+#ifndef INC_MENUS_H_
+#define INC_MENUS_H_
+
+//midi_tempo
+void midi_tempo_update_menu();
+void screen_update_midi_tempo();
 
 
 //midi_modify_menu
@@ -18,5 +22,9 @@ void screen_update_midi_modify();
 void midi_transpose_update_menu();
 void screen_update_midi_transpose();
 
+//Settings menu
+void screen_update_settings();
+void settings_update_menu();
 
-#endif /* INC_MIDI_MODIFY_H_ */
+
+#endif /* INC_MENUS_H_ */

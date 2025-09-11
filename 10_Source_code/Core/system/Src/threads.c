@@ -3,9 +3,7 @@
 #include "_menu_ui.h" //menu change check
 
 #include "_menu_controller.h"
-#include "menu_tempo.h"
-#include "menu_modify.h"
-#include "menu_settings.h"
+#include "menus.h"
 
 #include "midi_tempo.h"
 #include "midi_transform.h"
