@@ -130,6 +130,10 @@ typedef enum {
 } DisplayFlags_t;
 
 
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms);
 
 // ---------------------
 // The following expositions are for memory_flash.c

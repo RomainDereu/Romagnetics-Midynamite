@@ -9,8 +9,8 @@
 #include "_menu_controller.h"
 #include "_menu_ui.h"
 #include "memory_main.h"
-#include "utils.h"
 #include "threads.h"
+#include "utils.h" //For the definitions of value updating functions
 
 extern TIM_HandleTypeDef htim3;
 
@@ -147,6 +147,34 @@ static CtrlActiveList* list_for_root(ui_group_t root) {
     }
 }
 
+
+uint8_t debounce_button(GPIO_TypeDef *port,
+		                uint16_t      pin,
+		                uint8_t     *prev_state,
+		                uint32_t      db_ms)
+{
+    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
+
+    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
+    // Otherwise, fire on cur==0 immediately.
+    if (cur == 0 && (!prev_state || *prev_state == 1)) {
+        osDelay(db_ms);
+        cur = HAL_GPIO_ReadPin(port, pin);
+        if (cur == 0) {
+            if (prev_state) *prev_state = 0;
+            return 1;
+        }
+    }
+
+    // remember state if tracking
+    if (prev_state) *prev_state = cur;
+    return 0;
+}
+
+
+
+
+
 static inline uint32_t flag_from_id(uint32_t id) {
     return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u;
 }
@@ -190,18 +218,11 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
         } break;
 
         case UI_GROUP_SETTINGS: {
-            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);  // always-on bucket (footer/shared)
-
-            const uint8_t sel = menu_nav_get_select(UI_SETTINGS_SELECT);
-            if (sel <= 2) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
-            } else if (sel <= 5) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
-            } else if (sel <= 21) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
-            } else {
-                mask |= flag_from_id(CTRL_G_SETTINGS_ABOUT);
-            }
+            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);
+            mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
+            mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
+            mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
+            // CTRL_G_SETTINGS_ABOUT doesn't belong; it has no interactive items.
         } break;
 
         default:
@@ -294,6 +315,30 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
     int32_t m = v % rows; if (m < 0) m += rows;
     s_menu_selects[field] = (uint8_t)m;
 }
+
+uint8_t handle_menu_toggle(GPIO_TypeDef *port,
+                           uint16_t pin1,
+                           uint16_t pin2)
+{
+    static uint8_t prev_state = 1;
+    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+
+    // detect a fresh press of pin1 while pin2 is held
+    if (s1 == 0 && prev_state == 1 && s2 == 1) {
+        osDelay(100);
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
+            HAL_GPIO_ReadPin(port, pin2) == 1)
+        {
+            prev_state = 0;
+            return 1;
+        }
+    }
+
+    prev_state = s1;
+    return 0;
+}
+
 
 
 

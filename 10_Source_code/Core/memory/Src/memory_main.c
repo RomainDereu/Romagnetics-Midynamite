@@ -10,7 +10,6 @@
 #include "memory_main.h"
 #include "_menu_controller.h"
 #include "stm32f4xx_hal.h"
-#include "utils.h"
 
 
 

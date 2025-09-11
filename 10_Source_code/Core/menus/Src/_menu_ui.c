@@ -16,10 +16,16 @@
 extern const Message *message;
 
 
-
 void menu_display(const char * menu_message){
 	draw_line(0, 10, 127, 10);
 	write_68(menu_message, TEXT_LEFT_START, 0);
+}
+
+void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
+	draw_line(92, 10, 92, bottom_line);
+	uint8_t text_position = bottom_line/2;
+    const char *text_print = message->choices.off_on[on_or_off];
+	write_1118(text_print, 95, text_position);
 }
 
 

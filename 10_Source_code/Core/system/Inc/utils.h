@@ -10,12 +10,6 @@
 
 #include "memory_main.h"
 
-#define LINE_1_VERT 15
-#define LINE_2_VERT 25
-#define LINE_3_VERT 35
-#define LINE_4_VERT 45
-#define BOTTOM_LINE_VERT LINE_4_VERT + 3
-
 
 #define NO_MULT 1
 #define TEN_MULT 10
@@ -32,11 +26,6 @@
 #define MIDI_CH_16 16
 
 #define MIDDLE_C 60
-
-#define TEXT_LEFT_START 5
-
-
-
 
 
 
@@ -64,18 +53,6 @@ void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,
 				uint16_t pin1,
 				uint16_t pin2);
 
-
-void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
-
-
-uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-		                   uint16_t pin1,
-		                   uint16_t pin2);
-
-uint8_t debounce_button(GPIO_TypeDef *port,
-		                uint16_t      pin,
-		                uint8_t     *prev_state,
-		                uint32_t      db_ms);
 
 
 void select_current_state(uint8_t *select_states,

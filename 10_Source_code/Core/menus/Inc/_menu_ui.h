@@ -12,6 +12,15 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define LINE_1_VERT 15
+#define LINE_2_VERT 25
+#define LINE_3_VERT 35
+#define LINE_4_VERT 45
+#define BOTTOM_LINE_VERT LINE_4_VERT + 3
+
+#define TEXT_LEFT_START 5
+
+
 
 // Fonts you already use via write_* functions
 typedef enum {
@@ -45,6 +54,8 @@ typedef struct {
 // API
 // ---------------------
 void menu_display(const char * menu_message);
+void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
+
 void menu_change_check(void);
 
 

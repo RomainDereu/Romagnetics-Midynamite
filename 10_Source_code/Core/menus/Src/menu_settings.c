@@ -9,7 +9,6 @@
 #include "_menu_ui.h"
 #include "menu_settings.h"
 #include "screen_driver.h"
-#include "utils.h" //Needed for text placement
 #include "text.h"
 #include "threads.h"
 

@@ -186,59 +186,8 @@ void panic_midi(UART_HandleTypeDef *huart1,
  * GUI helpers
  * --------------------------- */
 
-//On/ Off Part
-void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	draw_line(92, 10, 92, bottom_line);
-	uint8_t text_position = bottom_line/2;
-    const char *text_print = message->choices.off_on[on_or_off];
-	write_1118(text_print, 95, text_position);
-}
 
-uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                           uint16_t pin1,
-                           uint16_t pin2)
-{
-    static uint8_t prev_state = 1;
-    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
 
-    // detect a fresh press of pin1 while pin2 is held
-    if (s1 == 0 && prev_state == 1 && s2 == 1) {
-        osDelay(100);
-        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
-            HAL_GPIO_ReadPin(port, pin2) == 1)
-        {
-            prev_state = 0;
-            return 1;
-        }
-    }
-
-    prev_state = s1;
-    return 0;
-}
-
-uint8_t debounce_button(GPIO_TypeDef *port,
-		                uint16_t      pin,
-		                uint8_t     *prev_state,
-		                uint32_t      db_ms)
-{
-    uint8_t cur = HAL_GPIO_ReadPin(port, pin);
-
-    // If we have a prev_state pointer, only fire on high→low (prev==1 && cur==0).
-    // Otherwise, fire on cur==0 immediately.
-    if (cur == 0 && (!prev_state || *prev_state == 1)) {
-        osDelay(db_ms);
-        cur = HAL_GPIO_ReadPin(port, pin);
-        if (cur == 0) {
-            if (prev_state) *prev_state = 0;
-            return 1;
-        }
-    }
-
-    // remember state if tracking
-    if (prev_state) *prev_state = cur;
-    return 0;
-}
 
 //GUI function setting a flag on the currently selected item
 void select_current_state(uint8_t *select_states,

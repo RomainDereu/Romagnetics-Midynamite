@@ -159,6 +159,9 @@ uint8_t build_select_states(ui_group_t group,
                             uint8_t states_cap);
 
 void    menu_nav_begin(ui_group_t group);
+
+uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2);
+
 void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
 uint8_t menu_nav_get_select(ui_state_field_t field);
