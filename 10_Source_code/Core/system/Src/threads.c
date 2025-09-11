@@ -39,7 +39,7 @@ static const osEventFlagsAttr_t s_flags_attrs = { .name = "display_flags" };
 // -------------------------
 static const osThreadAttr_t s_display_attrs = {
   .name       = "display_update",
-  .stack_size = 128 * 4,
+  .stack_size = 4096,
   .priority   = (osPriority_t)osPriorityBelowNormal,
 };
 static const osThreadAttr_t s_midi_core_attrs = {

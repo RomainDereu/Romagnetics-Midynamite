@@ -52,7 +52,7 @@ void screen_update_midi_modify(void)
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
     midi_display_on_off(save_get(MIDI_MODIFY_CURRENTLY_SENDING), LINE_4_VERT);
 
-    const ui_element elems[] = {
+     const ui_element elems[] = {
         // ---------- CHANGE page ----------
         { UI_ELEM_TEXT, 0, message->send_1_sem, UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_MODIFY_CHANGE },
         { UI_ELEM_ITEM, MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1, (const char*)message->choices.midi_channels, UI_FONT_6x8, 50, LINE_1_VERT, CTRL_G_MODIFY_CHANGE },
