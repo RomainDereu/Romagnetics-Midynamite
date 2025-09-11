@@ -180,6 +180,11 @@ static inline uint32_t flag_from_id(uint32_t id) {
 }
 
 
+static inline uint8_t is_bits_item(save_field_t f) {
+    return menu_controls[f].handler == update_channel_filter;
+}
+
+
 static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 {
     uint32_t mask = 0;
@@ -218,12 +223,35 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
         } break;
 
         case UI_GROUP_SETTINGS: {
+            // Optional: keep ALL for headers/dividers if you use it
             mask |= flag_from_id(CTRL_G_SETTINGS_ALL);
-            mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
-            mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
-            mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
-            // CTRL_G_SETTINGS_ABOUT doesn't belong; it has no interactive items.
+
+            // Count interactive rows per section (ABOUT has no fields → not counted)
+            uint8_t rows_g1 = 0, rows_g2 = 0, rows_f = 0;
+            for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
+                const menu_controls_t mt = menu_controls[f];
+                if (mt.handler == no_update) continue;               // display-only items don't add rows
+                const uint8_t span = (mt.handler == update_channel_filter) ? 16 : 1;
+                if      (mt.groups == CTRL_G_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + span);
+                else if (mt.groups == CTRL_G_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + span);
+                else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + span);
+            }
+
+            const uint8_t sel = s_menu_selects[UI_SETTINGS_SELECT];
+            const uint8_t rows_total = (uint8_t)(rows_g1 + rows_g2 + rows_f);
+            // menu_nav_update_select adds +1, so the last index is ABOUT
+            if (sel < rows_g1) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
+            } else if (sel < (uint8_t)(rows_g1 + rows_g2)) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
+            } else if (sel < rows_total) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
+            } else {
+                mask |= flag_from_id(CTRL_G_SETTINGS_ABOUT);  // only when selected
+            }
         } break;
+
+
 
         default:
             mask |= flag_from_id(CTRL_G_TEMPO);
@@ -246,8 +274,8 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
         uint32_t gm = flag_from_id(mt.groups);
         if ((gm & active_groups) == 0) continue;
 
-        // Non-interactive (display-only) items must not be selectable
-        if (mt.handler == no_update) continue;
+        // Non-interactive items are *not* selectable, EXCEPT ABOUT (acts as a section anchor)
+        if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
 
         out->fields_idx[out->count++] = f;
     }
@@ -258,14 +286,23 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
 
 static void rebuild_list_for_group(ui_group_t group) {
     ui_group_t root = root_group(group);
-    uint32_t mask   = ctrl_active_groups_from_ui_group(root);
+    uint32_t mask;
+
+    if (root == UI_GROUP_SETTINGS) {
+        // NAVIGATION spans all sections, including ABOUT
+        mask =  flag_from_id(CTRL_G_SETTINGS_GLOBAL1)
+              | flag_from_id(CTRL_G_SETTINGS_GLOBAL2)
+              | flag_from_id(CTRL_G_SETTINGS_FILTER)
+              | flag_from_id(CTRL_G_SETTINGS_ABOUT);   // <-- add this
+    } else {
+        mask = ctrl_active_groups_from_ui_group(root);
+    }
+
     CtrlActiveList* out = list_for_root(root);
     ctrl_build_active_fields(mask, out);
 }
 
-static const CtrlActiveList* get_list_for_group(ui_group_t group) {
-    return list_for_root(root_group(group));
-}
+
 
 
 
@@ -281,10 +318,11 @@ static inline ui_group_t group_from_select_field(ui_state_field_t field) {
     }
 }
 
-
-static inline uint8_t is_bits_item(save_field_t f) {
-    return menu_controls[f].handler == update_channel_filter;
+static const CtrlActiveList* get_list_for_group(ui_group_t group) {
+    return list_for_root(root_group(group));
 }
+
+
 
 
 static uint8_t ctrl_row_count(const CtrlActiveList *list)
@@ -302,7 +340,13 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 {
     const int8_t step = encoder_read_step(&htim3);
     const CtrlActiveList* list = get_list_for_group(group);
-    const uint8_t rows = ctrl_row_count(list);
+    uint8_t rows = ctrl_row_count(list);
+
+    // ---- add this: ABOUT is a virtual extra page (no fields) ----
+    if (group == UI_GROUP_SETTINGS) {
+        rows = (uint8_t)(rows + 1);  // +1 virtual row for ABOUT
+    }
+    // --------------------------------------------------------------
 
     uint8_t sel_prev = s_menu_selects[field];
     s_prev_selects[field] = sel_prev;
@@ -315,6 +359,7 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
     int32_t m = v % rows; if (m < 0) m += rows;
     s_menu_selects[field] = (uint8_t)m;
 }
+
 
 uint8_t handle_menu_toggle(GPIO_TypeDef *port,
                            uint16_t pin1,
@@ -389,23 +434,25 @@ static inline ui_state_field_t select_field_for_group(ui_group_t g) {
 
 uint8_t ui_is_field_selected(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    uint32_t gid = menu_controls[f].groups;           // ID, not mask
-    ui_group_t root = select_group_for_field_id(gid); // use the new helper
+
+    uint32_t gid = menu_controls[f].groups;           // controller group ID
+    ui_group_t root = select_group_for_field_id(gid); // map to root UI page
     ui_state_field_t sel_field = select_field_for_group(root);
     uint8_t sel_idx = menu_nav_get_select(sel_field);
 
-    CtrlActiveList list;
-    ctrl_build_active_fields(ctrl_active_groups_from_ui_group(root), &list);
+    // Use the prebuilt nav list (spans all subsections for Settings)
+    const CtrlActiveList* list = get_list_for_group(root);
 
     uint8_t row = 0;
-    for (uint8_t i = 0; i < list.count; ++i) {
-        save_field_t cur = (save_field_t)list.fields_idx[i];
-        uint8_t span = (menu_controls[cur].handler == update_channel_filter) ? 16 : 1;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t cur = (save_field_t)list->fields_idx[i];
+        uint8_t span = is_bits_item(cur) ? 16 : 1;
         if (cur == f) return (sel_idx == row) ? 1u : 0u;
         row = (uint8_t)(row + span);
     }
     return 0;
 }
+
 
 
 

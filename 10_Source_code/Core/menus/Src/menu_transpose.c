@@ -37,6 +37,9 @@ void screen_update_midi_transpose(void)
     screen_driver_Fill(Black);
     menu_display(message->midi_transpose);
 
+    // On/Off status icon (not part of elems to avoid underline)
+    midi_display_on_off(save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING), 63);
+
     // One flat table; groups decide what shows.
     const ui_element elems[] = {
         // ---------- SHIFT page ----------
@@ -72,11 +75,6 @@ void screen_update_midi_transpose(void)
     };
 
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
-
-    // On/Off status icon (not part of elems to avoid underline)
-    midi_display_on_off(save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING), 63);
-
     screen_driver_UpdateScreen();
-
     (void)menu_nav_end_auto(UI_MIDI_TRANSPOSE_SELECT);
 }
