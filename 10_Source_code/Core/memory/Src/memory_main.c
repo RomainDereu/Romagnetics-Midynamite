@@ -225,7 +225,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     switch (op) {
         case SAVE_MODIFY_SET: {
             int32_t desired = (int32_t)value_if_set;
-            if (desired == 255) {
+            if (desired > 230) {//For warps, 255 + 25 buffer for button presses
                 v = mt.wrap ? lim.max : lim.min;
             } else {
                 v = desired;

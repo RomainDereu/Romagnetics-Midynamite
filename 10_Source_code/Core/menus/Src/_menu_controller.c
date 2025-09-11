@@ -31,7 +31,6 @@ static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
 static uint8_t  s_active_count = 0;
 static ui_group_t s_current_root_group = 0;
 
-
 // Field-change tracking
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
@@ -39,7 +38,6 @@ uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 // -------------------------
 // Controller (from original _menu_controller.c)
 // -------------------------
-
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
                                              //wrap,   handler,    handler_arg, group
     [MIDI_TEMPO_CURRENT_TEMPO]           = { NO_WRAP, update_value,         10, CTRL_G_TEMPO },
@@ -97,9 +95,6 @@ typedef struct {
 static MenuActiveLists s_menu_lists;
 
 
-
-
-
 static ui_group_t root_group(ui_group_t g) {
     switch (g) {
         case UI_GROUP_TEMPO:
@@ -149,8 +144,6 @@ static CtrlActiveList* list_for_root(ui_group_t root) {
         default:                        return &s_menu_lists.tempo_item_list;
     }
 }
-
-
 
 
 
@@ -242,46 +235,43 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 
 
 
-
 static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
-    out->count = 0;
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && out->count < MENU_ACTIVE_LIST_CAP; ++f) {
+    uint8_t count = 0;
+
+    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
         const menu_controls_t mt = menu_controls[f];
 
-        uint32_t gm = flag_from_id(mt.groups);
+        // Quick reject: group not active
+        const uint32_t gm = flag_from_id(mt.groups);
         if ((gm & active_groups) == 0) continue;
 
+        // Skip inert rows except ABOUT, which is virtual/visible
         if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
 
-        out->fields_idx[out->count++] = f;
+        out->fields_idx[count++] = f;
     }
+
+    out->count = count;
 }
 
 
 
 
-static void rebuild_list_for_group(ui_group_t group) {
-    ui_group_t root = root_group(group);
-    uint32_t mask;
 
-    if (root == UI_GROUP_SETTINGS) {
-        // NAVIGATION spans all sections, including ABOUT
-        mask =  flag_from_id(CTRL_G_SETTINGS_GLOBAL1)
-              | flag_from_id(CTRL_G_SETTINGS_GLOBAL2)
-              | flag_from_id(CTRL_G_SETTINGS_FILTER)
-              | flag_from_id(CTRL_G_SETTINGS_ABOUT);   // <-- add this
-    } else {
-        mask = ctrl_active_groups_from_ui_group(root);
-    }
+static void rebuild_list_for_group(ui_group_t group)
+{
+    const ui_group_t root = root_group(group);
 
-    CtrlActiveList* out = list_for_root(root);
-    ctrl_build_active_fields(mask, out);
+    const uint32_t mask = (root == UI_GROUP_SETTINGS)
+        ? (  flag_from_id(CTRL_G_SETTINGS_GLOBAL1)
+           | flag_from_id(CTRL_G_SETTINGS_GLOBAL2)
+           | flag_from_id(CTRL_G_SETTINGS_FILTER)
+           | flag_from_id(CTRL_G_SETTINGS_ABOUT))
+        :  ctrl_active_groups_from_ui_group(root);
+
+    ctrl_build_active_fields(mask, list_for_root(root));
 }
-
-
-
-
 
 
 // Map a select field to its root UI group (so callers don't pass group explicitly)
@@ -301,7 +291,6 @@ static const CtrlActiveList* get_list_for_group(ui_group_t group) {
 
 
 
-
 static uint8_t ctrl_row_count(const CtrlActiveList *list)
 {
     uint8_t rows = 0;
@@ -316,25 +305,29 @@ static uint8_t ctrl_row_count(const CtrlActiveList *list)
 static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 {
     const int8_t step = encoder_read_step(&htim3);
-    const CtrlActiveList* list = get_list_for_group(group);
-    uint8_t rows = ctrl_row_count(list);
 
-    if (group == UI_GROUP_SETTINGS) {
-        rows = (uint8_t)(rows + 1);  // +1 virtual row for ABOUT
-    }
-
-    uint8_t sel_prev = s_menu_selects[field];
-    s_prev_selects[field] = sel_prev;
+    // Snapshot previous selection unconditionally so has_menu_changed()
+    // can compare even when step==0.
+    uint8_t sel = s_menu_selects[field];
+    s_prev_selects[field] = sel;
 
     if (step == 0) return;
 
-    if (rows == 0) { s_menu_selects[field] = 0; return; }
-    if (sel_prev >= rows) sel_prev = (uint8_t)(rows - 1);
+    const CtrlActiveList* list = get_list_for_group(group);
+    uint8_t rows = ctrl_row_count(list);
+    if (group == UI_GROUP_SETTINGS) rows = (uint8_t)(rows + 1); // ABOUT
 
-    int32_t v = (int32_t)sel_prev + (int32_t)step;
-    int32_t m = v % rows; if (m < 0) m += rows;
-    s_menu_selects[field] = (uint8_t)m;
+    if (rows == 0) { s_menu_selects[field] = 0; return; }
+    if (sel >= rows) sel = (uint8_t)(rows - 1);
+
+    // Wrap without slow modulo on negatives
+    int16_t v = (int16_t)sel + (int16_t)step;
+    while (v < 0)       v += rows;
+    while (v >= rows)   v -= rows;
+
+    s_menu_selects[field] = (uint8_t)v;
 }
+
 
 
 
@@ -424,56 +417,54 @@ typedef struct {
 } NavSel;
 
 /* Find the currently selected item (field/bit) for a given page select. */
-static inline NavSel nav_selection(ui_state_field_t sel_field) {
+static inline NavSel nav_selection(ui_state_field_t sel_field)
+{
     NavSel s = {0};
-    s.root = group_from_select_field(sel_field);
-    s.row  = menu_nav_get_select(sel_field);
-    s.bit  = 0xFF;
+    s.root  = group_from_select_field(sel_field);
+    s.row   = menu_nav_get_select(sel_field);
+    s.bit   = 0xFF;
     s.field = SAVE_FIELD_INVALID;
 
     const CtrlActiveList *list = get_list_for_group(s.root);
-    uint8_t row = 0;
+    uint8_t row_cursor = 0;
 
     for (uint8_t i = 0; i < list->count; ++i) {
-        save_field_t f = (save_field_t)list->fields_idx[i];
+        const save_field_t f = (save_field_t)list->fields_idx[i];
+        const uint8_t span  = is_bits_item(f) ? 16u : 1u;
 
-        if (is_bits_item(f)) {
-            if (s.row >= row && s.row < (uint8_t)(row + 16u)) {
-                s.field   = f;
-                s.is_bits = 1;
-                s.bit     = (uint8_t)(s.row - row);
-                s.gid     = menu_controls[f].groups;
-                return s;
-            }
-            row = (uint8_t)(row + 16u);
-        } else {
-            if (s.row == row) {
-                s.field   = f;
-                s.is_bits = 0;
-                s.gid     = menu_controls[f].groups;
-                return s;
-            }
-            row++;
+        if (s.row < (uint8_t)(row_cursor + span)) {
+            s.field   = f;
+            s.is_bits = (span == 16u);
+            s.bit     = s.is_bits ? (uint8_t)(s.row - row_cursor) : 0xFF;
+            s.gid     = menu_controls[f].groups;
+            return s;
         }
+        row_cursor = (uint8_t)(row_cursor + span);
     }
-    // nothing matched (empty page, etc.)
-    return s;
+    return s; // INVALID if nothing matched
 }
+
 
 /* For press-to-toggle-page logic: map the selection to its page selector. */
-static inline save_field_t selector_for_press(const NavSel *s) {
+static inline save_field_t selector_for_press(const NavSel *s)
+{
     if (s->field == SAVE_FIELD_INVALID) return SAVE_FIELD_INVALID;
 
-    if (s->root == UI_GROUP_TRANSPOSE_BOTH)
-        return MIDI_TRANSPOSE_TRANSPOSE_TYPE;
+    switch (s->root) {
+        case UI_GROUP_TRANSPOSE_BOTH:
+            return MIDI_TRANSPOSE_TRANSPOSE_TYPE;
 
-    if (s->root == UI_GROUP_MODIFY_BOTH) {
-        if (s->gid == CTRL_G_MODIFY_VEL_CHANGED || s->gid == CTRL_G_MODIFY_VEL_FIXED)
-            return MIDI_MODIFY_VELOCITY_TYPE;
-        return MIDI_MODIFY_CHANGE_OR_SPLIT;
+        case UI_GROUP_MODIFY_BOTH:
+            // Velocity subpage toggles by its own selector; otherwise CHANGE/SPLIT
+            if (s->gid == CTRL_G_MODIFY_VEL_CHANGED || s->gid == CTRL_G_MODIFY_VEL_FIXED)
+                return MIDI_MODIFY_VELOCITY_TYPE;
+            return MIDI_MODIFY_CHANGE_OR_SPLIT;
+
+        default:
+            return SAVE_FIELD_INVALID;
     }
-    return SAVE_FIELD_INVALID;
 }
+
 
 
 
@@ -489,30 +480,40 @@ void select_press_menu_change(ui_state_field_t sel_field) {
 
 
 /* Apply the row’s action (used for underline “calc step” and similar). */
-static inline void nav_apply_selection(const NavSel *s) {
+static inline void nav_apply_selection(const NavSel *s)
+{
     if (s->field == SAVE_FIELD_INVALID) return;
+
     if (s->is_bits) {
         update_channel_filter(s->field, s->bit);
-    } else {
-        const menu_controls_t mt = menu_controls[s->field];
-        if (mt.handler) mt.handler(s->field, mt.handler_arg);
+        return;
     }
+
+    const menu_controls_t mt = menu_controls[s->field];
+    if (mt.handler) mt.handler(s->field, mt.handler_arg);
 }
 
+
 /* Tiny adapter to toggle the currently selected row. */
-static inline void toggle_selected_row(ui_state_field_t sel_field) {
-    NavSel s = nav_selection(sel_field);
+static inline void toggle_selected_row(ui_state_field_t sel_field)
+{
+    const NavSel s = nav_selection(sel_field);
     nav_apply_selection(&s);
 }
 
 /* “Is this field selected?” simplified to a single compare. */
-uint8_t ui_is_field_selected(save_field_t f) {
+uint8_t ui_is_field_selected(save_field_t f)
+{
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    const ui_group_t  root      = select_group_for_field_id(menu_controls[f].groups);
+
+    const ui_group_t root = select_group_for_field_id(menu_controls[f].groups);
     const ui_state_field_t page = select_field_for_group(root);
+
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
 }
+
+
 
 static inline uint8_t test_field_changed(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
@@ -525,23 +526,23 @@ static inline void clear_field_changed(save_field_t f) {
 }
 
 
-static inline uint8_t any_field_changed(void) {
-    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) {
+static inline uint8_t any_field_changed(void)
+{
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i)
         if (s_field_change_bits[i]) return 1;
-    }
     return 0;
 }
-static inline void clear_all_field_changed(void) {
-    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) {
+
+static inline void clear_all_field_changed(void)
+{
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i)
         s_field_change_bits[i] = 0;
-    }
 }
 
 static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 {
     const uint8_t old_select  = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
     const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
-
     const uint8_t data_changed = any_field_changed();
 
     if (field < UI_STATE_FIELD_COUNT) {
@@ -549,33 +550,18 @@ static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
         ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
-    if (data_changed) {
-        clear_all_field_changed();   // consume all pending field changes
-    }
+    if (data_changed) clear_all_field_changed();
 
-    return (sel_changed || data_changed);
+    return (uint8_t)(sel_changed | data_changed);
 }
-
-
-
-
 
 
 // -------------------------
 // UI state & navigation (from original _menu_ui.c)
 // -------------------------
-
-
-
 void save_mark_all_changed(void) {
     for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFFu;
 }
-
-
-
-
-
-
 
 
 static int ui_state_try_lock(void) {
@@ -635,7 +621,6 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
     return 0;
 }
 
-
 // ---------------------
 // Settings: 16-channel filter drawer
 // ---------------------
@@ -645,86 +630,81 @@ void filter_controller(void) {
 
     const uint32_t mask     = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
     const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
-    const uint8_t  sel      = menu_nav_get_select(SETTINGS);
+    const uint8_t  sel      = menu_nav_get_select(UI_SETTINGS_SELECT);
 
     filter_controller_ui(mask, base_idx, sel);
 }
 
-static uint8_t menu_nav_end_auto(ui_state_field_t field) {
+
+static uint8_t menu_nav_end_auto(ui_state_field_t field)
+{
     toggle_selected_row(field);
 
     const uint8_t sel = menu_nav_get_select(field);
     const uint8_t changed = has_menu_changed(field, sel);
 
-    if (changed) {
-        threads_display_notify(display_flag_from_field(field));
-    }
+    if (changed) threads_display_notify(display_flag_from_field(field));
     return changed;
 }
 
-static uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                           uint16_t pin1,
-                           uint16_t pin2)
-{
-    static uint8_t prev_state = 1;
-    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
 
-    // detect a fresh press of pin1 while pin2 is held
-    if (s1 == 0 && prev_state == 1 && s2 == 1) {
+
+static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2)
+{
+    static uint8_t prev_s1 = 1;
+
+    const uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    const uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+
+    // Rising → falling on s1 while s2 is high
+    if (s1 == 0 && prev_s1 == 1 && s2 == 1) {
         osDelay(100);
-        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
-            HAL_GPIO_ReadPin(port, pin2) == 1)
-        {
-            prev_state = 0;
+        // Re-read after debounce
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 && HAL_GPIO_ReadPin(port, pin2) == 1) {
+            prev_s1 = 0;
             return 1;
         }
     }
 
-    prev_state = s1;
+    prev_s1 = s1;
     return 0;
 }
 
 
-
 void update_menu(menu_list_t menu)
 {
-    ui_state_field_t field;
-
-    // Pick the UI_* select directly
-    switch (menu) {
-        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
-        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
-        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
-        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
-        default:             field = UI_MIDI_TEMPO_SELECT;     break;
-    }
+    ui_state_field_t field =
+        (menu == MIDI_TEMPO)     ? UI_MIDI_TEMPO_SELECT :
+        (menu == MIDI_MODIFY)    ? UI_MIDI_MODIFY_SELECT :
+        (menu == MIDI_TRANSPOSE) ? UI_MIDI_TRANSPOSE_SELECT :
+                                   UI_SETTINGS_SELECT;
 
     menu_nav_begin_and_update(field);
 
-    // Per-page actions
     switch (menu) {
         case MIDI_TEMPO: {
             const uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
-            save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
+            if (bpm) {
+                save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
+            } else {
+                // Defensive: avoid div-by-zero if limits ever change
+                save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 0);
+            }
         } break;
 
         case MIDI_TRANSPOSE:
         case MIDI_MODIFY: {
             if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-                // Your impl resets select to 0 after page toggle
-                select_press_menu_change(field);
+                select_press_menu_change(field); // resets select and rebuilds list
             }
         } break;
 
-        case SETTINGS: {
+        case SETTINGS:
             saving_settings_ui();
-        } break;
+            break;
 
         default: break;
     }
 
     (void)menu_nav_end_auto(field);
 }
-
-
