@@ -1,11 +1,9 @@
 /*
- * _menu_controller.c  (merged)
+ * _menu_controller.c
  *
  *  Created on: Sep 8, 2025
  *      Author: Astaa
  *
- *  NOTE: This file merges the original _menu_controller.c (controller/groups/handlers)
- *        and _menu_ui.c (UI state + navigation helpers) into a single translation unit.
  */
 
 #include "_menu_controller.h"
@@ -157,6 +155,7 @@ static inline uint32_t flag_from_id(uint32_t id) {
 static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 {
     uint32_t mask = 0;
+
     switch (requested) {
         case UI_GROUP_TEMPO:
             mask |= flag_from_id(CTRL_G_TEMPO);
@@ -166,32 +165,34 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
 
             int page = (int)save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
-            mask |= (page == MIDI_MODIFY_SPLIT)
-                  ? flag_from_id(CTRL_G_MODIFY_SPLIT)
-                  : flag_from_id(CTRL_G_MODIFY_CHANGE);
+            if (page == MIDI_MODIFY_SPLIT) {
+                mask |= flag_from_id(CTRL_G_MODIFY_SPLIT);
+            } else { // default/fallback to CHANGE
+                mask |= flag_from_id(CTRL_G_MODIFY_CHANGE);
+            }
 
             int vel  = (int)save_get(MIDI_MODIFY_VELOCITY_TYPE);
-            mask |= (vel == MIDI_MODIFY_FIXED_VEL)
-                  ? flag_from_id(CTRL_G_MODIFY_VEL_FIXED)
-                  : flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
+            if (vel == MIDI_MODIFY_FIXED_VEL) {
+                mask |= flag_from_id(CTRL_G_MODIFY_VEL_FIXED);
+            } else { // default/fallback to CHANGED
+                mask |= flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
+            }
         } break;
-
 
         case UI_GROUP_TRANSPOSE_BOTH: {
             mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
             int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
-                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
-                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
+            if (t == MIDI_TRANSPOSE_SHIFT) {
+                mask |= flag_from_id(CTRL_G_TRANSPOSE_SHIFT);
+            } else { // default/fallback to SCALED
+                mask |= flag_from_id(CTRL_G_TRANSPOSE_SCALED);
+            }
         } break;
 
-
-
         case UI_GROUP_SETTINGS: {
-            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);
+            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);  // always-on bucket (footer/shared)
 
             const uint8_t sel = menu_nav_get_select(UI_SETTINGS_SELECT);
-
             if (sel <= 2) {
                 mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
             } else if (sel <= 5) {
@@ -203,14 +204,14 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             }
         } break;
 
-
         default:
             mask |= flag_from_id(CTRL_G_TEMPO);
             break;
     }
-    return mask;
 
+    return mask;
 }
+
 
 
 
@@ -304,17 +305,17 @@ static inline ui_group_t select_group_for_field_id(uint32_t id) {
     switch (id) {
         case CTRL_G_TEMPO:     return UI_GROUP_TEMPO;
 
-        case CTRL_G_TRANSPOSE_SHIFT:
-        case CTRL_G_TRANSPOSE_SCALED:
-        case CTRL_G_TRANSPOSE_BOTH:
-            return UI_GROUP_TRANSPOSE_BOTH;
-
         case CTRL_G_MODIFY_CHANGE:
         case CTRL_G_MODIFY_SPLIT:
         case CTRL_G_MODIFY_BOTH:
         case CTRL_G_MODIFY_VEL_CHANGED:
         case CTRL_G_MODIFY_VEL_FIXED:
             return UI_GROUP_MODIFY_BOTH;
+
+        case CTRL_G_TRANSPOSE_SHIFT:
+        case CTRL_G_TRANSPOSE_SCALED:
+        case CTRL_G_TRANSPOSE_BOTH:
+            return UI_GROUP_TRANSPOSE_BOTH;
 
         case CTRL_G_SETTINGS_GLOBAL1:
         case CTRL_G_SETTINGS_GLOBAL2:
