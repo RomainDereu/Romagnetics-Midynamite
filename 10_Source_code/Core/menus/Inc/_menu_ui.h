@@ -12,27 +12,27 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define LINE_1_VERT 15
-#define LINE_2_VERT 25
-#define LINE_3_VERT 35
-#define LINE_4_VERT 45
-#define BOTTOM_LINE_VERT LINE_4_VERT + 3
+#define LINE_1 15
+#define LINE_2 25
+#define LINE_3 35
+#define LINE_4 45
+#define BOTTOM_LINE LINE_4 + 3
 
-#define TEXT_LEFT_START 5
+#define TXT_LEFT 5
 
 
 
 // Fonts you already use via write_* functions
 typedef enum {
-    UI_FONT_6x8,
-    UI_FONT_11x18,
-    UI_FONT_16x24
+    UI_6x8,
+    UI_11x18,
+    UI_16x24
 } ui_font_t;
 
 // What to render
 typedef enum {
-    UI_ELEM_TEXT,
-	UI_ELEM_ITEM,
+    ELEM_TEXT,
+	ELEM_ITEM,
 } ui_elem_type_t;
 
 #define UI_CHOICE(tbl) ((const char*)(tbl))

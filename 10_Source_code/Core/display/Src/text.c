@@ -133,7 +133,7 @@ static const Message _message = {
     },
 
 	//For midi_transpose
-	.numbers_neg80_to_pos80 = {
+	.neg_pos_80 = {
 	    "-80", "-79", "-78", "-77", "-76", "-75", "-74", "-73", "-72", "-71",
 	    "-70", "-69", "-68", "-67", "-66", "-65", "-64", "-63", "-62", "-61",
 	    "-60", "-59", "-58", "-57", "-56", "-55", "-54", "-53", "-52", "-51",
@@ -155,7 +155,7 @@ static const Message _message = {
 
 
 	//Numbers for the tempo
-	.numbers_0_to_300 = {
+	.zer_to_300 = {
 	    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
 	    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
 	    "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
@@ -206,30 +206,27 @@ static const Message _message = {
 	//Error Handlers
 	.error = "ERROR",
 
-    // Dropdowns and grouped choices
-    .choices = {
-        .change_split = { "Change", "Split" },
-        .change_fixed = { "Change", "Fixed" },
-        .midi_outs = {"Out 1", "Out 2", "Out 1+2"},
-        .midi_outs_split = {"Out 1", "Out 2", "Out 1+2", "Split"},
-        .transpose_modes = { "Pitch Shift", "Scale" },
-        .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixo.", "Aeolian", "Locrian" },
-        .intervals = {
-            "Oct Dn", "6th Dn", "5th Dn", "4th Dn", "3rd Dn",
-            "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"
-        },
-        .no_yes = { "No", "Yes" },
-        .off_on = { "Off", "On" },
-        .usb_receive_send = { "No USB", "Send USB"},
-        .midi_channels = {
-            "Off",
-            "Ch. 1",  "Ch. 2",  "Ch. 3",  "Ch. 4",
-            "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
-            "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
-            "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
-        },
-        .menu_list = { "Tempo", "Modify", "Transpose", "Settings"},
-    }
+    .change_split = { "Change", "Split" },
+    .change_fixed = { "Change", "Fixed" },
+    .midi_outs = {"Out 1", "Out 2", "Out 1+2"},
+    .midi_outs_split = {"Out 1", "Out 2", "Out 1+2", "Split"},
+    .transpose_modes = { "Pitch Shift", "Scale" },
+    .scales = { "Ionian", "Dorian", "Phrygian", "Lydian", "Mixo.", "Aeolian", "Locrian" },
+    .intervals = {
+         "Oct Dn", "6th Dn", "5th Dn", "4th Dn", "3rd Dn",
+         "3rd Up", "4th Up", "5th Up", "6th Up", "Oct Up"
+     },
+    .no_yes = { "No", "Yes" },
+    .off_on = { "Off", "On" },
+    .usb_receive_send = { "No USB", "Send USB"},
+    .midi_channels = {
+         "Off",
+         "Ch. 1",  "Ch. 2",  "Ch. 3",  "Ch. 4",
+         "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
+         "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
+         "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
+     },
+    .menu_list = { "Tempo", "Modify", "Transpose", "Settings"},
 };
 
 const Message *message = &_message;

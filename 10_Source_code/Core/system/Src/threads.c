@@ -136,16 +136,16 @@ static void MediumTasksThread(void *argument)
     if (debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)) {
       switch (ui_state_get(UI_CURRENT_MENU)) {
         case MIDI_TEMPO:
-          save_modify_u8(MIDI_TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
+          save_modify_u8(TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
           mt_start_stop(&htim2);
           threads_display_notify(FLAG_TEMPO);
           break;
         case MIDI_MODIFY:
-          save_modify_u8(MIDI_MODIFY_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
+          save_modify_u8(MODIFY_SENDING, SAVE_MODIFY_INCREMENT, 0);
           threads_display_notify(FLAG_MODIFY);
           break;
         case MIDI_TRANSPOSE:
-          save_modify_u8(MIDI_TRANSPOSE_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
+          save_modify_u8(TRANSPOSE_SENDING, SAVE_MODIFY_INCREMENT, 0);
           threads_display_notify(FLAG_TRANSPOSE);
           break;
         default:

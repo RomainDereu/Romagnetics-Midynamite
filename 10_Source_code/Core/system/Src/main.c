@@ -65,7 +65,7 @@ int main(void)
 
   screen_driver_UpdateContrast();
 
-  if (save_get(MIDI_TEMPO_CURRENTLY_SENDING) == 1) {
+  if (save_get(TEMPO_CURRENTLY_SENDING) == 1) {
     mt_start_stop(&htim2);
   }
 
@@ -329,8 +329,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   // Romagnetics code
   if (htim->Instance == TIM2) {
-    uint8_t send_to_out        = save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT);
-    uint32_t tempo_click_rate  = save_get(MIDI_TEMPO_TEMPO_CLICK_RATE);
+    uint8_t send_to_out        = save_get(TEMPO_SEND_TO_MIDI_OUT);
+    uint32_t tempo_click_rate  = save_get(TEMPO_TEMPO_CLICK_RATE);
     send_midi_tempo_out(tempo_click_rate, send_to_out);
   }
 }

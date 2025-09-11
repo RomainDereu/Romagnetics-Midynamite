@@ -18,13 +18,13 @@ extern const Message *message;
 
 void menu_display(const char * menu_message){
 	draw_line(0, 10, 127, 10);
-	write_68(menu_message, TEXT_LEFT_START, 0);
+	write_68(menu_message, TXT_LEFT, 0);
 }
 
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 	draw_line(92, 10, 92, bottom_line);
 	uint8_t text_position = bottom_line/2;
-    const char *text_print = message->choices.off_on[on_or_off];
+    const char *text_print = message->off_on[on_or_off];
 	write_1118(text_print, 95, text_position);
 }
 
@@ -39,18 +39,18 @@ void menu_change_check(){
 static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     if (!s) return;
     switch (font) {
-        case UI_FONT_6x8:   write_68(s, x, y); break;
-        case UI_FONT_11x18: write_1118(s, x, y); break;
-        case UI_FONT_16x24: break;
+        case UI_6x8:   write_68(s, x, y); break;
+        case UI_11x18: write_1118(s, x, y); break;
+        case UI_16x24: break;
     }
 }
 
 static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t ul) {
 	if (!s) return;
     switch (font) {
-        case UI_FONT_6x8:   write_underline_68(s, x, y, ul); break;
-        case UI_FONT_11x18: write_underline_1118(s, x, y, ul); break;
-        case UI_FONT_16x24: write_underline_1624(s, x, y, ul); break;
+        case UI_6x8:   write_underline_68(s, x, y, ul); break;
+        case UI_11x18: write_underline_1118(s, x, y, ul); break;
+        case UI_16x24: write_underline_1624(s, x, y, ul); break;
     }
 }
 
@@ -102,11 +102,11 @@ void menu_ui_render(const ui_element *elems, size_t count) {
         if (!elem_is_visible(e, active)) continue;
 
         switch (e->type) {
-            case UI_ELEM_TEXT:
+            case ELEM_TEXT:
                 draw_text(e->text, e->x, e->y, e->font);
                 break;
 
-            case UI_ELEM_ITEM:
+            case ELEM_ITEM:
                 draw_item_row(e);
                 break;
 
@@ -139,7 +139,7 @@ void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel){
     for (uint8_t i = 0; i < 16; i++) {
 		const char  *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];
 		const uint8_t x    = (uint8_t)(5 + 10 * (i % 8));
-		const uint8_t y    = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
+		const uint8_t y    = (i < 8) ? LINE_2 : LINE_3;
 		const uint8_t ul   = (uint8_t)(sel == (uint8_t)(base_idx + i));
 		write_underline_68_2(label, x, y, ul);
     }

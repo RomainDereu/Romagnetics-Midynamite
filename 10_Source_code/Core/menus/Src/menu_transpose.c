@@ -6,6 +6,7 @@
  */
 #include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
+#include "menus.h"
 #include "midi_transform.h"
 #include "screen_driver.h"
 #include "text.h"
@@ -17,40 +18,28 @@ void screen_update_midi_transpose(void)
     menu_display(message->midi_transpose);
 
     // On/Off status icon (not part of elems to avoid underline)
-    midi_display_on_off(save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING), 63);
+    midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
 
-    // One flat table; groups decide what shows.
     const ui_element elems[] = {
+        // type      save_item                 text                              font    x        y     ctrl_group_id
         // ---------- SHIFT page ----------
-        { UI_ELEM_TEXT, 0, message->shift_by, UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_TRANSPOSE_SHIFT },
-        // Use numbers_neg80_to_pos80 but offset so index 0 -> "-36"
-        { UI_ELEM_ITEM, MIDI_TRANSPOSE_MIDI_SHIFT_VALUE,
-          (const char*)(message->numbers_neg80_to_pos80 + (80 - 36)),
-          UI_FONT_6x8, 65, LINE_1_VERT, CTRL_G_TRANSPOSE_SHIFT },
-
-        { UI_ELEM_TEXT, 0, message->semitones, UI_FONT_6x8, TEXT_LEFT_START, LINE_2_VERT, CTRL_G_TRANSPOSE_SHIFT },
+        { ELEM_TEXT , 0,                          TEXT_(shift_by),             UI_6x8, TXT_LEFT, LINE_1, CTRL_TRANSPOSE_SHIFT },
+        { ELEM_ITEM , TRANSPOSE_MIDI_SHIFT_VALUE, TEXT_(neg_pos_80 + (80-36)), UI_6x8, 65,       LINE_1, CTRL_TRANSPOSE_SHIFT },
+        { ELEM_TEXT , 0,                          TEXT_(semitones),            UI_6x8, TXT_LEFT, LINE_2, CTRL_TRANSPOSE_SHIFT },
 
         // ---------- SCALED page ----------
-        { UI_ELEM_TEXT, 0, message->root_note, UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_TRANSPOSE_SCALED },
-        { UI_ELEM_ITEM, MIDI_TRANSPOSE_BASE_NOTE,
-          (const char*)message->twelve_notes_names,
-          UI_FONT_6x8, 62, LINE_1_VERT, CTRL_G_TRANSPOSE_SCALED },
-
-        { UI_ELEM_TEXT, 0, message->interval, UI_FONT_6x8, TEXT_LEFT_START, LINE_2_VERT, CTRL_G_TRANSPOSE_SCALED },
-        { UI_ELEM_ITEM, MIDI_TRANSPOSE_INTERVAL,
-          (const char*)message->choices.intervals,
-          UI_FONT_6x8, 55, LINE_2_VERT, CTRL_G_TRANSPOSE_SCALED },
-
-        { UI_ELEM_TEXT, 0, message->scale, UI_FONT_6x8, TEXT_LEFT_START, LINE_3_VERT, CTRL_G_TRANSPOSE_SCALED },
-        { UI_ELEM_ITEM, MIDI_TRANSPOSE_TRANSPOSE_SCALE,
-          (const char*)message->choices.scales,
-          UI_FONT_6x8, 40, LINE_3_VERT, CTRL_G_TRANSPOSE_SCALED },
+        { ELEM_TEXT , 0,                          TEXT_(root_note),            UI_6x8, TXT_LEFT, LINE_1, CTRL_TRANSPOSE_SCALED },
+        { ELEM_ITEM , TRANSPOSE_BASE_NOTE,         TEXT_(twelve_notes_names),  UI_6x8, 62,       LINE_1, CTRL_TRANSPOSE_SCALED },
+        { ELEM_TEXT , 0,                          TEXT_(interval),             UI_6x8, TXT_LEFT, LINE_2, CTRL_TRANSPOSE_SCALED },
+        { ELEM_ITEM , TRANSPOSE_INTERVAL,          TEXT_(intervals),           UI_6x8, 55,       LINE_2, CTRL_TRANSPOSE_SCALED },
+        { ELEM_TEXT , 0,                          TEXT_(scale),                UI_6x8, TXT_LEFT, LINE_3, CTRL_TRANSPOSE_SCALED },
+        { ELEM_ITEM , TRANSPOSE_TRANSPOSE_SCALE,   TEXT_(scales),              UI_6x8, 40,       LINE_3, CTRL_TRANSPOSE_SCALED },
 
         // ---------- COMMON (both pages) ----------
-        { UI_ELEM_TEXT, 0, message->send_base, UI_FONT_6x8, TEXT_LEFT_START, LINE_4_VERT, CTRL_G_TRANSPOSE_BOTH },
-        { UI_ELEM_ITEM, MIDI_TRANSPOSE_SEND_ORIGINAL,
-          (const char*)message->choices.no_yes,
-          UI_FONT_6x8, 65, LINE_4_VERT, CTRL_G_TRANSPOSE_BOTH },
+        { ELEM_TEXT , 0,                          TEXT_(send_base),            UI_6x8, TXT_LEFT, LINE_4, CTRL_TRANSPOSE_BOTH },
+        { ELEM_ITEM , TRANSPOSE_SEND_ORIGINAL,     TEXT_(no_yes),              UI_6x8, 65,       LINE_4, CTRL_TRANSPOSE_BOTH },
     };
+
+
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 }

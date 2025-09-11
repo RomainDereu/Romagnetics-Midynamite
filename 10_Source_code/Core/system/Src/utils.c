@@ -224,15 +224,15 @@ uint8_t menu_check_for_updates(
 
 void saving_settings_ui(void){
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-		write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		write_68(message->saving, TXT_LEFT, BOTTOM_LINE);
 		screen_driver_UpdateScreen();
 
 		store_settings();
 
-		write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		write_68(message->saved, TXT_LEFT, BOTTOM_LINE);
 		screen_driver_UpdateScreen();
 		osDelay(1000);
-		write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		write_68(message->save_instruction, TXT_LEFT, BOTTOM_LINE);
 		screen_driver_UpdateScreen();
     }
 }

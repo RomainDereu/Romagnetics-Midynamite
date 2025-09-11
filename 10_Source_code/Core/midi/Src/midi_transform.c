@@ -145,8 +145,8 @@ void pipeline_start(midi_note *midi_msg) {
     if (is_channel_blocked(status)) return;
 
     // Nothing active: do only MIDI/USB thru
-    if (save_get(MIDI_MODIFY_CURRENTLY_SENDING) == 0 &&
-        save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING)   == 0) {
+    if (save_get(MODIFY_SENDING) == 0 &&
+        save_get(TRANSPOSE_SENDING)   == 0) {
 
         if (save_get(SETTINGS_MIDI_THRU) == 1) {
             send_midi_out(midi_msg, length);
@@ -160,10 +160,10 @@ void pipeline_start(midi_note *midi_msg) {
     }
 
     // Send to appropriate pipeline
-    if (save_get(MIDI_MODIFY_CURRENTLY_SENDING) == 1) {
+    if (save_get(MODIFY_SENDING) == 1) {
         pipeline_midi_modify(midi_msg);
         return;
-    } else if (save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING) == 1) {
+    } else if (save_get(TRANSPOSE_SENDING) == 1) {
         pipeline_midi_transpose(midi_msg);
         return;
     }
@@ -179,12 +179,12 @@ static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_chann
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t status_nibble = status & 0xF0;
 
-        if (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) {
+        if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) {
             new_channel = *send_to_midi_channel;
-        } else if (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
-            new_channel = (midi_msg->note >= save_get(MIDI_MODIFY_SPLIT_NOTE))
-                          ? save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2)
-                          : save_get(MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1);
+        } else if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
+            new_channel = (midi_msg->note >= save_get(MODIFY_SPLIT_NOTE))
+                          ? save_get(MODIFY_SPLIT_MIDI_CH2)
+                          : save_get(MODIFY_SPLIT_MIDI_CH1);
         } else {
             new_channel = *send_to_midi_channel;
         }
@@ -198,10 +198,10 @@ static void change_velocity(midi_note *midi_msg) {
     // int16 in case of overflow
     int32_t velocity = midi_msg->velocity;
 
-    if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
-        velocity += save_get(MIDI_MODIFY_VELOCITY_PLUS_MINUS);
-    } else if (save_get(MIDI_MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
-        velocity = save_get(MIDI_MODIFY_VELOCITY_ABSOLUTE);
+    if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
+        velocity += save_get(MODIFY_VEL_PLUS_MINUS);
+    } else if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
+        velocity = save_get(MODIFY_VEL_ABSOLUTE);
     }
 
     // Clamp to 0-127 range
@@ -217,20 +217,20 @@ static void change_velocity(midi_note *midi_msg) {
 void pipeline_midi_modify(midi_note *midi_msg) {
     change_velocity(midi_msg);
 
-    if (save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2) != 0) {
+    if (save_get(MODIFY_SEND_TO_MIDI_CH2) != 0) {
         midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1);
+        uint8_t send_ch_1 = save_get(MODIFY_SEND_TO_MIDI_CH1);
         change_midi_channel(&midi_note_1, &send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
 
         midi_note midi_note_2 = *midi_msg;
-        uint8_t send_ch_2 = save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2);
+        uint8_t send_ch_2 = save_get(MODIFY_SEND_TO_MIDI_CH2);
         change_midi_channel(&midi_note_2, &send_ch_2);
         pipeline_midi_transpose(&midi_note_2);
 
     } else {
         midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = save_get(MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1);
+        uint8_t send_ch_1 = save_get(MODIFY_SEND_TO_MIDI_CH1);
         change_midi_channel(&midi_note_1, &send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
     }
@@ -279,12 +279,12 @@ static uint8_t snap_note_to_scale(uint8_t note, const uint8_t *scale, uint8_t ba
 // Transpose math
 // ---------------------
 static uint8_t midi_transpose_notes(uint8_t note) {
-    uint8_t mode = save_get(MIDI_TRANSPOSE_TRANSPOSE_SCALE) % AMOUNT_OF_MODES;
+    uint8_t mode = save_get(TRANSPOSE_TRANSPOSE_SCALE) % AMOUNT_OF_MODES;
 
     uint8_t scale_intervals[7];
     get_mode_scale(mode, scale_intervals);
 
-    uint8_t base = save_get(MIDI_TRANSPOSE_BASE_NOTE);
+    uint8_t base = save_get(TRANSPOSE_BASE_NOTE);
 
     // Snap note to scale if not in scale
     if (!note_in_scale(note, scale_intervals, base)) {
@@ -310,7 +310,7 @@ static uint8_t midi_transpose_notes(uint8_t note) {
     static const int degree_shifts[10] = {
         -7, -5, -4, -3, -2, 2, 3, 4, 5, 7
     };
-    int shift = degree_shifts[ save_get(MIDI_TRANSPOSE_INTERVAL) ];
+    int shift = degree_shifts[ save_get(TRANSPOSE_INTERVAL) ];
 
     int new_degree = degree + shift;
     int octave_shift = 0;
@@ -340,11 +340,11 @@ static void midi_pitch_shift(midi_note *midi_msg) {
     if (status == 0x90 || status == 0x80) {
         int16_t note = midi_msg->note;
 
-        if (save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) {
+        if (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) {
             note = midi_transpose_notes((uint8_t)note);
         }
-        else if (save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SHIFT) {
-            note += (int16_t)(int32_t)save_get(MIDI_TRANSPOSE_MIDI_SHIFT_VALUE);
+        else if (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SHIFT) {
+            note += (int16_t)(int32_t)save_get(TRANSPOSE_MIDI_SHIFT_VALUE);
         }
 
         if (note < 0)   note = 0;
@@ -358,21 +358,21 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 // Transpose pipeline
 // ---------------------
 void pipeline_midi_transpose(midi_note *midi_msg) {
-    if (save_get(MIDI_TRANSPOSE_CURRENTLY_SENDING) == 0){
+    if (save_get(TRANSPOSE_SENDING) == 0){
         pipeline_final(midi_msg, 3);
         return;
     }
 
-    if (save_get(MIDI_TRANSPOSE_SEND_ORIGINAL) == 1) {
+    if (save_get(TRANSPOSE_SEND_ORIGINAL) == 1) {
         midi_note pre_shift_msg = *midi_msg;
 
-        if (save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) {
-            uint8_t mode = save_get(MIDI_TRANSPOSE_TRANSPOSE_SCALE) % AMOUNT_OF_MODES;
+        if (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) {
+            uint8_t mode = save_get(TRANSPOSE_TRANSPOSE_SCALE) % AMOUNT_OF_MODES;
             uint8_t scale_intervals[7];
             get_mode_scale(mode, scale_intervals);
             pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note,
                                                     scale_intervals,
-                                                    save_get(MIDI_TRANSPOSE_BASE_NOTE));
+                                                    save_get(TRANSPOSE_BASE_NOTE));
         }
 
         pipeline_final(&pre_shift_msg, 3);
@@ -407,7 +407,7 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
     uint8_t note = (length > 1) ? midi_bytes[1] : 0;
 
     // Send to UART(s)
-    switch (save_get(MIDI_MODIFY_SEND_TO_MIDI_OUT)) {
+    switch (save_get(MODIFY_SEND_TO_MIDI_OUT)) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             break;
@@ -419,8 +419,8 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
             HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             break;
         case MIDI_OUT_SPLIT:
-            if (save_get(MIDI_MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
-                if (note < save_get(MIDI_MODIFY_SPLIT_NOTE))
+            if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
+                if (note < save_get(MODIFY_SPLIT_NOTE))
                     HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
                 else
                     HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);

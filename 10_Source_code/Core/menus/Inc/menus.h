@@ -8,6 +8,9 @@
 #ifndef INC_MENUS_H_
 #define INC_MENUS_H_
 
+#define TEXT_(m) ((const char*)(message->m))
+
+
 //midi_tempo
 void screen_update_midi_tempo();
 

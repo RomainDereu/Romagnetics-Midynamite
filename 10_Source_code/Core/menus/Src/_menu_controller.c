@@ -39,51 +39,49 @@ uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 // Controller (from original _menu_controller.c)
 // -------------------------
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
-                                             //wrap,   handler,    handler_arg, group
-    [MIDI_TEMPO_CURRENT_TEMPO]           = { NO_WRAP, update_value,         10, CTRL_G_TEMPO },
-    [MIDI_TEMPO_CURRENTLY_SENDING]       = {   WRAP,  no_update,             0, CTRL_G_TEMPO },
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]        = {   WRAP,  update_value,          1, CTRL_G_TEMPO },
+    //                                wrap     handler             handler_arg   group
+    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO },
+    [TEMPO_CURRENTLY_SENDING]    = {   WRAP,  no_update,                0,      CTRL_TEMPO },
+    [TEMPO_SEND_TO_MIDI_OUT]     = {   WRAP,  update_value,             1,      CTRL_TEMPO },
 
+    [MODIFY_CHANGE_OR_SPLIT]     = {   WRAP,  no_update,                0,      0 },
+    [MODIFY_VELOCITY_TYPE]       = {   WRAP,  no_update,                0,      0 },
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]        = {   WRAP,  no_update,             0, 0 }, // selector only
-    [MIDI_MODIFY_VELOCITY_TYPE]          = {   WRAP,  no_update,             0, 0 }, // selector only
+    [MODIFY_SEND_TO_MIDI_CH1]    = { NO_WRAP, update_value,             1,      CTRL_MODIFY_CHANGE },
+    [MODIFY_SEND_TO_MIDI_CH2]    = { NO_WRAP, update_value,             1,      CTRL_MODIFY_CHANGE },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1] = { NO_WRAP, update_value,          1, CTRL_G_MODIFY_CHANGE },
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2] = { NO_WRAP, update_value,          1, CTRL_G_MODIFY_CHANGE },
+    [MODIFY_SPLIT_MIDI_CH1]      = { NO_WRAP, update_value,             1,      CTRL_MODIFY_SPLIT },
+    [MODIFY_SPLIT_MIDI_CH2]      = { NO_WRAP, update_value,             1,      CTRL_MODIFY_SPLIT },
+    [MODIFY_SPLIT_NOTE]          = { NO_WRAP, update_value,            12,      CTRL_MODIFY_SPLIT },
 
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1]   = { NO_WRAP, update_value,          1, CTRL_G_MODIFY_SPLIT },
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2]   = { NO_WRAP, update_value,          1, CTRL_G_MODIFY_SPLIT },
-    [MIDI_MODIFY_SPLIT_NOTE]             = { NO_WRAP, update_value,         12, CTRL_G_MODIFY_SPLIT },
+    [MODIFY_SEND_TO_MIDI_OUT]    = {   WRAP,  update_value,             1,      CTRL_MODIFY_BOTH },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]       = {   WRAP,  update_value,          1, CTRL_G_MODIFY_BOTH },
+    [MODIFY_VEL_PLUS_MINUS]      = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_CHANGED },
+    [MODIFY_VEL_ABSOLUTE]        = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_FIXED },
 
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]    = { NO_WRAP, update_value,         10, CTRL_G_MODIFY_VEL_CHANGED },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]      = { NO_WRAP, update_value,         10, CTRL_G_MODIFY_VEL_FIXED },
+    [MODIFY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_BOTH },
 
-    [MIDI_MODIFY_CURRENTLY_SENDING]      = {   WRAP,  no_update,             0, CTRL_G_MODIFY_BOTH },
+    [TRANSPOSE_TRANSPOSE_TYPE]   = {   WRAP,  no_update,                0,      0 },
+    [TRANSPOSE_MIDI_SHIFT_VALUE] = { NO_WRAP, update_value,            12,      CTRL_TRANSPOSE_SHIFT },
 
+    [TRANSPOSE_BASE_NOTE]        = { NO_WRAP, update_value,             1,      CTRL_TRANSPOSE_SCALED },
+    [TRANSPOSE_INTERVAL]         = { NO_WRAP, update_value,             1,      CTRL_TRANSPOSE_SCALED },
+    [TRANSPOSE_TRANSPOSE_SCALE]  = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_SCALED },
 
-    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]      = {   WRAP,  no_update,             0, 0 }, // selector only
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]    = { NO_WRAP, update_value,         12, CTRL_G_TRANSPOSE_SHIFT },
+    [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_BOTH },
+    [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
 
-	[MIDI_TRANSPOSE_BASE_NOTE]           = { NO_WRAP, update_value,          1, CTRL_G_TRANSPOSE_SCALED },
-    [MIDI_TRANSPOSE_INTERVAL]            = { NO_WRAP, update_value,          1, CTRL_G_TRANSPOSE_SCALED },
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]     = {   WRAP,  update_value,          1, CTRL_G_TRANSPOSE_SCALED },
+    [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
+    [SETTINGS_SEND_USB]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
+    [SETTINGS_BRIGHTNESS]        = { NO_WRAP, update_contrast,          1,      CTRL_SETTINGS_GLOBAL1 },
 
-	[MIDI_TRANSPOSE_SEND_ORIGINAL]       = {   WRAP,  update_value,          1, CTRL_G_TRANSPOSE_BOTH },
-    [MIDI_TRANSPOSE_CURRENTLY_SENDING]   = {   WRAP,  no_update,             0, 0 },
+    [SETTINGS_MIDI_THRU]         = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
+    [SETTINGS_USB_THRU]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
+    [SETTINGS_CHANNEL_FILTER]    = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
 
-
-    [SETTINGS_START_MENU]                = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL1  },
-    [SETTINGS_SEND_USB]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL1  },
-    [SETTINGS_BRIGHTNESS]                = { NO_WRAP, update_contrast,       1, CTRL_G_SETTINGS_GLOBAL1  },
-
-    [SETTINGS_MIDI_THRU]                 = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
-    [SETTINGS_USB_THRU]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
-    [SETTINGS_CHANNEL_FILTER]            = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
-
-    [SETTINGS_FILTERED_CHANNELS]         = {   WRAP,  update_channel_filter, 1, CTRL_G_SETTINGS_FILTER  }, // 16-bit strip
+    [SETTINGS_FILTERED_CHANNELS] = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
 };
+
 
 typedef struct {
     CtrlActiveList tempo_item_list;
@@ -164,69 +162,69 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 
     switch (requested) {
         case UI_GROUP_TEMPO:
-            mask |= flag_from_id(CTRL_G_TEMPO);
+            mask |= flag_from_id(CTRL_TEMPO);
             break;
 
         case UI_GROUP_MODIFY_BOTH: {
-            mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
+            mask |= flag_from_id(CTRL_MODIFY_BOTH);
 
-            int page = (int)save_get(MIDI_MODIFY_CHANGE_OR_SPLIT);
+            int page = (int)save_get(MODIFY_CHANGE_OR_SPLIT);
             if (page == MIDI_MODIFY_SPLIT) {
-                mask |= flag_from_id(CTRL_G_MODIFY_SPLIT);
+                mask |= flag_from_id(CTRL_MODIFY_SPLIT);
             } else { // default/fallback to CHANGE
-                mask |= flag_from_id(CTRL_G_MODIFY_CHANGE);
+                mask |= flag_from_id(CTRL_MODIFY_CHANGE);
             }
 
-            int vel  = (int)save_get(MIDI_MODIFY_VELOCITY_TYPE);
+            int vel  = (int)save_get(MODIFY_VELOCITY_TYPE);
             if (vel == MIDI_MODIFY_FIXED_VEL) {
-                mask |= flag_from_id(CTRL_G_MODIFY_VEL_FIXED);
+                mask |= flag_from_id(CTRL_MODIFY_VEL_FIXED);
             } else { // default/fallback to CHANGED
-                mask |= flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
+                mask |= flag_from_id(CTRL_MODIFY_VEL_CHANGED);
             }
         } break;
 
         case UI_GROUP_TRANSPOSE_BOTH: {
-            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
-            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
+            mask |= flag_from_id(CTRL_TRANSPOSE_BOTH);
+            int t = (int)save_get(TRANSPOSE_TRANSPOSE_TYPE);
             if (t == MIDI_TRANSPOSE_SHIFT) {
-                mask |= flag_from_id(CTRL_G_TRANSPOSE_SHIFT);
+                mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
             } else { // default/fallback to SCALED
-                mask |= flag_from_id(CTRL_G_TRANSPOSE_SCALED);
+                mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
             }
         } break;
 
         case UI_GROUP_SETTINGS: {
             // Optional: keep ALL for headers/dividers if you use it
-            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);
+            mask |= flag_from_id(CTRL_SETTINGS_ALL);
 
             // Count interactive rows per section (ABOUT has no fields → not counted)
             uint8_t rows_g1 = 0, rows_g2 = 0, rows_f = 0;
             for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
                 const menu_controls_t mt = menu_controls[f];
                 const uint8_t adv = is_bits_item((save_field_t)f) ? 16u : 1u;
-                if      (mt.groups == CTRL_G_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + adv);
-                else if (mt.groups == CTRL_G_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + adv);
-                else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
+                if      (mt.groups == CTRL_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + adv);
+                else if (mt.groups == CTRL_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + adv);
+                else if (mt.groups == CTRL_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
             }
 
             const uint8_t sel = s_menu_selects[UI_SETTINGS_SELECT];
             const uint8_t rows_total = (uint8_t)(rows_g1 + rows_g2 + rows_f);
             // menu_nav_update_select adds +1, so the last index is ABOUT
             if (sel < rows_g1) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
+                mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
             } else if (sel < (uint8_t)(rows_g1 + rows_g2)) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
+                mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
             } else if (sel < rows_total) {
-                mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
+                mask |= flag_from_id(CTRL_SETTINGS_FILTER);
             } else {
-                mask |= flag_from_id(CTRL_G_SETTINGS_ABOUT);  // only when selected
+                mask |= flag_from_id(CTRL_SETTINGS_ABOUT);  // only when selected
             }
         } break;
 
 
 
         default:
-            mask |= flag_from_id(CTRL_G_TEMPO);
+            mask |= flag_from_id(CTRL_TEMPO);
             break;
     }
 
@@ -247,7 +245,7 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
         if ((gm & active_groups) == 0) continue;
 
         // Skip inert rows except ABOUT, which is virtual/visible
-        if (mt.handler == no_update && mt.groups != CTRL_G_SETTINGS_ABOUT) continue;
+        if (mt.handler == no_update && mt.groups != CTRL_SETTINGS_ABOUT) continue;
 
         out->fields_idx[count++] = f;
     }
@@ -264,10 +262,10 @@ static void rebuild_list_for_group(ui_group_t group)
     const ui_group_t root = root_group(group);
 
     const uint32_t mask = (root == UI_GROUP_SETTINGS)
-        ? (  flag_from_id(CTRL_G_SETTINGS_GLOBAL1)
-           | flag_from_id(CTRL_G_SETTINGS_GLOBAL2)
-           | flag_from_id(CTRL_G_SETTINGS_FILTER)
-           | flag_from_id(CTRL_G_SETTINGS_ABOUT))
+        ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
+           | flag_from_id(CTRL_SETTINGS_GLOBAL2)
+           | flag_from_id(CTRL_SETTINGS_FILTER)
+           | flag_from_id(CTRL_SETTINGS_ABOUT))
         :  ctrl_active_groups_from_ui_group(root);
 
     ctrl_build_active_fields(mask, list_for_root(root));
@@ -336,25 +334,25 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 // Replace select_group_for_field_mask(...) with this:
 static inline ui_group_t select_group_for_field_id(uint32_t id) {
     switch (id) {
-        case CTRL_G_TEMPO:     return UI_GROUP_TEMPO;
+        case CTRL_TEMPO:     return UI_GROUP_TEMPO;
 
-        case CTRL_G_MODIFY_CHANGE:
-        case CTRL_G_MODIFY_SPLIT:
-        case CTRL_G_MODIFY_BOTH:
-        case CTRL_G_MODIFY_VEL_CHANGED:
-        case CTRL_G_MODIFY_VEL_FIXED:
+        case CTRL_MODIFY_CHANGE:
+        case CTRL_MODIFY_SPLIT:
+        case CTRL_MODIFY_BOTH:
+        case CTRL_MODIFY_VEL_CHANGED:
+        case CTRL_MODIFY_VEL_FIXED:
             return UI_GROUP_MODIFY_BOTH;
 
-        case CTRL_G_TRANSPOSE_SHIFT:
-        case CTRL_G_TRANSPOSE_SCALED:
-        case CTRL_G_TRANSPOSE_BOTH:
+        case CTRL_TRANSPOSE_SHIFT:
+        case CTRL_TRANSPOSE_SCALED:
+        case CTRL_TRANSPOSE_BOTH:
             return UI_GROUP_TRANSPOSE_BOTH;
 
-        case CTRL_G_SETTINGS_GLOBAL1:
-        case CTRL_G_SETTINGS_GLOBAL2:
-        case CTRL_G_SETTINGS_FILTER:
-        case CTRL_G_SETTINGS_ALL:
-        case CTRL_G_SETTINGS_ABOUT:
+        case CTRL_SETTINGS_GLOBAL1:
+        case CTRL_SETTINGS_GLOBAL2:
+        case CTRL_SETTINGS_FILTER:
+        case CTRL_SETTINGS_ALL:
+        case CTRL_SETTINGS_ABOUT:
             return UI_GROUP_SETTINGS;
 
 
@@ -452,13 +450,13 @@ static inline save_field_t selector_for_press(const NavSel *s)
 
     switch (s->root) {
         case UI_GROUP_TRANSPOSE_BOTH:
-            return MIDI_TRANSPOSE_TRANSPOSE_TYPE;
+            return TRANSPOSE_TRANSPOSE_TYPE;
 
         case UI_GROUP_MODIFY_BOTH:
             // Velocity subpage toggles by its own selector; otherwise CHANGE/SPLIT
-            if (s->gid == CTRL_G_MODIFY_VEL_CHANGED || s->gid == CTRL_G_MODIFY_VEL_FIXED)
-                return MIDI_MODIFY_VELOCITY_TYPE;
-            return MIDI_MODIFY_CHANGE_OR_SPLIT;
+            if (s->gid == CTRL_MODIFY_VEL_CHANGED || s->gid == CTRL_MODIFY_VEL_FIXED)
+                return MODIFY_VELOCITY_TYPE;
+            return MODIFY_CHANGE_OR_SPLIT;
 
         default:
             return SAVE_FIELD_INVALID;
@@ -626,7 +624,7 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
 // ---------------------
 void filter_controller(void) {
     const uint32_t active = ui_active_groups();
-    if ((active & (1u << (CTRL_G_SETTINGS_FILTER - 1))) == 0) return;
+    if ((active & (1u << (CTRL_SETTINGS_FILTER - 1))) == 0) return;
 
     const uint32_t mask     = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
     const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
@@ -683,12 +681,12 @@ void update_menu(menu_list_t menu)
 
     switch (menu) {
         case MIDI_TEMPO: {
-            const uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
+            const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
             if (bpm) {
-                save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
+                save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
             } else {
                 // Defensive: avoid div-by-zero if limits ever change
-                save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 0);
+                save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 0);
             }
         } break;
 

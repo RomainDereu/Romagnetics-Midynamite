@@ -14,49 +14,48 @@
 
 // Expose for tests
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
-		                                //min,   max,  default
-    [MIDI_TEMPO_CURRENT_TEMPO]         = {  20,   300, 120 },
-    [MIDI_TEMPO_TEMPO_CLICK_RATE]      = {   1, 50000,  24 },
-    [MIDI_TEMPO_CURRENTLY_SENDING]     = {   0,     1,   0 },
-    [MIDI_TEMPO_SEND_TO_MIDI_OUT]      = {   0,     2,   0 },
+    //                                   min         max         default
+    [TEMPO_CURRENT_TEMPO]        = {     20,        300,        120 },
+    [TEMPO_TEMPO_CLICK_RATE]     = {      1,      50000,         24 },
+    [TEMPO_CURRENTLY_SENDING]    = {      0,          1,          0 },
+    [TEMPO_SEND_TO_MIDI_OUT]     = {      0,          2,          0 },
 
-    [MIDI_MODIFY_CHANGE_OR_SPLIT]      = {   0,     1,   1 },
-    [MIDI_MODIFY_VELOCITY_TYPE]        = {   0,     1,   0 },
+    [MODIFY_CHANGE_OR_SPLIT]     = {      0,          1,          1 },
+    [MODIFY_VELOCITY_TYPE]       = {      0,          1,          0 },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_1] = { 1,   16,   1 },
-    [MIDI_MODIFY_SEND_TO_MIDI_CHANNEL_2] = { 0,   16,   0 },
+    [MODIFY_SEND_TO_MIDI_CH1]    = {      1,         16,          1 },
+    [MODIFY_SEND_TO_MIDI_CH2]    = {      0,         16,          0 },
 
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1] = {  1,    16,   1 },
-    [MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2] = {  1,    16,   2 },
-    [MIDI_MODIFY_SPLIT_NOTE]           = {  0,   127,  60 },
+    [MODIFY_SPLIT_MIDI_CH1]      = {      1,         16,          1 },
+    [MODIFY_SPLIT_MIDI_CH2]      = {      1,         16,          2 },
+    [MODIFY_SPLIT_NOTE]          = {      0,        127,         60 },
 
-    [MIDI_MODIFY_SEND_TO_MIDI_OUT]     = {  0,     2,   0 },
+    [MODIFY_SEND_TO_MIDI_OUT]    = {      0,          2,          0 },
 
-    [MIDI_MODIFY_VELOCITY_PLUS_MINUS]  = { -80, 80,   0 },
-    [MIDI_MODIFY_VELOCITY_ABSOLUTE]    = {   0,  127,  64 },
+    [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
+    [MODIFY_VEL_ABSOLUTE]        = {      0,        127,         64 },
 
-    [MIDI_MODIFY_CURRENTLY_SENDING]    = {   0,     1,   0 },
+    [MODIFY_SENDING]             = {      0,          1,          0 },
 
-    [MIDI_TRANSPOSE_TRANSPOSE_TYPE]    = {   0,     1,   0 },
-    [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]  = { -36,  36,  0 },
-    [MIDI_TRANSPOSE_BASE_NOTE]         = {   0,    11,  0 },
-    [MIDI_TRANSPOSE_INTERVAL]          = {   0,     9,  0 },
-    [MIDI_TRANSPOSE_TRANSPOSE_SCALE]   = {   0,     6,  0 },
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]     = {   0,     1,  0 },
-    [MIDI_TRANSPOSE_CURRENTLY_SENDING] = {   0,     1,  0 },
+    [TRANSPOSE_TRANSPOSE_TYPE]   = {      0,          1,          0 },
+    [TRANSPOSE_MIDI_SHIFT_VALUE] = {    -36,         36,          0 },
+    [TRANSPOSE_BASE_NOTE]        = {      0,         11,          0 },
+    [TRANSPOSE_INTERVAL]         = {      0,          9,          0 },
+    [TRANSPOSE_TRANSPOSE_SCALE]  = {      0,          6,          0 },
+    [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
+    [TRANSPOSE_SENDING]          = {      0,          1,          0 },
 
-    [SETTINGS_START_MENU]              = {   0,     3,  0 },
-    [SETTINGS_SEND_USB]                = {   0,     1,  0 },
-    [SETTINGS_BRIGHTNESS]              = {   0,     9,  6 },
-    [SETTINGS_MIDI_THRU]               = {   0,     1,  0 },
-    [SETTINGS_USB_THRU]                = {   0,     1,  0 },
-    [SETTINGS_CHANNEL_FILTER]          = {   0,     1,  0 },
-    [SETTINGS_FILTERED_CHANNELS]       = {   0, 0x0000FFFF, 0 },
-    [SETTINGS_ABOUT]                   = {   0,     0,  0 },
+    [SETTINGS_START_MENU]        = {      0,          3,          0 },
+    [SETTINGS_SEND_USB]          = {      0,          1,          0 },
+    [SETTINGS_BRIGHTNESS]        = {      0,          9,          6 },
+    [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
+    [SETTINGS_USB_THRU]          = {      0,          1,          0 },
+    [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },
+    [SETTINGS_FILTERED_CHANNELS] = {      0,  0x0000FFFF,          0 },
+    [SETTINGS_ABOUT]             = {      0,          0,          0 },
 
-    [SAVE_DATA_VALIDITY]               = {   0, 0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },
+    [SAVE_DATA_VALIDITY]         = {      0,  0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },
 };
-
 
 // ---------------------
 // Runtime save copy

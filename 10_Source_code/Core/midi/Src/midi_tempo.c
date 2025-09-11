@@ -29,10 +29,10 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
 	uint8_t clock_stop  = 0xfC;
 
 	static UART_HandleTypeDef *UART_list_tempo[2];
-	uint8_t send_out_to = save_get(MIDI_TEMPO_SEND_TO_MIDI_OUT);
+	uint8_t send_out_to = save_get(TEMPO_SEND_TO_MIDI_OUT);
 	list_of_UART_to_send_to(send_out_to, UART_list_tempo);
 
-	uint8_t clock_sending = save_get(MIDI_TEMPO_CURRENTLY_SENDING);
+	uint8_t clock_sending = save_get(TEMPO_CURRENTLY_SENDING);
 
     // Stop clock
     if (clock_sending == 0) {

@@ -125,30 +125,25 @@ typedef struct {
 
     // Note names
     const char *midi_note_names[128];
-    const char *numbers_neg80_to_pos80[161];
-    const char *numbers_0_to_300[301];
+    const char *neg_pos_80[161];
+    const char *zer_to_300[301];
     const char *twelve_notes_names[12];
 
     const char *zero_to_sixteen[17];
     const char *one_to_sixteen_one_char[17];
 
-
-
-    // All selectable dropdowns and grouped options
-    struct {
-        const char *change_split[2];
-        const char *change_fixed[2];
-        const char *midi_outs[3];
-        const char *midi_outs_split[4];
-        const char *transpose_modes[2];
-        const char *scales[7];
-        const char *intervals[10];
-        const char *no_yes[2];
-        const char *off_on[2];
-        const char *usb_receive_send[2];
-        const char *midi_channels[17];
-        const char *menu_list[4];
-    } choices;
+    const char *change_split[2];
+    const char *change_fixed[2];
+    const char *midi_outs[3];
+    const char *midi_outs_split[4];
+    const char *transpose_modes[2];
+    const char *scales[7];
+    const char *intervals[10];
+    const char *no_yes[2];
+    const char *off_on[2];
+    const char *usb_receive_send[2];
+    const char *midi_channels[17];
+    const char *menu_list[4];
 
 } Message;
 
