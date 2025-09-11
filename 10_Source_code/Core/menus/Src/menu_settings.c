@@ -47,27 +47,20 @@ void screen_update_settings(void)
         { UI_ELEM_ITEM, SETTINGS_CHANNEL_FILTER, (const char*)message->choices.off_on,        UI_FONT_6x8, 80,            LINE_3_VERT, CTRL_G_SETTINGS_GLOBAL2 },
 
         // -------- ABOUT (text-only) --------
+        { UI_ELEM_TEXT, 0, message->X_equals_ignore_channel, UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_SETTINGS_FILTER },
+
+
+        // -------- ABOUT (text-only) --------
         { UI_ELEM_TEXT, 0, message->about_brand,   UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_SETTINGS_ABOUT },
         { UI_ELEM_TEXT, 0, message->about_product, UI_FONT_6x8, TEXT_LEFT_START, LINE_2_VERT, CTRL_G_SETTINGS_ABOUT },
         { UI_ELEM_TEXT, 0, message->about_version, UI_FONT_6x8, TEXT_LEFT_START, LINE_3_VERT, CTRL_G_SETTINGS_ABOUT },
+
+
+
     };
 
     // -------- FILTER GRID (custom draw, but only when its group is active) --------
-    if (active & (1u << (CTRL_G_SETTINGS_FILTER - 1))) {
-        write_68(message->X_equals_ignore_channel, TEXT_LEFT_START, LINE_1_VERT);
-
-        const uint32_t mask = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
-        const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
-        const uint8_t  sel = menu_nav_get_select(SETTINGS);
-
-        for (uint8_t i = 0; i < 16; i++) {
-            const char *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];
-            const uint8_t x = (uint8_t)(5 + 10 * (i % 8));
-            const uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
-            const uint8_t underline = (uint8_t)(sel == (base_idx + i));
-            write_underline_68_2(label, x, y, underline);
-        }
-    }
+    filter_controller();
 
     // Footer (can be CTRL_G_SETTINGS_BOTH if you prefer to gate it too)
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);

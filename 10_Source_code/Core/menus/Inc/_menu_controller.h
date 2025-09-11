@@ -12,7 +12,7 @@
 #include "memory_main.h"
 
 // ---------------------
-// Menu list
+// Menu list (page selectors)
 // ---------------------
 typedef enum {
     MIDI_TEMPO = 0,
@@ -30,20 +30,19 @@ typedef enum {
 
 #define UI_SELECT_COUNT AMOUNT_OF_MENUS
 
-
 // ---------------------
-// UI state
+// UI state fields (not page selects)
 // ---------------------
 #define UI_STATE_BUSY 0xFF
 
 typedef enum {
-    UI_CURRENT_MENU,
+    UI_CURRENT_MENU = 0,
     UI_OLD_MENU,
     UI_STATE_FIELD_COUNT
 } ui_state_field_t;
 
 // ---------------------
-// UI submenu id
+// UI submenu ids
 // ---------------------
 typedef enum {
     UI_GROUP_TEMPO = 0,
@@ -64,9 +63,6 @@ typedef enum {
     UI_GROUP_NONE = 0xFF
 } ui_group_t;
 
-
-
-
 // ---------------------
 // Modify ops
 // ---------------------
@@ -82,7 +78,7 @@ typedef enum {
 extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 
 // ---------------------
-// Wrapping options
+// Wrapping
 // ---------------------
 #define NO_WRAP  0
 #define WRAP     1
@@ -102,12 +98,12 @@ typedef struct {
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
 // ---------------------
-// Controller groups (bit flags)
+// Controller groups (bit IDs: 1..31)
 // ---------------------
 typedef enum {
     CTRL_G_TEMPO = 1,
 
-	CTRL_G_MODIFY_CHANGE,
+    CTRL_G_MODIFY_CHANGE,
     CTRL_G_MODIFY_SPLIT,
     CTRL_G_MODIFY_BOTH,
     CTRL_G_MODIFY_VEL_CHANGED,
@@ -138,21 +134,21 @@ typedef struct {
 } CtrlActiveList;
 
 // ---------------------
-// UI API
+// Public API
 // ---------------------
+void     update_menu(menu_list_t menu);
 
-void update_menu(menu_list_t menu);
-
-uint8_t ui_is_field_selected(save_field_t f);
+uint8_t  ui_is_field_selected(save_field_t f);
 uint32_t ui_active_groups(void);
 
+void     save_mark_all_changed(void); // used by memory_flash & tests
 
-void save_mark_all_changed(void); //used by memory_flash & tests
+uint8_t  menu_nav_get_select(menu_list_t field); // current row in a page
 
+uint8_t  ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t  ui_state_get(ui_state_field_t field);
 
-uint8_t menu_nav_get_select(menu_list_t field); //Settings toggle
-
-uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
-uint8_t ui_state_get(ui_state_field_t field);
+// Draw the 16-channel filter UI when the FILTER section is active
+void     filter_controller(void);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
