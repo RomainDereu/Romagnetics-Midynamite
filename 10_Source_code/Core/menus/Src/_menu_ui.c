@@ -114,8 +114,7 @@ void menu_ui_render(const ui_element *elems, size_t count) {
                 break;
         }
     }
-
-
+    screen_driver_UpdateScreen();
 }
 
 
@@ -136,14 +135,4 @@ void menu_ui_draw_title(const char *title) {
     menu_display(title);
 }
 
-
-void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel){
-    for (uint8_t i = 0; i < 16; i++) {
-		const char  *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];
-		const uint8_t x    = (uint8_t)(5 + 10 * (i % 8));
-		const uint8_t y    = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
-		const uint8_t ul   = (uint8_t)(sel == (uint8_t)(base_idx + i));
-		write_underline_68_2(label, x, y, ul);
-    }
-}
 
