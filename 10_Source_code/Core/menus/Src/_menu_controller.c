@@ -48,6 +48,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [MIDI_TEMPO_CURRENTLY_SENDING]       = {   WRAP,  no_update,             0, CTRL_G_TEMPO },
     [MIDI_TEMPO_SEND_TO_MIDI_OUT]        = {   WRAP,  update_value,          1, CTRL_G_TEMPO },
 
+
     [MIDI_MODIFY_CHANGE_OR_SPLIT]        = {   WRAP,  no_update,             0, 0 }, // selector only
     [MIDI_MODIFY_VELOCITY_TYPE]          = {   WRAP,  no_update,             0, 0 }, // selector only
 
@@ -65,21 +66,27 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     [MIDI_MODIFY_CURRENTLY_SENDING]      = {   WRAP,  no_update,             0, CTRL_G_MODIFY_BOTH },
 
+
     [MIDI_TRANSPOSE_TRANSPOSE_TYPE]      = {   WRAP,  no_update,             0, 0 }, // selector only
     [MIDI_TRANSPOSE_MIDI_SHIFT_VALUE]    = { NO_WRAP, update_value,         12, CTRL_G_TRANSPOSE_SHIFT },
-    [MIDI_TRANSPOSE_BASE_NOTE]           = { NO_WRAP, update_value,          1, CTRL_G_TRANSPOSE_SCALED },
+
+	[MIDI_TRANSPOSE_BASE_NOTE]           = { NO_WRAP, update_value,          1, CTRL_G_TRANSPOSE_SCALED },
     [MIDI_TRANSPOSE_INTERVAL]            = { NO_WRAP, update_value,          1, CTRL_G_TRANSPOSE_SCALED },
     [MIDI_TRANSPOSE_TRANSPOSE_SCALE]     = {   WRAP,  update_value,          1, CTRL_G_TRANSPOSE_SCALED },
-    [MIDI_TRANSPOSE_SEND_ORIGINAL]       = {   WRAP,  update_value,          1, CTRL_G_TRANSPOSE_BOTH },
+
+	[MIDI_TRANSPOSE_SEND_ORIGINAL]       = {   WRAP,  update_value,          1, CTRL_G_TRANSPOSE_BOTH },
     [MIDI_TRANSPOSE_CURRENTLY_SENDING]   = {   WRAP,  no_update,             0, 0 },
 
-    [SETTINGS_START_MENU]                = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
-    [SETTINGS_SEND_USB]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
-    [SETTINGS_BRIGHTNESS]                = { NO_WRAP, update_contrast,       1, CTRL_G_SETTINGS },
-    [SETTINGS_MIDI_THRU]                 = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
-    [SETTINGS_USB_THRU]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
-    [SETTINGS_CHANNEL_FILTER]            = {   WRAP,  update_value,          1, CTRL_G_SETTINGS },
-    [SETTINGS_FILTERED_CHANNELS]         = {   WRAP,  update_channel_filter, 1, CTRL_G_SETTINGS }, // 16-bit strip
+
+    [SETTINGS_START_MENU]                = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL1  },
+    [SETTINGS_SEND_USB]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL1  },
+    [SETTINGS_BRIGHTNESS]                = { NO_WRAP, update_contrast,       1, CTRL_G_SETTINGS_GLOBAL1  },
+
+    [SETTINGS_MIDI_THRU]                 = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
+    [SETTINGS_USB_THRU]                  = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
+    [SETTINGS_CHANNEL_FILTER]            = {   WRAP,  update_value,          1, CTRL_G_SETTINGS_GLOBAL2  },
+
+    [SETTINGS_FILTERED_CHANNELS]         = {   WRAP,  update_channel_filter, 1, CTRL_G_SETTINGS_FILTER  }, // 16-bit strip
 };
 
 typedef struct {
@@ -94,16 +101,11 @@ static MenuActiveLists s_menu_lists;
 
 static ui_group_t root_group(ui_group_t g) {
     switch (g) {
-        case UI_GROUP_TEMPO:      return UI_GROUP_TEMPO;
-        case UI_GROUP_SETTINGS:   return UI_GROUP_SETTINGS;
+        case UI_GROUP_TEMPO:
+            return UI_GROUP_TEMPO;
 
-        case UI_GROUP_MODIFY:     return UI_GROUP_MODIFY_BOTH;  // <— add this
-
-        case UI_GROUP_TRANSPOSE_SHIFT:
-        case UI_GROUP_TRANSPOSE_SCALED:
-        case UI_GROUP_TRANSPOSE_BOTH:
-            return UI_GROUP_TRANSPOSE_BOTH;
-
+        // Modify: any sub-group maps to BOTH
+        case UI_GROUP_MODIFY:
         case UI_GROUP_MODIFY_CHANGE:
         case UI_GROUP_MODIFY_SPLIT:
         case UI_GROUP_MODIFY_BOTH:
@@ -111,9 +113,20 @@ static ui_group_t root_group(ui_group_t g) {
         case UI_GROUP_MODIFY_VEL_FIXED:
             return UI_GROUP_MODIFY_BOTH;
 
-        default: return UI_GROUP_TEMPO;
+		// Transpose: any sub-group maps to BOTH
+		case UI_GROUP_TRANSPOSE_SHIFT:
+		case UI_GROUP_TRANSPOSE_SCALED:
+		case UI_GROUP_TRANSPOSE_BOTH:
+			return UI_GROUP_TRANSPOSE_BOTH;
+
+        case UI_GROUP_SETTINGS:
+            return UI_GROUP_SETTINGS;
+
+        default:
+            return UI_GROUP_TEMPO;
     }
 }
+
 
 // Map a select field to its display flag (for notify)
 static inline uint32_t display_flag_from_field(ui_state_field_t field) {
@@ -149,18 +162,6 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             mask |= flag_from_id(CTRL_G_TEMPO);
             break;
 
-        case UI_GROUP_SETTINGS:
-            mask |= flag_from_id(CTRL_G_SETTINGS);
-            break;
-
-        case UI_GROUP_TRANSPOSE_BOTH: {
-            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
-            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
-            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
-                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
-                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
-        } break;
-
         case UI_GROUP_MODIFY_BOTH: {
             mask |= flag_from_id(CTRL_G_MODIFY_BOTH);
 
@@ -174,6 +175,34 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
                   ? flag_from_id(CTRL_G_MODIFY_VEL_FIXED)
                   : flag_from_id(CTRL_G_MODIFY_VEL_CHANGED);
         } break;
+
+
+        case UI_GROUP_TRANSPOSE_BOTH: {
+            mask |= flag_from_id(CTRL_G_TRANSPOSE_BOTH);
+            int t = (int)save_get(MIDI_TRANSPOSE_TRANSPOSE_TYPE);
+            mask |= (t <= MIDI_TRANSPOSE_SHIFT)
+                  ? flag_from_id(CTRL_G_TRANSPOSE_SHIFT)
+                  : flag_from_id(CTRL_G_TRANSPOSE_SCALED);
+        } break;
+
+
+
+        case UI_GROUP_SETTINGS: {
+            mask |= flag_from_id(CTRL_G_SETTINGS_ALL);
+
+            const uint8_t sel = menu_nav_get_select(UI_SETTINGS_SELECT);
+
+            if (sel <= 2) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL1);
+            } else if (sel <= 5) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_GLOBAL2);
+            } else if (sel <= 21) {
+                mask |= flag_from_id(CTRL_G_SETTINGS_FILTER);
+            } else {
+                mask |= flag_from_id(CTRL_G_SETTINGS_ABOUT);
+            }
+        } break;
+
 
         default:
             mask |= flag_from_id(CTRL_G_TEMPO);
@@ -274,7 +303,6 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 static inline ui_group_t select_group_for_field_id(uint32_t id) {
     switch (id) {
         case CTRL_G_TEMPO:     return UI_GROUP_TEMPO;
-        case CTRL_G_SETTINGS:  return UI_GROUP_SETTINGS;
 
         case CTRL_G_TRANSPOSE_SHIFT:
         case CTRL_G_TRANSPOSE_SCALED:
@@ -287,6 +315,14 @@ static inline ui_group_t select_group_for_field_id(uint32_t id) {
         case CTRL_G_MODIFY_VEL_CHANGED:
         case CTRL_G_MODIFY_VEL_FIXED:
             return UI_GROUP_MODIFY_BOTH;
+
+        case CTRL_G_SETTINGS_GLOBAL1:
+        case CTRL_G_SETTINGS_GLOBAL2:
+        case CTRL_G_SETTINGS_FILTER:
+        case CTRL_G_SETTINGS_ALL:
+        case CTRL_G_SETTINGS_ABOUT:
+            return UI_GROUP_SETTINGS;
+
 
         default:
             return UI_GROUP_TEMPO;
@@ -420,10 +456,6 @@ static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 }
 
 
-
-
-// End using only the field (reads current internal select)
-// End: toggle current, commit selection, and notify display if anything changed
 uint8_t menu_nav_end_auto(ui_state_field_t field) {
     const ui_group_t g = group_from_select_field(field);
     const uint8_t sel = menu_nav_get_select(field);
@@ -436,17 +468,6 @@ uint8_t menu_nav_end_auto(ui_state_field_t field) {
     }
     return changed;
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 // -------------------------

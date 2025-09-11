@@ -36,6 +36,7 @@ typedef struct {
     ui_font_t font;
     int16_t x;
     int16_t y;
+    uint8_t ctrl_group_id;
 } ui_element;
 
 

@@ -30,20 +30,21 @@ void screen_update_midi_tempo(void)
     screen_driver_Fill(Black);
     menu_display(message->send_midi_tempo);
 
+    // static decorations (not group-gated; always OK)
     screen_driver_Line(64, 10, 64, 64, White);
-	screen_driver_Line(0, 40, 64, 40, White);
+    screen_driver_Line(0, 40, 64, 40, White);
 
+    // keep selection/active mask fresh for this frame
     menu_nav_begin_and_update(UI_MIDI_TEMPO_SELECT);
 
-	ui_element elems[] = {
-	    { UI_ELEM_ITEM, MIDI_TEMPO_CURRENT_TEMPO    , (const char*)message->numbers_0_to_300 , UI_FONT_16x24,  80            , 20 },
-	    { UI_ELEM_TEXT  , 0                         , message->bpm                           , UI_FONT_6x8  ,  80            , 48 },
-	    { UI_ELEM_TEXT  , 0                         , message->target                        , UI_FONT_6x8  ,  TEXT_LEFT_START, 15 },
-	    { UI_ELEM_ITEM, MIDI_TEMPO_SEND_TO_MIDI_OUT , (const char*)message->choices.midi_outs, UI_FONT_6x8  ,  TEXT_LEFT_START, 25 },
-	    { UI_ELEM_ITEM, MIDI_TEMPO_CURRENTLY_SENDING, (const char*)message->choices.off_on   , UI_FONT_11x18,  15            , 42  },
-	};
-
-
+    ui_element elems[] = {
+        //                type        save_item                     text                                   font          x               y    ctrl_group_id
+        { UI_ELEM_ITEM ,  MIDI_TEMPO_CURRENT_TEMPO,     (const char*)message->numbers_0_to_300,           UI_FONT_16x24,  80,             20,  CTRL_G_TEMPO },
+        { UI_ELEM_TEXT ,  0,                           message->bpm,                                     UI_FONT_6x8,    80,             48,  CTRL_G_TEMPO },
+        { UI_ELEM_TEXT ,  0,                           message->target,                                  UI_FONT_6x8,    TEXT_LEFT_START, 15,  CTRL_G_TEMPO },
+        { UI_ELEM_ITEM ,  MIDI_TEMPO_SEND_TO_MIDI_OUT, (const char*)message->choices.midi_outs,          UI_FONT_6x8,    TEXT_LEFT_START, 25,  CTRL_G_TEMPO },
+        { UI_ELEM_ITEM ,  MIDI_TEMPO_CURRENTLY_SENDING,(const char*)message->choices.off_on,             UI_FONT_11x18,  15,             42,  CTRL_G_TEMPO },
+    };
 
     menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
 

@@ -67,26 +67,43 @@ static inline void draw_item_row(const ui_element *e)
 }
 
 
+static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_groups_mask)
+{
+    if (e->ctrl_group_id == 0) return 1;
+    uint8_t id = e->ctrl_group_id;
+    if (id < 1 || id > 31) return 0;
+    uint32_t bit = (1u << (id - 1));
+    return (active_groups_mask & bit) ? 1u : 0u;
+}
+
 
 void menu_ui_render(const ui_element *elems, size_t count) {
     if (!elems || count == 0) return;
 
+    // Ask controller which groups are active this frame
+    const uint32_t active = ui_active_groups();
+
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
+
+        // New: skip elements not in the active groups
+        if (!elem_is_visible(e, active)) continue;
+
         switch (e->type) {
             case UI_ELEM_TEXT:
                 draw_text(e->text, e->x, e->y, e->font);
                 break;
 
             case UI_ELEM_ITEM:
-                // Arrays you pass are already mode-filtered; just draw.
                 draw_item_row(e);
                 break;
 
-            default: break;
+            default:
+                break;
         }
     }
 }
+
 
 
 void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
