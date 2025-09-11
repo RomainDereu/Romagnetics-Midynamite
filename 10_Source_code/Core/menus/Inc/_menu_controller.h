@@ -143,29 +143,14 @@ typedef struct {
 
 void update_menu(menu_list_t menu);
 
-void select_press_menu_change(menu_list_t sel_field);
-
 uint8_t ui_is_field_selected(save_field_t f);
-
 uint32_t ui_active_groups(void);
 
 
-void menu_nav_begin_and_update(menu_list_t field);
-uint8_t menu_nav_end_auto(menu_list_t field);
-
-void save_mark_all_changed(void);
-
-uint8_t build_select_states(ui_group_t group,
-                            uint8_t current_select,
-                            uint8_t *states,
-                            uint8_t states_cap);
+void save_mark_all_changed(void); //used by memory_flash & tests
 
 
-uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2);
-
-void    menu_nav_reset(menu_list_t field, uint8_t value);
-
-uint8_t menu_nav_get_select(menu_list_t field);
+uint8_t menu_nav_get_select(menu_list_t field); //Settings toggle
 
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t ui_state_get(ui_state_field_t field);
