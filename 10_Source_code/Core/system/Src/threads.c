@@ -121,10 +121,10 @@ static void MediumTasksThread(void *argument)
     }
 
     switch (current_menu) {
-      case MIDI_TEMPO:     update_menu(MIDI_TEMPO);;    break;
-      case MIDI_MODIFY:    update_menu(MIDI_MODIFY);    break;
-      case MIDI_TRANSPOSE: update_menu(MIDI_TRANSPOSE); break;
-      case SETTINGS:       update_menu(SETTINGS);       break;
+      case MIDI_TEMPO:     update_menu(UI_MIDI_TEMPO_SELECT);;    break;
+      case MIDI_MODIFY:    update_menu(UI_MIDI_MODIFY_SELECT);    break;
+      case MIDI_TRANSPOSE: update_menu(UI_MIDI_TRANSPOSE_SELECT); break;
+      case SETTINGS:       update_menu(UI_SETTINGS_SELECT);       break;
       default: break;
     }
 

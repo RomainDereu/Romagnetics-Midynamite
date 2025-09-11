@@ -23,8 +23,8 @@ static volatile uint8_t ui_state_busy = 0;
 static ui_state_t ui_state = {0};
 
 // Persisted select per menu page
-static uint8_t s_menu_selects[UI_SELECT_COUNT] = {0};
-static uint8_t s_prev_selects[UI_SELECT_COUNT] = {0};
+static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
+static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
 
 // Per-frame list of active fields (indices)
 static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
@@ -96,85 +96,18 @@ typedef struct {
 
 static MenuActiveLists s_menu_lists;
 
-static void select_press_menu_change(menu_list_t sel_field) {
-    const NavSel s   = nav_selection(sel_field);
-    const save_field_t tgt = selector_for_press(&s);
-    if (tgt == SAVE_FIELD_INVALID) return;
-    save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
-    s_menu_selects[sel_field] = 0;
-    rebuild_list_for_group(group_from_select_field(sel_field));
-}
-
-static void menu_nav_begin(ui_group_t group)
-{
-    s_active_count = 0;
-
-    // remember root for this page/frame
-    s_current_root_group = root_group(group);
-
-    rebuild_list_for_group(group);
-    const CtrlActiveList* list = get_list_for_group(group);
-    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
-        s_active_list[i] = list->fields_idx[i];
-    }
-    s_active_count = list->count;
-}
-
-static void menu_nav_begin_and_update(menu_list_t field) {
-    ui_group_t g = group_from_select_field(field);
-    menu_nav_begin(g);
-    menu_nav_update_select(field, g);
-}
-
-static uint8_t menu_nav_end_auto(menu_list_t field) {
-    toggle_selected_row(field);
-
-    const uint8_t sel = menu_nav_get_select(field);
-    const uint8_t changed = has_menu_changed(field, sel);
-
-    if (changed) {
-        threads_display_notify(display_flag_from_field(field));
-    }
-    return changed;
-}
-
-static uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                           uint16_t pin1,
-                           uint16_t pin2)
-{
-    static uint8_t prev_state = 1;
-    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
-
-    // detect a fresh press of pin1 while pin2 is held
-    if (s1 == 0 && prev_state == 1 && s2 == 1) {
-        osDelay(100);
-        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
-            HAL_GPIO_ReadPin(port, pin2) == 1)
-        {
-            prev_state = 0;
-            return 1;
-        }
-    }
-
-    prev_state = s1;
-    return 0;
-}
-
-
-
 
 void update_menu(menu_list_t menu)
 {
-    menu_list_t field;
+    ui_state_field_t field;
 
     // Pick the UI_* select directly
     switch (menu) {
-        case MIDI_TEMPO:     field = MIDI_TEMPO;     break;
-        case MIDI_MODIFY:    field = MIDI_MODIFY;    break;
-        case MIDI_TRANSPOSE: field = MIDI_TRANSPOSE; break;
-        case SETTINGS:       field = SETTINGS;       break;
-        default:             field = MIDI_TEMPO;     break;
+        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
+        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
+        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
+        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
+        default:             field = UI_MIDI_TEMPO_SELECT;     break;
     }
 
     menu_nav_begin_and_update(field);
@@ -235,12 +168,12 @@ static ui_group_t root_group(ui_group_t g) {
 
 
 // Map a select field to its display flag (for notify)
-static inline uint32_t display_flag_from_field(menu_list_t field) {
+static inline uint32_t display_flag_from_field(ui_state_field_t field) {
     switch (field) {
-        case MIDI_TEMPO:     return FLAG_TEMPO;
-        case MIDI_MODIFY:    return FLAG_MODIFY;
-        case MIDI_TRANSPOSE: return FLAG_TRANSPOSE;
-        case SETTINGS:       return FLAG_SETTINGS;
+        case UI_MIDI_TEMPO_SELECT:     return FLAG_TEMPO;
+        case UI_MIDI_MODIFY_SELECT:    return FLAG_MODIFY;
+        case UI_MIDI_TRANSPOSE_SELECT: return FLAG_TRANSPOSE;
+        case UI_SETTINGS_SELECT:       return FLAG_SETTINGS;
         default:                       return FLAG_TEMPO;
     }
 }
@@ -254,6 +187,9 @@ static CtrlActiveList* list_for_root(ui_group_t root) {
         default:                        return &s_menu_lists.tempo_item_list;
     }
 }
+
+
+
 
 
 
@@ -318,7 +254,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
                 else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
             }
 
-            const uint8_t sel = s_menu_selects[SETTINGS];
+            const uint8_t sel = s_menu_selects[UI_SETTINGS_SELECT];
             const uint8_t rows_total = (uint8_t)(rows_g1 + rows_g2 + rows_f);
             // menu_nav_update_select adds +1, so the last index is ABOUT
             if (sel < rows_g1) {
@@ -387,12 +323,12 @@ static void rebuild_list_for_group(ui_group_t group) {
 
 
 // Map a select field to its root UI group (so callers don't pass group explicitly)
-static inline ui_group_t group_from_select_field(menu_list_t field) {
+static inline ui_group_t group_from_select_field(ui_state_field_t field) {
     switch (field) {
-        case MIDI_TEMPO:     return UI_GROUP_TEMPO;
-        case MIDI_MODIFY:    return UI_GROUP_MODIFY_BOTH;
-        case MIDI_TRANSPOSE: return UI_GROUP_TRANSPOSE_BOTH;
-        case SETTINGS:       return UI_GROUP_SETTINGS;
+        case UI_MIDI_TEMPO_SELECT:     return UI_GROUP_TEMPO;
+        case UI_MIDI_MODIFY_SELECT:    return UI_GROUP_MODIFY_BOTH;
+        case UI_MIDI_TRANSPOSE_SELECT: return UI_GROUP_TRANSPOSE_BOTH;
+        case UI_SETTINGS_SELECT:       return UI_GROUP_SETTINGS;
         default:                       return UI_GROUP_TEMPO;
     }
 }
@@ -415,7 +351,7 @@ static uint8_t ctrl_row_count(const CtrlActiveList *list)
 }
 
 
-static void menu_nav_update_select(menu_list_t field, ui_group_t group)
+static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 {
     const int8_t step = encoder_read_step(&htim3);
     const CtrlActiveList* list = get_list_for_group(group);
@@ -440,7 +376,36 @@ static void menu_nav_update_select(menu_list_t field, ui_group_t group)
 
 
 
+uint8_t handle_menu_toggle(GPIO_TypeDef *port,
+                           uint16_t pin1,
+                           uint16_t pin2)
+{
+    static uint8_t prev_state = 1;
+    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
 
+    // detect a fresh press of pin1 while pin2 is held
+    if (s1 == 0 && prev_state == 1 && s2 == 1) {
+        osDelay(100);
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
+            HAL_GPIO_ReadPin(port, pin2) == 1)
+        {
+            prev_state = 0;
+            return 1;
+        }
+    }
+
+    prev_state = s1;
+    return 0;
+}
+
+
+
+
+
+// + paste this near other UI helpers
+
+// Replace select_group_for_field_mask(...) with this:
 static inline ui_group_t select_group_for_field_id(uint32_t id) {
     switch (id) {
         case CTRL_G_TEMPO:     return UI_GROUP_TEMPO;
@@ -470,29 +435,48 @@ static inline ui_group_t select_group_for_field_id(uint32_t id) {
     }
 }
 
-static inline menu_list_t select_field_for_group(ui_group_t g) {
+static inline ui_state_field_t select_field_for_group(ui_group_t g) {
     switch (g) {
-        case UI_GROUP_TEMPO:          return MIDI_TEMPO;
-        case UI_GROUP_SETTINGS:       return SETTINGS;
-        case UI_GROUP_TRANSPOSE_BOTH: return MIDI_TRANSPOSE;
-        case UI_GROUP_MODIFY_BOTH:    return MIDI_MODIFY;
-        default:                      return MIDI_TEMPO;
+        case UI_GROUP_TEMPO:          return UI_MIDI_TEMPO_SELECT;
+        case UI_GROUP_SETTINGS:       return UI_SETTINGS_SELECT;
+        case UI_GROUP_TRANSPOSE_BOTH: return UI_MIDI_TRANSPOSE_SELECT;
+        case UI_GROUP_MODIFY_BOTH:    return UI_MIDI_MODIFY_SELECT;
+        default:                      return UI_MIDI_TEMPO_SELECT;
     }
 }
 
 
 
-uint8_t menu_nav_get_select(menu_list_t field) {
-    return (field < UI_SELECT_COUNT) ? s_menu_selects[field] : 0;
+uint8_t menu_nav_get_select(ui_state_field_t field) {
+    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
 }
 
 
+static void menu_nav_begin(ui_group_t group)
+{
+    s_active_count = 0;
 
+    // remember root for this page/frame
+    s_current_root_group = root_group(group);
+
+    rebuild_list_for_group(group);
+    const CtrlActiveList* list = get_list_for_group(group);
+    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
+        s_active_list[i] = list->fields_idx[i];
+    }
+    s_active_count = list->count;
+}
 
 uint32_t ui_active_groups(void) {
     return ctrl_active_groups_from_ui_group(s_current_root_group);
 }
 
+// Begin + update select (single entry point)
+void menu_nav_begin_and_update(ui_state_field_t field) {
+    ui_group_t g = group_from_select_field(field);
+    menu_nav_begin(g);
+    menu_nav_update_select(field, g);
+}
 
 
 typedef struct {
@@ -505,7 +489,7 @@ typedef struct {
 } NavSel;
 
 /* Find the currently selected item (field/bit) for a given page select. */
-static inline NavSel nav_selection(menu_list_t sel_field) {
+static inline NavSel nav_selection(ui_state_field_t sel_field) {
     NavSel s = {0};
     s.root = group_from_select_field(sel_field);
     s.row  = menu_nav_get_select(sel_field);
@@ -558,7 +542,14 @@ static inline save_field_t selector_for_press(const NavSel *s) {
 
 
 
-
+void select_press_menu_change(ui_state_field_t sel_field) {
+    const NavSel s   = nav_selection(sel_field);
+    const save_field_t tgt = selector_for_press(&s);
+    if (tgt == SAVE_FIELD_INVALID) return;
+    save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
+    s_menu_selects[sel_field] = 0;
+    rebuild_list_for_group(group_from_select_field(sel_field));
+}
 
 
 
@@ -574,7 +565,7 @@ static inline void nav_apply_selection(const NavSel *s) {
 }
 
 /* Tiny adapter to toggle the currently selected row. */
-static inline void toggle_selected_row(menu_list_t sel_field) {
+static inline void toggle_selected_row(ui_state_field_t sel_field) {
     NavSel s = nav_selection(sel_field);
     nav_apply_selection(&s);
 }
@@ -583,9 +574,42 @@ static inline void toggle_selected_row(menu_list_t sel_field) {
 uint8_t ui_is_field_selected(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
     const ui_group_t  root      = select_group_for_field_id(menu_controls[f].groups);
-    const menu_list_t page = select_field_for_group(root);
+    const ui_state_field_t page = select_field_for_group(root);
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
+}
+
+
+
+
+
+
+
+
+uint8_t build_select_states(ui_group_t group,
+                            uint8_t current_select,
+                            uint8_t *states,
+                            uint8_t states_cap)
+{
+    rebuild_list_for_group(group);
+    const CtrlActiveList* list = get_list_for_group(group);
+
+    const uint8_t rows = ctrl_row_count(list);
+    if (states && states_cap) {
+        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
+        if (rows && current_select < states_cap) states[current_select] = 1;
+    }
+    return rows;
+}
+
+static inline uint8_t test_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
+    return (s_field_change_bits[f >> 5] >> (f & 31)) & 1u;
+}
+
+static inline void clear_field_changed(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return;
+    s_field_change_bits[f >> 5] &= ~(1u << (f & 31));
 }
 
 
@@ -601,15 +625,16 @@ static inline void clear_all_field_changed(void) {
     }
 }
 
-static uint8_t has_menu_changed(menu_list_t field, uint8_t current_select)
+static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 {
-    const uint8_t old_select  = (field < UI_SELECT_COUNT) ? s_prev_selects[field] : 0;
-    const uint8_t sel_changed = (field < UI_SELECT_COUNT) && (old_select != current_select);
+    const uint8_t old_select  = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
+    const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
 
     const uint8_t data_changed = any_field_changed();
 
-    if (field < UI_SELECT_COUNT) {
+    if (field < UI_STATE_FIELD_COUNT) {
         s_menu_selects[field] = current_select;
+        ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
     if (data_changed) {
@@ -620,13 +645,34 @@ static uint8_t has_menu_changed(menu_list_t field, uint8_t current_select)
 }
 
 
+uint8_t menu_nav_end_auto(ui_state_field_t field) {
+    toggle_selected_row(field);
+
+    const uint8_t sel = menu_nav_get_select(field);
+    const uint8_t changed = has_menu_changed(field, sel);
+
+    if (changed) {
+        threads_display_notify(display_flag_from_field(field));
+    }
+    return changed;
+}
+
+
 
 // -------------------------
 // UI state & navigation (from original _menu_ui.c)
 // -------------------------
+
+
+
 void save_mark_all_changed(void) {
     for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFFu;
 }
+
+
+
+
+
 
 
 
@@ -651,7 +697,7 @@ uint8_t ui_state_get(ui_state_field_t field) {
     return value;
 }
 
-static uint8_t ui_state_set(ui_state_field_t field, uint8_t v) {
+static uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
     if (!ui_state_try_lock()) return 0;
 
     switch (field) {
@@ -679,7 +725,7 @@ static uint8_t ui_state_increment(ui_state_field_t field) {
     return ui_state_set(field, value);
 }
 
-uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t v)  {
+uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set) {
     switch(op) {
         case UI_MODIFY_INCREMENT: return ui_state_increment(field);
         case UI_MODIFY_SET:       return ui_state_set(field, value_if_set);
