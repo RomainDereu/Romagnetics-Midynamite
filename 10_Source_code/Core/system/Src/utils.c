@@ -8,6 +8,7 @@
 #include "cmsis_os.h"
 #include "memory_main.h"
 #include "_menu_controller.h"
+#include "_menu_ui.h" //For saving_settings_ui
 #include "screen_driver.h"   //For setcontrast
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
@@ -207,23 +208,6 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 /* ---------------------------
  * GUI helpers
  * --------------------------- */
-
-
-
-
-
-
-//GUI function setting a flag on the currently selected item
-void select_current_state(uint8_t *select_states,
-                          uint8_t  amount,
-                          uint8_t  current_select)
-{
-    for (uint8_t i = 0; i < amount; i++) select_states[i] = 0;
-    if (current_select < amount) {
-        select_states[current_select] = 1;
-    }
-}
-
 //Checks for updates to a menu and refreshes the screen if needed
 uint8_t menu_check_for_updates(
     const void *old_data,
@@ -235,6 +219,22 @@ uint8_t menu_check_for_updates(
     const uint8_t sel_changed  = (*old_select != *current_select);
     const uint8_t data_changed = (memcmp(old_data, data_ptr, sz) != 0);
     return (sel_changed || data_changed);
+}
+
+
+void saving_settings_ui(void){
+    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
+		write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+
+		store_settings();
+
+		write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+		osDelay(1000);
+		write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
+		screen_driver_UpdateScreen();
+    }
 }
 
 

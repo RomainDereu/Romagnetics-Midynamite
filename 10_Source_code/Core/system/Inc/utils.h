@@ -61,13 +61,11 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 		                uint32_t      db_ms);
 
 
-
-void select_current_state(uint8_t *select_states,
-                          uint8_t  amount,
-                          uint8_t  current_select);
-
-
 uint8_t menu_check_for_updates(const void *old_data, const void *data_ptr, size_t sz,
 							   uint8_t *old_select, uint8_t *current_select);
+
+
+void saving_settings_ui(void);
+
 
 #endif /* SRC_UTILS_H_ */

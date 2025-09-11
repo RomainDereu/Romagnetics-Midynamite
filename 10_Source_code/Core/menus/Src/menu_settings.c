@@ -10,44 +10,20 @@
 #include "menus.h"
 #include "screen_driver.h"
 #include "text.h"
+
+
 #include "threads.h"
-#include "utils.h" // For debounce
+#include "utils.h" // For saving_settings_ui
 
 
-#define SETTINGS_FIRST_GLOBAL1  SETTINGS_START_MENU
-#define SETTINGS_LAST_GLOBAL1   SETTINGS_BRIGHTNESS
 
-#define SETTINGS_FIRST_GLOBAL2  SETTINGS_MIDI_THRU
-#define SETTINGS_LAST_GLOBAL2   SETTINGS_CHANNEL_FILTER
-
-#define SETTINGS_FIRST_FILTER   SETTINGS_FILTERED_CHANNELS
-
-extern const Message *message;
-
-
-static void saving_settings_ui(void){
-    write_68(message->saving, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-
-    store_settings();
-
-    write_68(message->saved, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-    osDelay(1000);
-    write_68(message->save_instruction, TEXT_LEFT_START, BOTTOM_LINE_VERT);
-    screen_driver_UpdateScreen();
-}
 
 
 
 void settings_update_menu(void)
 {
     menu_nav_begin_and_update(UI_SETTINGS_SELECT);
-
-    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-        saving_settings_ui();
-    }
-
+    saving_settings_ui();
     (void)menu_nav_end_auto(UI_SETTINGS_SELECT);
 }
 
@@ -99,7 +75,7 @@ void screen_update_settings(void)
         write_68(message->X_equals_ignore_channel, TEXT_LEFT_START, LINE_1_VERT);
 
         const uint32_t mask = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
-        const uint8_t  base_idx = (uint8_t)(SETTINGS_FIRST_FILTER - SETTINGS_START_MENU);
+        const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
         const uint8_t  sel = menu_nav_get_select(UI_SETTINGS_SELECT);
 
         for (uint8_t i = 0; i < 16; i++) {
