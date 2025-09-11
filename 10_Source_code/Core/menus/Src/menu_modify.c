@@ -11,7 +11,6 @@
 #include "screen_driver.h"
 #include "text.h"
 #include "threads.h"
-#include "utils.h" // Needed for text placement
 
 // -------------------------
 // Controller loop
@@ -44,9 +43,6 @@ void midi_modify_update_menu(void)
 // -------------------------
 void screen_update_midi_modify(void)
 {
-    // Keep selection/active-list up-to-date
-    menu_nav_begin_and_update(UI_MIDI_MODIFY_SELECT);
-
     screen_driver_Fill(Black);
     menu_display(message->midi_modify);
     draw_line(0, LINE_4_VERT, 127, LINE_4_VERT);
@@ -88,5 +84,4 @@ void screen_update_midi_modify(void)
 
     menu_ui_render(elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
     screen_driver_UpdateScreen();
-    (void)menu_nav_end_auto(UI_MIDI_MODIFY_SELECT);
 }

@@ -52,8 +52,6 @@ void settings_update_menu(void)
 
 void screen_update_settings(void)
 {
-    // Sync active mask / selection
-    menu_nav_begin_and_update(UI_SETTINGS_SELECT);
 
     screen_driver_Fill(Black);
 
@@ -120,5 +118,4 @@ void screen_update_settings(void)
 
     screen_driver_UpdateScreen();
 
-    (void)menu_nav_end_auto(UI_SETTINGS_SELECT);
 }

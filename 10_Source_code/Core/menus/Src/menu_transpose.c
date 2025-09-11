@@ -11,7 +11,6 @@
 #include "screen_driver.h"
 #include "text.h"
 #include "threads.h"
-#include "utils.h" //Needed for text placement
 
 
 void midi_transpose_update_menu(void)
@@ -31,8 +30,6 @@ void midi_transpose_update_menu(void)
 
 void screen_update_midi_transpose(void)
 {
-    // keep active mask/selection fresh for this frame
-    menu_nav_begin_and_update(UI_MIDI_TRANSPOSE_SELECT);
 
     screen_driver_Fill(Black);
     menu_display(message->midi_transpose);
@@ -76,5 +73,4 @@ void screen_update_midi_transpose(void)
 
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
     screen_driver_UpdateScreen();
-    (void)menu_nav_end_auto(UI_MIDI_TRANSPOSE_SELECT);
 }
