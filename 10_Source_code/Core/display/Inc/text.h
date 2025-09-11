@@ -128,7 +128,10 @@ typedef struct {
     const char *numbers_neg80_to_pos80[161];
     const char *numbers_0_to_300[301];
     const char *twelve_notes_names[12];
-    const char *one_to_sixteen[16];
+
+    const char *zero_to_sixteen[17];
+    const char *zero_to_sixteen_one_char[17];
+
 
 
     // All selectable dropdowns and grouped options

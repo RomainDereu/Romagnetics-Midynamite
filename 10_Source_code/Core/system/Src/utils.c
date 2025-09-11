@@ -82,22 +82,17 @@ void update_value(save_field_t field, uint8_t multiplier)
     int8_t step = encoder_read_step(timer);
     if (step == 0) return;
 
-    const save_limits_t   lim = save_limits[field];
-    const menu_controls_t mt  = menu_controls[field];
     const int32_t delta = (int32_t)step * (int32_t)active_mult;
 
-    // Try u32 field first (compute next in signed, wrap/clamp in signed, THEN cast)
-    {
-        int32_t cur32  = (int32_t)save_get(field);
-        int32_t next32 = wrap_or_clamp_i32(cur32 + delta, lim.min, lim.max, mt.wrap);
-        if (save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next32)) return;
-    }
+    // Get current, add delta (no wrap here)
+    int32_t cur = (int32_t)save_get(field);
+    int32_t next = cur + delta;
 
-    // Fallback to u8 (same rule: wrap before casting)
-    {
-        int32_t cur8  = (int32_t)save_get(field);
-        int32_t next8 = wrap_or_clamp_i32(cur8 + delta, lim.min, lim.max, mt.wrap);
-        (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next8);
+    // Let save layer apply the (single) wrap/clamp via SET
+    if (u32_fields[field]) {
+        (void)save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next);
+    } else {
+        (void)save_modify_u8(field,  SAVE_MODIFY_SET, (uint8_t)next);
     }
 }
 
@@ -214,16 +209,21 @@ uint8_t menu_check_for_updates(
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
-int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap) {
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
+{
     if (min > max) { int32_t t = min; min = max; max = t; }
+
     if (!wrap) {
         if (v < min) return min;
         if (v > max) return max;
         return v;
     }
-    int32_t range = max - min + 1;
-    if (range <= 0) return min;
-    int32_t off = (v - min) % range;
-    if (off < 0) off += range;
+
+    // Inclusive span so [1..16] reaches 16
+    const int32_t span = (max - min) + 1;
+    if (span <= 0) return min;
+
+    int32_t off = (v - min) % span;
+    if (off < 0) off += span;
     return min + off;
 }

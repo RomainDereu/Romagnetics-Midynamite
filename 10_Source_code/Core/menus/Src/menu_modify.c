@@ -65,10 +65,10 @@ void screen_update_midi_modify(void)
 
         // ---------- SPLIT page ----------
         { UI_ELEM_TEXT, 0, message->low_sem, UI_FONT_6x8, TEXT_LEFT_START, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
-        { UI_ELEM_ITEM, MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1, (const char*)message->numbers_0_to_300, UI_FONT_6x8, 30, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
+        { UI_ELEM_ITEM, MIDI_MODIFY_SPLIT_MIDI_CHANNEL_1, (const char*)message->zero_to_sixteen, UI_FONT_6x8, 30, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
 
         { UI_ELEM_TEXT, 0, message->high_sem, UI_FONT_6x8, 45, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
-        { UI_ELEM_ITEM, MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2, (const char*)message->numbers_0_to_300, UI_FONT_6x8, 80, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
+        { UI_ELEM_ITEM, MIDI_MODIFY_SPLIT_MIDI_CHANNEL_2, (const char*)message->zero_to_sixteen, UI_FONT_6x8, 80, LINE_1_VERT, CTRL_G_MODIFY_SPLIT },
 
         { UI_ELEM_TEXT, 0, message->split, UI_FONT_6x8, TEXT_LEFT_START, LINE_2_VERT, CTRL_G_MODIFY_SPLIT },
         { UI_ELEM_ITEM, MIDI_MODIFY_SPLIT_NOTE, (const char*)message->midi_note_names, UI_FONT_6x8, 40, LINE_2_VERT, CTRL_G_MODIFY_SPLIT },
