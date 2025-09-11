@@ -97,45 +97,7 @@ typedef struct {
 static MenuActiveLists s_menu_lists;
 
 
-void update_menu(menu_list_t menu)
-{
-    ui_state_field_t field;
 
-    // Pick the UI_* select directly
-    switch (menu) {
-        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
-        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
-        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
-        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
-        default:             field = UI_MIDI_TEMPO_SELECT;     break;
-    }
-
-    menu_nav_begin_and_update(field);
-
-    // Per-page actions
-    switch (menu) {
-        case MIDI_TEMPO: {
-            const uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
-            save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
-        } break;
-
-        case MIDI_TRANSPOSE:
-        case MIDI_MODIFY: {
-            if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-                // Your impl resets select to 0 after page toggle
-                select_press_menu_change(field);
-            }
-        } break;
-
-        case SETTINGS: {
-            saving_settings_ui();
-        } break;
-
-        default: break;
-    }
-
-    (void)menu_nav_end_auto(field);
-}
 
 
 static ui_group_t root_group(ui_group_t g) {
@@ -376,33 +338,6 @@ static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
 
 
 
-uint8_t handle_menu_toggle(GPIO_TypeDef *port,
-                           uint16_t pin1,
-                           uint16_t pin2)
-{
-    static uint8_t prev_state = 1;
-    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
-
-    // detect a fresh press of pin1 while pin2 is held
-    if (s1 == 0 && prev_state == 1 && s2 == 1) {
-        osDelay(100);
-        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
-            HAL_GPIO_ReadPin(port, pin2) == 1)
-        {
-            prev_state = 0;
-            return 1;
-        }
-    }
-
-    prev_state = s1;
-    return 0;
-}
-
-
-
-
-
 // + paste this near other UI helpers
 
 // Replace select_group_for_field_mask(...) with this:
@@ -579,29 +514,6 @@ uint8_t ui_is_field_selected(save_field_t f) {
     return (s.field == f) ? 1u : 0u;
 }
 
-
-
-
-
-
-
-
-uint8_t build_select_states(ui_group_t group,
-                            uint8_t current_select,
-                            uint8_t *states,
-                            uint8_t states_cap)
-{
-    rebuild_list_for_group(group);
-    const CtrlActiveList* list = get_list_for_group(group);
-
-    const uint8_t rows = ctrl_row_count(list);
-    if (states && states_cap) {
-        for (uint8_t i = 0; i < states_cap; ++i) states[i] = 0;
-        if (rows && current_select < states_cap) states[current_select] = 1;
-    }
-    return rows;
-}
-
 static inline uint8_t test_field_changed(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
     return (s_field_change_bits[f >> 5] >> (f & 31)) & 1u;
@@ -645,17 +557,7 @@ static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 }
 
 
-uint8_t menu_nav_end_auto(ui_state_field_t field) {
-    toggle_selected_row(field);
 
-    const uint8_t sel = menu_nav_get_select(field);
-    const uint8_t changed = has_menu_changed(field, sel);
-
-    if (changed) {
-        threads_display_notify(display_flag_from_field(field));
-    }
-    return changed;
-}
 
 
 
@@ -746,6 +648,83 @@ void filter_controller(void) {
     const uint8_t  sel      = menu_nav_get_select(SETTINGS);
 
     filter_controller_ui(mask, base_idx, sel);
+}
+
+static uint8_t menu_nav_end_auto(ui_state_field_t field) {
+    toggle_selected_row(field);
+
+    const uint8_t sel = menu_nav_get_select(field);
+    const uint8_t changed = has_menu_changed(field, sel);
+
+    if (changed) {
+        threads_display_notify(display_flag_from_field(field));
+    }
+    return changed;
+}
+
+static uint8_t handle_menu_toggle(GPIO_TypeDef *port,
+                           uint16_t pin1,
+                           uint16_t pin2)
+{
+    static uint8_t prev_state = 1;
+    uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+
+    // detect a fresh press of pin1 while pin2 is held
+    if (s1 == 0 && prev_state == 1 && s2 == 1) {
+        osDelay(100);
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 &&
+            HAL_GPIO_ReadPin(port, pin2) == 1)
+        {
+            prev_state = 0;
+            return 1;
+        }
+    }
+
+    prev_state = s1;
+    return 0;
+}
+
+
+
+void update_menu(menu_list_t menu)
+{
+    ui_state_field_t field;
+
+    // Pick the UI_* select directly
+    switch (menu) {
+        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
+        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
+        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
+        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
+        default:             field = UI_MIDI_TEMPO_SELECT;     break;
+    }
+
+    menu_nav_begin_and_update(field);
+
+    // Per-page actions
+    switch (menu) {
+        case MIDI_TEMPO: {
+            const uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
+            save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
+        } break;
+
+        case MIDI_TRANSPOSE:
+        case MIDI_MODIFY: {
+            if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+                // Your impl resets select to 0 after page toggle
+                select_press_menu_change(field);
+            }
+        } break;
+
+        case SETTINGS: {
+            saving_settings_ui();
+        } break;
+
+        default: break;
+    }
+
+    (void)menu_nav_end_auto(field);
 }
 
 

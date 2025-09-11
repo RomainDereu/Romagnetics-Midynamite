@@ -143,7 +143,7 @@ typedef struct {
 // UI API
 // ---------------------
 
-void update_menu(menu_list_t menu);
+
 
 void select_press_menu_change(ui_state_field_t sel_field);
 
@@ -151,21 +151,9 @@ uint8_t ui_is_field_selected(save_field_t f);
 
 uint32_t ui_active_groups(void);
 
-
 void menu_nav_begin_and_update(ui_state_field_t field);
-uint8_t menu_nav_end_auto(ui_state_field_t field);
 
 void save_mark_all_changed(void);
-
-uint8_t build_select_states(ui_group_t group,
-                            uint8_t current_select,
-                            uint8_t *states,
-                            uint8_t states_cap);
-
-
-uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2);
-
-void    menu_nav_reset(ui_state_field_t field, uint8_t value);
 
 uint8_t menu_nav_get_select(ui_state_field_t field);
 
@@ -173,5 +161,7 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
 uint8_t ui_state_get(ui_state_field_t field);
 
 void     filter_controller(void);
+
+void update_menu(menu_list_t menu);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
