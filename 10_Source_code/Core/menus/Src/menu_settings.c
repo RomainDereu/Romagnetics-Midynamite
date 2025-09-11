@@ -58,7 +58,7 @@ void screen_update_settings(void)
 
         const uint32_t mask = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
         const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
-        const uint8_t  sel = menu_nav_get_select(UI_SETTINGS_SELECT);
+        const uint8_t  sel = menu_nav_get_select(SETTINGS);
 
         for (uint8_t i = 0; i < 16; i++) {
             const char *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];

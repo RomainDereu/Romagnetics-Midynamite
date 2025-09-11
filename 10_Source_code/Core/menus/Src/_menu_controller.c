@@ -23,8 +23,8 @@ static volatile uint8_t ui_state_busy = 0;
 static ui_state_t ui_state = {0};
 
 // Persisted select per menu page
-static uint8_t s_menu_selects[UI_STATE_FIELD_COUNT] = {0};
-static uint8_t s_prev_selects[UI_STATE_FIELD_COUNT] = {0};
+static uint8_t s_menu_selects[UI_SELECT_COUNT] = {0};
+static uint8_t s_prev_selects[UI_SELECT_COUNT] = {0};
 
 // Per-frame list of active fields (indices)
 static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
@@ -99,15 +99,15 @@ static MenuActiveLists s_menu_lists;
 
 void update_menu(menu_list_t menu)
 {
-    ui_state_field_t field;
+    menu_list_t field;
 
     // Pick the UI_* select directly
     switch (menu) {
-        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
-        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
-        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
-        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
-        default:             field = UI_MIDI_TEMPO_SELECT;     break;
+        case MIDI_TEMPO:     field = MIDI_TEMPO;     break;
+        case MIDI_MODIFY:    field = MIDI_MODIFY;    break;
+        case MIDI_TRANSPOSE: field = MIDI_TRANSPOSE; break;
+        case SETTINGS:       field = SETTINGS;       break;
+        default:             field = MIDI_TEMPO;     break;
     }
 
     menu_nav_begin_and_update(field);
@@ -168,12 +168,12 @@ static ui_group_t root_group(ui_group_t g) {
 
 
 // Map a select field to its display flag (for notify)
-static inline uint32_t display_flag_from_field(ui_state_field_t field) {
+static inline uint32_t display_flag_from_field(menu_list_t field) {
     switch (field) {
-        case UI_MIDI_TEMPO_SELECT:     return FLAG_TEMPO;
-        case UI_MIDI_MODIFY_SELECT:    return FLAG_MODIFY;
-        case UI_MIDI_TRANSPOSE_SELECT: return FLAG_TRANSPOSE;
-        case UI_SETTINGS_SELECT:       return FLAG_SETTINGS;
+        case MIDI_TEMPO:     return FLAG_TEMPO;
+        case MIDI_MODIFY:    return FLAG_MODIFY;
+        case MIDI_TRANSPOSE: return FLAG_TRANSPOSE;
+        case SETTINGS:       return FLAG_SETTINGS;
         default:                       return FLAG_TEMPO;
     }
 }
@@ -254,7 +254,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
                 else if (mt.groups == CTRL_G_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
             }
 
-            const uint8_t sel = s_menu_selects[UI_SETTINGS_SELECT];
+            const uint8_t sel = s_menu_selects[SETTINGS];
             const uint8_t rows_total = (uint8_t)(rows_g1 + rows_g2 + rows_f);
             // menu_nav_update_select adds +1, so the last index is ABOUT
             if (sel < rows_g1) {
@@ -323,12 +323,12 @@ static void rebuild_list_for_group(ui_group_t group) {
 
 
 // Map a select field to its root UI group (so callers don't pass group explicitly)
-static inline ui_group_t group_from_select_field(ui_state_field_t field) {
+static inline ui_group_t group_from_select_field(menu_list_t field) {
     switch (field) {
-        case UI_MIDI_TEMPO_SELECT:     return UI_GROUP_TEMPO;
-        case UI_MIDI_MODIFY_SELECT:    return UI_GROUP_MODIFY_BOTH;
-        case UI_MIDI_TRANSPOSE_SELECT: return UI_GROUP_TRANSPOSE_BOTH;
-        case UI_SETTINGS_SELECT:       return UI_GROUP_SETTINGS;
+        case MIDI_TEMPO:     return UI_GROUP_TEMPO;
+        case MIDI_MODIFY:    return UI_GROUP_MODIFY_BOTH;
+        case MIDI_TRANSPOSE: return UI_GROUP_TRANSPOSE_BOTH;
+        case SETTINGS:       return UI_GROUP_SETTINGS;
         default:                       return UI_GROUP_TEMPO;
     }
 }
@@ -351,7 +351,7 @@ static uint8_t ctrl_row_count(const CtrlActiveList *list)
 }
 
 
-static void menu_nav_update_select(ui_state_field_t field, ui_group_t group)
+static void menu_nav_update_select(menu_list_t field, ui_group_t group)
 {
     const int8_t step = encoder_read_step(&htim3);
     const CtrlActiveList* list = get_list_for_group(group);
@@ -435,20 +435,20 @@ static inline ui_group_t select_group_for_field_id(uint32_t id) {
     }
 }
 
-static inline ui_state_field_t select_field_for_group(ui_group_t g) {
+static inline menu_list_t select_field_for_group(ui_group_t g) {
     switch (g) {
-        case UI_GROUP_TEMPO:          return UI_MIDI_TEMPO_SELECT;
-        case UI_GROUP_SETTINGS:       return UI_SETTINGS_SELECT;
-        case UI_GROUP_TRANSPOSE_BOTH: return UI_MIDI_TRANSPOSE_SELECT;
-        case UI_GROUP_MODIFY_BOTH:    return UI_MIDI_MODIFY_SELECT;
-        default:                      return UI_MIDI_TEMPO_SELECT;
+        case UI_GROUP_TEMPO:          return MIDI_TEMPO;
+        case UI_GROUP_SETTINGS:       return SETTINGS;
+        case UI_GROUP_TRANSPOSE_BOTH: return MIDI_TRANSPOSE;
+        case UI_GROUP_MODIFY_BOTH:    return MIDI_MODIFY;
+        default:                      return MIDI_TEMPO;
     }
 }
 
 
 
-uint8_t menu_nav_get_select(ui_state_field_t field) {
-    return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+uint8_t menu_nav_get_select(menu_list_t field) {
+    return (field < UI_SELECT_COUNT) ? s_menu_selects[field] : 0;
 }
 
 
@@ -472,7 +472,7 @@ uint32_t ui_active_groups(void) {
 }
 
 // Begin + update select (single entry point)
-void menu_nav_begin_and_update(ui_state_field_t field) {
+void menu_nav_begin_and_update(menu_list_t field) {
     ui_group_t g = group_from_select_field(field);
     menu_nav_begin(g);
     menu_nav_update_select(field, g);
@@ -489,7 +489,7 @@ typedef struct {
 } NavSel;
 
 /* Find the currently selected item (field/bit) for a given page select. */
-static inline NavSel nav_selection(ui_state_field_t sel_field) {
+static inline NavSel nav_selection(menu_list_t sel_field) {
     NavSel s = {0};
     s.root = group_from_select_field(sel_field);
     s.row  = menu_nav_get_select(sel_field);
@@ -542,7 +542,7 @@ static inline save_field_t selector_for_press(const NavSel *s) {
 
 
 
-void select_press_menu_change(ui_state_field_t sel_field) {
+void select_press_menu_change(menu_list_t sel_field) {
     const NavSel s   = nav_selection(sel_field);
     const save_field_t tgt = selector_for_press(&s);
     if (tgt == SAVE_FIELD_INVALID) return;
@@ -565,7 +565,7 @@ static inline void nav_apply_selection(const NavSel *s) {
 }
 
 /* Tiny adapter to toggle the currently selected row. */
-static inline void toggle_selected_row(ui_state_field_t sel_field) {
+static inline void toggle_selected_row(menu_list_t sel_field) {
     NavSel s = nav_selection(sel_field);
     nav_apply_selection(&s);
 }
@@ -574,7 +574,7 @@ static inline void toggle_selected_row(ui_state_field_t sel_field) {
 uint8_t ui_is_field_selected(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
     const ui_group_t  root      = select_group_for_field_id(menu_controls[f].groups);
-    const ui_state_field_t page = select_field_for_group(root);
+    const menu_list_t page = select_field_for_group(root);
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
 }
@@ -625,16 +625,15 @@ static inline void clear_all_field_changed(void) {
     }
 }
 
-static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
+static uint8_t has_menu_changed(menu_list_t field, uint8_t current_select)
 {
-    const uint8_t old_select  = (field < UI_STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
-    const uint8_t sel_changed = (field < UI_STATE_FIELD_COUNT) && (old_select != current_select);
+    const uint8_t old_select  = (field < UI_SELECT_COUNT) ? s_prev_selects[field] : 0;
+    const uint8_t sel_changed = (field < UI_SELECT_COUNT) && (old_select != current_select);
 
     const uint8_t data_changed = any_field_changed();
 
-    if (field < UI_STATE_FIELD_COUNT) {
+    if (field < UI_SELECT_COUNT) {
         s_menu_selects[field] = current_select;
-        ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
     if (data_changed) {
@@ -645,7 +644,7 @@ static uint8_t has_menu_changed(ui_state_field_t field, uint8_t current_select)
 }
 
 
-uint8_t menu_nav_end_auto(ui_state_field_t field) {
+uint8_t menu_nav_end_auto(menu_list_t field) {
     toggle_selected_row(field);
 
     const uint8_t sel = menu_nav_get_select(field);
@@ -697,7 +696,7 @@ uint8_t ui_state_get(ui_state_field_t field) {
     return value;
 }
 
-static uint8_t ui_state_set(ui_state_field_t field, uint8_t value) {
+static uint8_t ui_state_set(ui_state_field_t field, uint8_t v) {
     if (!ui_state_try_lock()) return 0;
 
     switch (field) {
@@ -725,7 +724,7 @@ static uint8_t ui_state_increment(ui_state_field_t field) {
     return ui_state_set(field, value);
 }
 
-uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set) {
+uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t v)  {
     switch(op) {
         case UI_MODIFY_INCREMENT: return ui_state_increment(field);
         case UI_MODIFY_SET:       return ui_state_set(field, value_if_set);
