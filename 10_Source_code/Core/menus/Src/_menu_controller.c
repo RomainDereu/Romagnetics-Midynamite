@@ -507,11 +507,12 @@ static inline save_field_t selector_for_press(const NavSel *s) {
 
 
 void select_press_menu_change(ui_state_field_t sel_field) {
-    const NavSel s = nav_selection(sel_field);
+    const NavSel s   = nav_selection(sel_field);
     const save_field_t tgt = selector_for_press(&s);
-    if (tgt != SAVE_FIELD_INVALID) {
-        save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
-    }
+    if (tgt == SAVE_FIELD_INVALID) return;
+    save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
+    s_menu_selects[sel_field] = 0;
+    rebuild_list_for_group(group_from_select_field(sel_field));
 }
 
 
