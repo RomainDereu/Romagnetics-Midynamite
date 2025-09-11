@@ -5,24 +5,13 @@
  *      Author: Romain Dereu
  */
 
-#include "memory_main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h"
 #include "menus.h"
 #include "midi_tempo.h"
 #include "screen_driver.h"
 #include "text.h"
-#include "threads.h"
 
-void midi_tempo_update_menu(void)
-{
-    menu_nav_begin_and_update(UI_MIDI_TEMPO_SELECT);
-
-    uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
-    save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
-
-    (void)menu_nav_end_auto(UI_MIDI_TEMPO_SELECT);
-}
 
 void screen_update_midi_tempo(void)
 {

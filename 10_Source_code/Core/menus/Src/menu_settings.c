@@ -4,32 +4,15 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-#include "_menu_controller.h"
-#include "memory_main.h"
+#include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
 #include "menus.h"
 #include "screen_driver.h"
 #include "text.h"
 
 
-#include "threads.h"
-#include "utils.h" // For saving_settings_ui
-
-
-
-
-
-
-void settings_update_menu(void)
-{
-    menu_nav_begin_and_update(UI_SETTINGS_SELECT);
-    saving_settings_ui();
-    (void)menu_nav_end_auto(UI_SETTINGS_SELECT);
-}
-
 void screen_update_settings(void)
 {
-
     screen_driver_Fill(Black);
 
     // Decide title by active sub-group(s)
@@ -69,7 +52,6 @@ void screen_update_settings(void)
         { UI_ELEM_TEXT, 0, message->about_version, UI_FONT_6x8, TEXT_LEFT_START, LINE_3_VERT, CTRL_G_SETTINGS_ABOUT },
     };
 
-
     // -------- FILTER GRID (custom draw, but only when its group is active) --------
     if (active & (1u << (CTRL_G_SETTINGS_FILTER - 1))) {
         write_68(message->X_equals_ignore_channel, TEXT_LEFT_START, LINE_1_VERT);
@@ -93,5 +75,4 @@ void screen_update_settings(void)
 
     // Draw the flat, group-gated elements
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
-
 }

@@ -143,6 +143,8 @@ typedef struct {
 // UI API
 // ---------------------
 
+void update_menu(menu_list_t menu);
+
 void select_press_menu_change(ui_state_field_t sel_field);
 
 uint8_t ui_is_field_selected(save_field_t f);

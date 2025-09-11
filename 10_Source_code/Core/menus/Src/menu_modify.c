@@ -4,31 +4,13 @@
  *  Created on: Feb 27, 2025
  *      Author: Romain Dereu
  */
-#include "_menu_controller.h"
-#include "memory_main.h"
+
+#include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
 #include "menus.h"
 #include "screen_driver.h"
 #include "text.h"
-#include "threads.h"
 
-// -------------------------
-// Controller loop
-// -------------------------
-void midi_modify_update_menu(void)
-{
-    menu_nav_begin_and_update(UI_MIDI_MODIFY_SELECT);
-
-    if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-        select_press_menu_change(UI_MIDI_MODIFY_SELECT);
-    }
-
-    (void)menu_nav_end_auto(UI_MIDI_MODIFY_SELECT);
-}
-
-// -------------------------
-// Render
-// -------------------------
 void screen_update_midi_modify(void)
 {
     screen_driver_Fill(Black);

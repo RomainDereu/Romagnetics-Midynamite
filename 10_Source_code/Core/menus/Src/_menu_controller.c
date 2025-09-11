@@ -5,7 +5,7 @@
  *      Author: Astaa
  *
  */
-
+#include "main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h"
 #include "memory_main.h"
@@ -95,6 +95,47 @@ typedef struct {
 } MenuActiveLists;
 
 static MenuActiveLists s_menu_lists;
+
+
+void update_menu(menu_list_t menu)
+{
+    ui_state_field_t field;
+
+    // Pick the UI_* select directly
+    switch (menu) {
+        case MIDI_TEMPO:     field = UI_MIDI_TEMPO_SELECT;     break;
+        case MIDI_MODIFY:    field = UI_MIDI_MODIFY_SELECT;    break;
+        case MIDI_TRANSPOSE: field = UI_MIDI_TRANSPOSE_SELECT; break;
+        case SETTINGS:       field = UI_SETTINGS_SELECT;       break;
+        default:             field = UI_MIDI_TEMPO_SELECT;     break;
+    }
+
+    menu_nav_begin_and_update(field);
+
+    // Per-page actions
+    switch (menu) {
+        case MIDI_TEMPO: {
+            const uint32_t bpm = save_get(MIDI_TEMPO_CURRENT_TEMPO);
+            save_modify_u32(MIDI_TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
+        } break;
+
+        case MIDI_TRANSPOSE:
+        case MIDI_MODIFY: {
+            if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+                // Your impl resets select to 0 after page toggle
+                select_press_menu_change(field);
+            }
+        } break;
+
+        case SETTINGS: {
+            saving_settings_ui();
+        } break;
+
+        default: break;
+    }
+
+    (void)menu_nav_end_auto(field);
+}
 
 
 static ui_group_t root_group(ui_group_t g) {
@@ -409,11 +450,6 @@ static inline ui_state_field_t select_field_for_group(ui_group_t g) {
 uint8_t menu_nav_get_select(ui_state_field_t field) {
     return (field < UI_STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
 }
-
-
-
-
-
 
 
 static void menu_nav_begin(ui_group_t group)
