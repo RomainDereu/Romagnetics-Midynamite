@@ -68,5 +68,8 @@ void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, u
 void menu_ui_draw_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 void menu_ui_draw_title(const char *title);
 
+void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel);
+
+
 
 #endif /* MENU_INC_MENU_UI_H_ */

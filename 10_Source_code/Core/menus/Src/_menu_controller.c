@@ -732,3 +732,20 @@ uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value
     }
     return 0;
 }
+
+
+// ---------------------
+// Settings: 16-channel filter drawer
+// ---------------------
+void filter_controller(void) {
+    const uint32_t active = ui_active_groups();
+    if ((active & (1u << (CTRL_G_SETTINGS_FILTER - 1))) == 0) return;
+
+    const uint32_t mask     = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
+    const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
+    const uint8_t  sel      = menu_nav_get_select(SETTINGS);
+
+    filter_controller_ui(mask, base_idx, sel);
+}
+
+

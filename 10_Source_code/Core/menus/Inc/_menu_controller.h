@@ -172,4 +172,6 @@ uint8_t menu_nav_get_select(ui_state_field_t field);
 uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t ui_state_get(ui_state_field_t field);
 
+void     filter_controller(void);
+
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
