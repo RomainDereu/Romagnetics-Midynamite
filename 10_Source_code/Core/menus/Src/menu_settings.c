@@ -106,7 +106,7 @@ void screen_update_settings(void)
         const uint8_t  sel = menu_nav_get_select(UI_SETTINGS_SELECT);
 
         for (uint8_t i = 0; i < 16; i++) {
-            const char *label = (mask & (1u << i)) ? "X" : message->zero_to_sixteen_one_char[i];
+            const char *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];
             const uint8_t x = (uint8_t)(5 + 10 * (i % 8));
             const uint8_t y = (i < 8) ? LINE_2_VERT : LINE_3_VERT;
             const uint8_t underline = (uint8_t)(sel == (base_idx + i));

@@ -168,6 +168,26 @@ static void mark_field_changed(save_field_t f) {
     s_field_change_bits[f >> 5] |= (1u << (f & 31));
 }
 
+// Utils: wrap/clamp a value into [min, max] with optional wrap
+static int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
+{
+    if (min > max) { int32_t t = min; min = max; max = t; }
+
+    if (!wrap) {
+        if (v < min) return min;
+        if (v > max) return max;
+        return v;
+    }
+
+    // Inclusive span so [1..16] reaches 16
+    const int32_t span = (max - min) + 1;
+    if (span <= 0) return min;
+
+    int32_t off = (v - min) % span;
+    if (off < 0) off += span;
+    return min + off;
+}
+
 
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;

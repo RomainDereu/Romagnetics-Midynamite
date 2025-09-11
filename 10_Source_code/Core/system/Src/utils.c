@@ -208,22 +208,4 @@ uint8_t menu_check_for_updates(
     return (sel_changed || data_changed);
 }
 
-// Utils: wrap/clamp a value into [min, max] with optional wrap
-int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
-{
-    if (min > max) { int32_t t = min; min = max; max = t; }
 
-    if (!wrap) {
-        if (v < min) return min;
-        if (v > max) return max;
-        return v;
-    }
-
-    // Inclusive span so [1..16] reaches 16
-    const int32_t span = (max - min) + 1;
-    if (span <= 0) return min;
-
-    int32_t off = (v - min) % span;
-    if (off < 0) off += span;
-    return min + off;
-}

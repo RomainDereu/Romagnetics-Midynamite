@@ -230,7 +230,6 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             uint8_t rows_g1 = 0, rows_g2 = 0, rows_f = 0;
             for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
                 const menu_controls_t mt = menu_controls[f];
-                if (mt.handler == no_update) continue;               // display-only items don't add rows
                 const uint8_t span = (mt.handler == update_channel_filter) ? 16 : 1;
                 if      (mt.groups == CTRL_G_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + span);
                 else if (mt.groups == CTRL_G_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + span);

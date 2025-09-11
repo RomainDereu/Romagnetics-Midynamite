@@ -130,7 +130,7 @@ typedef struct {
     const char *twelve_notes_names[12];
 
     const char *zero_to_sixteen[17];
-    const char *zero_to_sixteen_one_char[17];
+    const char *one_to_sixteen_one_char[17];
 
 
 

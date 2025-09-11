@@ -63,7 +63,4 @@ void select_current_state(uint8_t *select_states,
 uint8_t menu_check_for_updates(const void *old_data, const void *data_ptr, size_t sz,
 							   uint8_t *old_select, uint8_t *current_select);
 
-int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
-
-
 #endif /* SRC_UTILS_H_ */

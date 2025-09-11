@@ -199,8 +199,8 @@ static const Message _message = {
 	},
 
 	//Used by 6_82
-	.zero_to_sixteen_one_char = {
-	    "Err", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"
+	.one_to_sixteen_one_char = {
+	    "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"
 	},
 
 	//Error Handlers
