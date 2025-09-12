@@ -9,7 +9,7 @@
 #define MIDI_INC_MENU_CONTROLLER_H_
 
 #include <stdint.h>
-#include "memory_main.h"
+#include "memory_main.h"   // for save_field_t, SAVE_FIELD_COUNT, etc.
 
 // ---------------------
 // Menu list
@@ -19,12 +19,13 @@ typedef enum {
     MIDI_MODIFY,
     MIDI_TRANSPOSE,
     SETTINGS,
-    AMOUNT_OF_MENUS,
-    CURRENT_MENU,
-    OLD_MENU,
-    STATE_FIELD_COUNT
+    AMOUNT_OF_MENUS,   // number of menus
+    CURRENT_MENU,      // UI state index
+    OLD_MENU,          // UI state index
+    STATE_FIELD_COUNT  // total UI state slots
 } menu_list_t;
 
+// Keep existing macro behavior
 #define AMOUNT_OF_MENUS CURRENT_MENU
 #define UI_STATE_BUSY 0xFF
 
@@ -58,8 +59,6 @@ typedef enum {
 } ui_group_t;
 
 
-
-
 // ---------------------
 // Modify ops
 // ---------------------
@@ -68,17 +67,20 @@ typedef enum {
     UI_MODIFY_SET,
 } ui_modify_op_t;
 
+
 // ---------------------
 // Field change bits
 // ---------------------
 #define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
 extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 
+
 // ---------------------
 // Wrapping options
 // ---------------------
 #define NO_WRAP  0
 #define WRAP     1
+
 
 // ---------------------
 // Menu controls
@@ -94,13 +96,14 @@ typedef struct {
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
+
 // ---------------------
 // Controller groups (bit flags)
 // ---------------------
 typedef enum {
     CTRL_TEMPO = 1,
 
-	CTRL_MODIFY_CHANGE,
+    CTRL_MODIFY_CHANGE,
     CTRL_MODIFY_SPLIT,
     CTRL_MODIFY_BOTH,
     CTRL_MODIFY_VEL_CHANGED,
@@ -118,6 +121,7 @@ typedef enum {
 
 } ctrl_group_id_t;
 
+
 // ---------------------
 // Active list
 // ---------------------
@@ -130,29 +134,70 @@ typedef struct {
     uint8_t  count;
 } CtrlActiveList;
 
+
+// =====================
+// Display flag helpers
+// =====================
+
+// 1) Display flags
+typedef enum {
+    FLAG_TEMPO      = (1u << 0),
+    FLAG_MODIFY     = (1u << 1),
+    FLAG_TRANSPOSE  = (1u << 2),
+    FLAG_SETTINGS   = (1u << 3)
+} DisplayFlags_t;
+
+// 2) Forward declarations used by helpers (implemented elsewhere)
+void    threads_display_notify(uint32_t flags);
+uint8_t ui_state_get(menu_list_t field);
+
+// 3) Menu → flag lookup
+static const DisplayFlags_t kMenuFlag[AMOUNT_OF_MENUS] = {
+    /* MIDI_TEMPO     */ FLAG_TEMPO,
+    /* MIDI_MODIFY    */ FLAG_MODIFY,
+    /* MIDI_TRANSPOSE */ FLAG_TRANSPOSE,
+    /* SETTINGS       */ FLAG_SETTINGS
+};
+
+// 4) Menu → "sending" save_field_t lookup
+static const save_field_t kMenuSendingField[AMOUNT_OF_MENUS] = {
+    /* MIDI_TEMPO     */ TEMPO_CURRENTLY_SENDING,
+    /* MIDI_MODIFY    */ MODIFY_SENDING,
+    /* MIDI_TRANSPOSE */ TRANSPOSE_SENDING,
+    /* SETTINGS       */ SAVE_FIELD_INVALID
+};
+
+// 5) Small helpers
+static inline DisplayFlags_t flag_for_menu(menu_list_t m) {
+    return (m < AMOUNT_OF_MENUS) ? kMenuFlag[m] : FLAG_TEMPO;
+}
+
+static inline save_field_t sending_field_for_menu(menu_list_t m) {
+    return (m < AMOUNT_OF_MENUS) ? kMenuSendingField[m] : SAVE_FIELD_INVALID;
+}
+
+static inline void screen_refresh(void) {
+    threads_display_notify(flag_for_menu((menu_list_t)ui_state_get(CURRENT_MENU)));
+}
+
+
 // ---------------------
 // UI API
 // ---------------------
-
-
-
 void select_press_menu_change(menu_list_t sel_field);
 
-uint8_t ui_is_field_selected(save_field_t f);
-
+uint8_t  ui_is_field_selected(save_field_t f);
 uint32_t ui_active_groups(void);
 
-void menu_nav_begin_and_update(menu_list_t field);
+void     menu_nav_begin_and_update(menu_list_t field);
+void     save_mark_all_changed(void);
 
-void save_mark_all_changed(void);
+uint8_t  menu_nav_get_select(menu_list_t field);
 
-uint8_t menu_nav_get_select(menu_list_t field);
-
-uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
-uint8_t ui_state_get(menu_list_t field);
+uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t  ui_state_get(menu_list_t field);
 
 void     filter_controller(void);
-
-void update_menu(menu_list_t menu);
+void     update_menu(menu_list_t menu);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */

@@ -26,6 +26,7 @@ static ui_state_t ui_state = {0};
 static uint8_t s_menu_selects[STATE_FIELD_COUNT] = {0};
 static uint8_t s_prev_selects[STATE_FIELD_COUNT] = {0};
 
+
 // Per-frame list of active fields (indices)
 static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
 static uint8_t  s_active_count = 0;
@@ -121,17 +122,6 @@ static ui_group_t root_group(ui_group_t g) {
     }
 }
 
-
-// Map a select field to its display flag (for notify)
-static inline uint32_t display_flag_from_field(menu_list_t field) {
-    switch (field) {
-        case MIDI_TEMPO:     return FLAG_TEMPO;
-        case MIDI_MODIFY:    return FLAG_MODIFY;
-        case MIDI_TRANSPOSE: return FLAG_TRANSPOSE;
-        case SETTINGS:       return FLAG_SETTINGS;
-        default:             return FLAG_TEMPO;
-    }
-}
 
 static CtrlActiveList* list_for_root(ui_group_t root) {
     switch (root) {
@@ -641,7 +631,7 @@ static uint8_t menu_nav_end_auto(menu_list_t field)
     const uint8_t sel = menu_nav_get_select(field);
     const uint8_t changed = has_menu_changed(field, sel);
 
-    if (changed) threads_display_notify(display_flag_from_field(field));
+    if (changed) threads_display_notify(flag_for_menu(field));
     return changed;
 }
 

@@ -123,12 +123,7 @@ typedef enum { USB_MIDI_OFF, USB_MIDI_SEND } midi_mode_t;
 typedef enum { NOT_SENDING, SENDING } sending_t;
 typedef enum { FALSE, TRUE } boolean_t;
 
-typedef enum {
-    FLAG_TEMPO      = (1 << 0),
-    FLAG_MODIFY     = (1 << 1),
-    FLAG_TRANSPOSE  = (1 << 2),
-    FLAG_SETTINGS   = (1 << 3)
-} DisplayFlags_t;
+
 
 
 
