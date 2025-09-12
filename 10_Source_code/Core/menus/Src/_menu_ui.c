@@ -13,9 +13,6 @@
 #include "utils.h"
 #include "text.h"
 
-extern const Message *message;
-
-
 void menu_display(const char * menu_message){
 	draw_line(0, 10, 127, 10);
 	write_68(menu_message, TXT_LEFT, 0);
@@ -144,5 +141,3 @@ void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel){
 		write_underline_68_2(label, x, y, ul);
     }
 }
-
-

@@ -25,17 +25,6 @@ typedef enum {
     STATE_FIELD_COUNT  // total UI state slots
 } menu_list_t;
 
-// Keep existing macro behavior
-#define AMOUNT_OF_MENUS CURRENT_MENU
-#define UI_STATE_BUSY 0xFF
-
-typedef enum {
-    TEMPO_PRINT = 0,
-    MIDI_OUT_PRINT,
-    AMOUNT_OF_TEMPO_ITEMS
-} midi_tempo_ui_states_t;
-
-
 // ---------------------
 // UI submenu id
 // ---------------------
@@ -149,7 +138,6 @@ typedef enum {
 
 // 2) Forward declarations used by helpers (implemented elsewhere)
 void    threads_display_notify(uint32_t flags);
-uint8_t ui_state_get(menu_list_t field);
 
 // 3) Menu → flag lookup
 static const DisplayFlags_t kMenuFlag[AMOUNT_OF_MENUS] = {
@@ -176,9 +164,6 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
     return (m < AMOUNT_OF_MENUS) ? kMenuSendingField[m] : SAVE_FIELD_INVALID;
 }
 
-static inline void screen_refresh(void) {
-    threads_display_notify(flag_for_menu((menu_list_t)ui_state_get(CURRENT_MENU)));
-}
 
 
 // ---------------------
@@ -196,6 +181,11 @@ uint8_t  menu_nav_get_select(menu_list_t field);
 
 uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t  ui_state_get(menu_list_t field);
+
+static inline void screen_refresh(void) {
+    threads_display_notify(flag_for_menu((menu_list_t)ui_state_get(CURRENT_MENU)));
+}
+
 
 void     filter_controller(void);
 void     update_menu(menu_list_t menu);

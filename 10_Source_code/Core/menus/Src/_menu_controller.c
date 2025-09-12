@@ -23,17 +23,9 @@ typedef struct {
 static volatile uint8_t ui_state_busy = 0;
 static ui_state_t ui_state = {0};
 
-// Persisted select per menu page
-static uint8_t s_menu_selects[STATE_FIELD_COUNT] = {0};
-static uint8_t s_prev_selects[STATE_FIELD_COUNT] = {0};
+static uint8_t s_menu_selects[AMOUNT_OF_MENUS] = {0};
+static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
-
-// Per-frame list of active fields (indices)
-static uint16_t s_active_list[MENU_ACTIVE_LIST_CAP];
-static uint8_t  s_active_count = 0;
-static ui_group_t s_current_root_group = 0;
-
-// Field-change tracking
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
 
@@ -94,6 +86,29 @@ typedef struct {
 
 static MenuActiveLists s_menu_lists;
 
+// --- Menu <-> Root group mapping (kills a few switch statements) ---
+static const ui_group_t kMenuToRoot[AMOUNT_OF_MENUS] = {
+  [MIDI_TEMPO]     = UI_GROUP_TEMPO,
+  [MIDI_MODIFY]    = UI_GROUP_MODIFY_BOTH,
+  [MIDI_TRANSPOSE] = UI_GROUP_TRANSPOSE_BOTH,
+  [SETTINGS]       = UI_GROUP_SETTINGS,
+};
+
+static const menu_list_t kRootToMenu[] = {
+  [UI_GROUP_TEMPO]          = MIDI_TEMPO,
+  [UI_GROUP_MODIFY_BOTH]    = MIDI_MODIFY,
+  [UI_GROUP_TRANSPOSE_BOTH] = MIDI_TRANSPOSE,
+  [UI_GROUP_SETTINGS]       = SETTINGS,
+};
+
+// Compact “ctrl_group_id_t -> root ui group” (replaces select_group_for_field_id)
+static inline ui_group_t root_for_ctrl_id(uint32_t id) {
+  if (id == CTRL_TEMPO) return UI_GROUP_TEMPO;
+  if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED) return UI_GROUP_MODIFY_BOTH;
+  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_BOTH)   return UI_GROUP_TRANSPOSE_BOTH;
+  if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ABOUT)   return UI_GROUP_SETTINGS;
+  return UI_GROUP_TEMPO; // safe default
+}
 
 static ui_group_t root_group(ui_group_t g) {
     switch (g) {
@@ -142,8 +157,24 @@ static inline uint32_t flag_from_id(uint32_t id) {
 }
 
 
+typedef struct { uint8_t g1, g2, filt, total; } SettingsRowCounts;
+
 static inline uint8_t is_bits_item(save_field_t f) {
     return menu_controls[f].handler == update_channel_filter;
+}
+
+static SettingsRowCounts settings_row_counts(void) {
+  SettingsRowCounts c = {0,0,0,0};
+  for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
+    const menu_controls_t mt = menu_controls[f];
+    const uint8_t span = is_bits_item((save_field_t)f) ? 16u : 1u;
+
+    if      (mt.groups == CTRL_SETTINGS_GLOBAL1) c.g1   = (uint8_t)(c.g1   + span);
+    else if (mt.groups == CTRL_SETTINGS_GLOBAL2) c.g2   = (uint8_t)(c.g2   + span);
+    else if (mt.groups == CTRL_SETTINGS_FILTER)  c.filt = (uint8_t)(c.filt + span);
+  }
+  c.total = (uint8_t)(c.g1 + c.g2 + c.filt);
+  return c;
 }
 
 
@@ -162,14 +193,14 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             int page = (int)save_get(MODIFY_CHANGE_OR_SPLIT);
             if (page == MIDI_MODIFY_SPLIT) {
                 mask |= flag_from_id(CTRL_MODIFY_SPLIT);
-            } else { // default/fallback to CHANGE
+            } else {
                 mask |= flag_from_id(CTRL_MODIFY_CHANGE);
             }
 
-            int vel  = (int)save_get(MODIFY_VELOCITY_TYPE);
+            int vel = (int)save_get(MODIFY_VELOCITY_TYPE);
             if (vel == MIDI_MODIFY_FIXED_VEL) {
                 mask |= flag_from_id(CTRL_MODIFY_VEL_FIXED);
-            } else { // default/fallback to CHANGED
+            } else {
                 mask |= flag_from_id(CTRL_MODIFY_VEL_CHANGED);
             }
         } break;
@@ -179,40 +210,27 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
             int t = (int)save_get(TRANSPOSE_TRANSPOSE_TYPE);
             if (t == MIDI_TRANSPOSE_SHIFT) {
                 mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
-            } else { // default/fallback to SCALED
+            } else {
                 mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
             }
         } break;
 
         case UI_GROUP_SETTINGS: {
-            // Optional: keep ALL for headers/dividers if you use it
             mask |= flag_from_id(CTRL_SETTINGS_ALL);
 
-            // Count interactive rows per section (ABOUT has no fields → not counted)
-            uint8_t rows_g1 = 0, rows_g2 = 0, rows_f = 0;
-            for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
-                const menu_controls_t mt = menu_controls[f];
-                const uint8_t adv = is_bits_item((save_field_t)f) ? 16u : 1u;
-                if      (mt.groups == CTRL_SETTINGS_GLOBAL1) rows_g1 = (uint8_t)(rows_g1 + adv);
-                else if (mt.groups == CTRL_SETTINGS_GLOBAL2) rows_g2 = (uint8_t)(rows_g2 + adv);
-                else if (mt.groups == CTRL_SETTINGS_FILTER)  rows_f  = (uint8_t)(rows_f  + adv);
-            }
-
+            const SettingsRowCounts rc = settings_row_counts();
             const uint8_t sel = s_menu_selects[SETTINGS];
-            const uint8_t rows_total = (uint8_t)(rows_g1 + rows_g2 + rows_f);
-            // menu_nav_update_select adds +1, so the last index is ABOUT
-            if (sel < rows_g1) {
+
+            if (sel < rc.g1) {
                 mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
-            } else if (sel < (uint8_t)(rows_g1 + rows_g2)) {
+            } else if (sel < (uint8_t)(rc.g1 + rc.g2)) {
                 mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
-            } else if (sel < rows_total) {
+            } else if (sel < rc.total) {
                 mask |= flag_from_id(CTRL_SETTINGS_FILTER);
             } else {
-                mask |= flag_from_id(CTRL_SETTINGS_ABOUT);  // only when selected
+                mask |= flag_from_id(CTRL_SETTINGS_ABOUT);
             }
         } break;
-
-
 
         default:
             mask |= flag_from_id(CTRL_TEMPO);
@@ -221,6 +239,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 
     return mask;
 }
+
 
 
 
@@ -247,7 +266,6 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
 
 
 
-
 static void rebuild_list_for_group(ui_group_t group)
 {
     const ui_group_t root = root_group(group);
@@ -263,16 +281,7 @@ static void rebuild_list_for_group(ui_group_t group)
 }
 
 
-// Map a select field to its root UI group (so callers don't pass group explicitly)
-static inline ui_group_t group_from_select_field(menu_list_t field) {
-    switch (field) {
-        case MIDI_TEMPO:     return UI_GROUP_TEMPO;
-        case MIDI_MODIFY:    return UI_GROUP_MODIFY_BOTH;
-        case MIDI_TRANSPOSE: return UI_GROUP_TRANSPOSE_BOTH;
-        case SETTINGS:       return UI_GROUP_SETTINGS;
-        default:                       return UI_GROUP_TEMPO;
-    }
-}
+
 
 static const CtrlActiveList* get_list_for_group(ui_group_t group) {
     return list_for_root(root_group(group));
@@ -319,82 +328,28 @@ static void menu_nav_update_select(menu_list_t field, ui_group_t group)
 
 
 
-
-// + paste this near other UI helpers
-
-// Replace select_group_for_field_mask(...) with this:
-static inline ui_group_t select_group_for_field_id(uint32_t id) {
-    switch (id) {
-        case CTRL_TEMPO:     return UI_GROUP_TEMPO;
-
-        case CTRL_MODIFY_CHANGE:
-        case CTRL_MODIFY_SPLIT:
-        case CTRL_MODIFY_BOTH:
-        case CTRL_MODIFY_VEL_CHANGED:
-        case CTRL_MODIFY_VEL_FIXED:
-            return UI_GROUP_MODIFY_BOTH;
-
-        case CTRL_TRANSPOSE_SHIFT:
-        case CTRL_TRANSPOSE_SCALED:
-        case CTRL_TRANSPOSE_BOTH:
-            return UI_GROUP_TRANSPOSE_BOTH;
-
-        case CTRL_SETTINGS_GLOBAL1:
-        case CTRL_SETTINGS_GLOBAL2:
-        case CTRL_SETTINGS_FILTER:
-        case CTRL_SETTINGS_ALL:
-        case CTRL_SETTINGS_ABOUT:
-            return UI_GROUP_SETTINGS;
-
-
-        default:
-            return UI_GROUP_TEMPO;
-    }
-}
-
-static inline menu_list_t select_field_for_group(ui_group_t g) {
-    switch (g) {
-        case UI_GROUP_TEMPO:          return MIDI_TEMPO;
-        case UI_GROUP_SETTINGS:       return SETTINGS;
-        case UI_GROUP_TRANSPOSE_BOTH: return MIDI_TRANSPOSE;
-        case UI_GROUP_MODIFY_BOTH:    return MIDI_MODIFY;
-        default:                      return MIDI_TEMPO;
-    }
-}
-
-
-
 uint8_t menu_nav_get_select(menu_list_t field) {
-    return (field < STATE_FIELD_COUNT) ? s_menu_selects[field] : 0;
+    return (field < AMOUNT_OF_MENUS) ? s_menu_selects[field] : 0;
 }
 
-
-static void menu_nav_begin(ui_group_t group)
-{
-    s_active_count = 0;
-
-    // remember root for this page/frame
-    s_current_root_group = root_group(group);
-
-    rebuild_list_for_group(group);
-    const CtrlActiveList* list = get_list_for_group(group);
-    for (uint8_t i = 0; i < list->count && i < MENU_ACTIVE_LIST_CAP; ++i) {
-        s_active_list[i] = list->fields_idx[i];
-    }
-    s_active_count = list->count;
-}
 
 uint32_t ui_active_groups(void) {
-    return ctrl_active_groups_from_ui_group(s_current_root_group);
+    uint8_t m = ui_state_get(CURRENT_MENU);
+    if (m == 0xFF || m >= AMOUNT_OF_MENUS) m = SETTINGS;
+    const ui_group_t root = kMenuToRoot[m];
+    return ctrl_active_groups_from_ui_group(root);
 }
 
 // Begin + update select (single entry point)
 void menu_nav_begin_and_update(menu_list_t field) {
-    ui_group_t g = group_from_select_field(field);
-    menu_nav_begin(g);
+    ui_group_t g = kMenuToRoot[field];
+    rebuild_list_for_group(g);       // before reading encoder
     menu_nav_update_select(field, g);
-}
 
+    if (g == UI_GROUP_SETTINGS) {
+        rebuild_list_for_group(g);
+    }
+}
 
 typedef struct {
     ui_group_t   root;
@@ -409,7 +364,7 @@ typedef struct {
 static inline NavSel nav_selection(menu_list_t sel_field)
 {
     NavSel s = {0};
-    s.root  = group_from_select_field(sel_field);
+    s.root  = kMenuToRoot[sel_field];   // <-- was using undefined f
     s.row   = menu_nav_get_select(sel_field);
     s.bit   = 0xFF;
     s.field = SAVE_FIELD_INVALID;
@@ -430,9 +385,8 @@ static inline NavSel nav_selection(menu_list_t sel_field)
         }
         row_cursor = (uint8_t)(row_cursor + span);
     }
-    return s; // INVALID if nothing matched
+    return s;
 }
-
 
 /* For press-to-toggle-page logic: map the selection to its page selector. */
 static inline save_field_t selector_for_press(const NavSel *s)
@@ -463,9 +417,8 @@ void select_press_menu_change(menu_list_t sel_field) {
     if (tgt == SAVE_FIELD_INVALID) return;
     save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
     s_menu_selects[sel_field] = 0;
-    rebuild_list_for_group(group_from_select_field(sel_field));
+    rebuild_list_for_group(kMenuToRoot[sel_field]);
 }
-
 
 
 /* Apply the row’s action (used for underline “calc step” and similar). */
@@ -495,12 +448,13 @@ uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
 
-    const ui_group_t root = select_group_for_field_id(menu_controls[f].groups);
-    const menu_list_t page = select_field_for_group(root);
+    const ui_group_t  root = root_for_ctrl_id(menu_controls[f].groups);
+    const menu_list_t page = kRootToMenu[root];
 
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
 }
+
 
 
 
@@ -530,13 +484,12 @@ static inline void clear_all_field_changed(void)
 
 static uint8_t has_menu_changed(menu_list_t field, uint8_t current_select)
 {
-    const uint8_t old_select  = (field < STATE_FIELD_COUNT) ? s_prev_selects[field] : 0;
-    const uint8_t sel_changed = (field < STATE_FIELD_COUNT) && (old_select != current_select);
+    const uint8_t old_select  = (field < AMOUNT_OF_MENUS) ? s_prev_selects[field] : 0;
+    const uint8_t sel_changed = (field < AMOUNT_OF_MENUS) && (old_select != current_select);
     const uint8_t data_changed = any_field_changed();
 
-    if (field < STATE_FIELD_COUNT) {
+    if (field < AMOUNT_OF_MENUS) {
         s_menu_selects[field] = current_select;
-        ui_state_modify(field, UI_MODIFY_SET, current_select);
     }
 
     if (data_changed) clear_all_field_changed();
@@ -562,7 +515,7 @@ static int ui_state_try_lock(void) {
 static void ui_state_unlock(void) { ui_state_busy = 0; }
 
 uint8_t ui_state_get(menu_list_t field) {
-    if (!ui_state_try_lock()) return UI_STATE_BUSY;
+    if (!ui_state_try_lock()) return 0xFF;
 
     uint8_t value = 0;
     switch (field) {
@@ -588,7 +541,7 @@ static uint8_t ui_state_set(menu_list_t field, uint8_t value) {
 
 static uint8_t ui_state_increment(menu_list_t field) {
     uint8_t value = ui_state_get(field);
-    if (value == UI_STATE_BUSY) return UI_STATE_BUSY;
+    if (value == 0xFF) return 0xFF;
 
     switch (field) {
         case CURRENT_MENU:
@@ -660,40 +613,41 @@ static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pi
 }
 
 
+// Unified “subpage toggle” used by MODIFY and TRANSPOSE
+static inline void maybe_toggle_subpage(menu_list_t field) {
+  if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+    select_press_menu_change(field);  // resets select + rebuilds list
+  }
+}
+
+// One small tick per page (keeps update_menu tiny)
+typedef void (*MenuTickFn)(menu_list_t field);
+
+static void tick_tempo(menu_list_t field) {
+  const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
+  const uint32_t rate = bpm ? (6000000u / (bpm * 24u)) : 0u;
+  save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, rate);
+}
+
+static void tick_modify(menu_list_t field)    { maybe_toggle_subpage(field); }
+static void tick_transpose(menu_list_t field) { maybe_toggle_subpage(field); }
+static void tick_settings(menu_list_t field)  { saving_settings_ui(); }
+
+static const MenuTickFn kMenuTick[AMOUNT_OF_MENUS] = {
+  [MIDI_TEMPO]     = tick_tempo,
+  [MIDI_MODIFY]    = tick_modify,
+  [MIDI_TRANSPOSE] = tick_transpose,
+  [SETTINGS]       = tick_settings,
+};
+
+
+
 void update_menu(menu_list_t menu)
 {
-    menu_list_t field =
-        (menu == MIDI_TEMPO)     ? MIDI_TEMPO :
-        (menu == MIDI_MODIFY)    ? MIDI_MODIFY :
-        (menu == MIDI_TRANSPOSE) ? MIDI_TRANSPOSE :
-                                   SETTINGS;
+  if (menu >= AMOUNT_OF_MENUS) menu = SETTINGS;
+  const menu_list_t field = menu;
 
-    menu_nav_begin_and_update(field);
-
-    switch (menu) {
-        case MIDI_TEMPO: {
-            const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
-            if (bpm) {
-                save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 6000000u / (bpm * 24u));
-            } else {
-                // Defensive: avoid div-by-zero if limits ever change
-                save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, 0);
-            }
-        } break;
-
-        case MIDI_TRANSPOSE:
-        case MIDI_MODIFY: {
-            if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-                select_press_menu_change(field); // resets select and rebuilds list
-            }
-        } break;
-
-        case SETTINGS:
-            saving_settings_ui();
-            break;
-
-        default: break;
-    }
-
-    (void)menu_nav_end_auto(field);
+  menu_nav_begin_and_update(field);
+  kMenuTick[field](field);
+  (void)menu_nav_end_auto(field);
 }
