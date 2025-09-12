@@ -19,8 +19,14 @@ typedef enum {
     MIDI_MODIFY,
     MIDI_TRANSPOSE,
     SETTINGS,
-    AMOUNT_OF_MENUS
+    AMOUNT_OF_MENUS,
+    CURRENT_MENU,
+    OLD_MENU,
+    STATE_FIELD_COUNT
 } menu_list_t;
+
+#define AMOUNT_OF_MENUS CURRENT_MENU
+#define UI_STATE_BUSY 0xFF
 
 typedef enum {
     TEMPO_PRINT = 0,
@@ -28,21 +34,6 @@ typedef enum {
     AMOUNT_OF_TEMPO_ITEMS
 } midi_tempo_ui_states_t;
 
-
-// ---------------------
-// UI state
-// ---------------------
-#define UI_STATE_BUSY 0xFF
-
-typedef enum {
-    UI_MIDI_TEMPO_SELECT,
-    UI_MIDI_MODIFY_SELECT,
-    UI_MIDI_TRANSPOSE_SELECT,
-    UI_SETTINGS_SELECT,
-    UI_CURRENT_MENU,
-    UI_OLD_MENU,
-    UI_STATE_FIELD_COUNT
-} ui_state_field_t;
 
 // ---------------------
 // UI submenu id
@@ -145,20 +136,20 @@ typedef struct {
 
 
 
-void select_press_menu_change(ui_state_field_t sel_field);
+void select_press_menu_change(menu_list_t sel_field);
 
 uint8_t ui_is_field_selected(save_field_t f);
 
 uint32_t ui_active_groups(void);
 
-void menu_nav_begin_and_update(ui_state_field_t field);
+void menu_nav_begin_and_update(menu_list_t field);
 
 void save_mark_all_changed(void);
 
-uint8_t menu_nav_get_select(ui_state_field_t field);
+uint8_t menu_nav_get_select(menu_list_t field);
 
-uint8_t ui_state_modify(ui_state_field_t field, ui_modify_op_t op, uint8_t value_if_set);
-uint8_t ui_state_get(ui_state_field_t field);
+uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t ui_state_get(menu_list_t field);
 
 void     filter_controller(void);
 

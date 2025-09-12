@@ -32,7 +32,7 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 void menu_change_check(){
 	 static uint8_t button_pressed = 0;
 	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
-		  ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
+		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
 	  }
 }
 

@@ -59,7 +59,7 @@ static void DisplayUpdateThread(void *arg) {
   for (;;) {
     uint32_t f = osEventFlagsWait(s_display_flags, DISPLAY_FLAG_MASK,
                                   osFlagsWaitAny, osWaitForever);
-    uint8_t current = ui_state_get(UI_CURRENT_MENU);
+    uint8_t current = ui_state_get(CURRENT_MENU);
     if ((f & FLAG_TEMPO)     && current == MIDI_TEMPO)     screen_update_midi_tempo();
     if ((f & FLAG_MODIFY)    && current == MIDI_MODIFY)    screen_update_midi_modify();
     if ((f & FLAG_TRANSPOSE) && current == MIDI_TRANSPOSE) screen_update_midi_transpose();
@@ -69,7 +69,7 @@ static void DisplayUpdateThread(void *arg) {
 }
 
 static void screen_refresh(void) {
-    switch (ui_state_get(UI_CURRENT_MENU)) {
+    switch (ui_state_get(CURRENT_MENU)) {
       case MIDI_TEMPO:     threads_display_notify(FLAG_TEMPO);     break;
       case MIDI_MODIFY:    threads_display_notify(FLAG_MODIFY);    break;
       case MIDI_TRANSPOSE: threads_display_notify(FLAG_TRANSPOSE); break;
@@ -99,11 +99,11 @@ static void MediumTasksThread(void *argument)
   (void)argument;
 
   // Initial menu draw trigger
-  ui_state_modify(UI_CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
-  ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET, 99);
+  ui_state_modify(CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
+  ui_state_modify(OLD_MENU, UI_MODIFY_SET, 99);
   screen_refresh();
 
-  switch (ui_state_get(UI_CURRENT_MENU)) {
+  switch (ui_state_get(CURRENT_MENU)) {
     case MIDI_TEMPO:     threads_display_notify(FLAG_TEMPO); break;
     case MIDI_MODIFY:    threads_display_notify(FLAG_MODIFY); break;
     case MIDI_TRANSPOSE: threads_display_notify(FLAG_TRANSPOSE); break;
@@ -113,28 +113,28 @@ static void MediumTasksThread(void *argument)
   for (;;) {
     menu_change_check();
 
-    uint8_t old_menu    = ui_state_get(UI_OLD_MENU);
-    uint8_t current_menu = ui_state_get(UI_CURRENT_MENU);
+    uint8_t old_menu    = ui_state_get(OLD_MENU);
+    uint8_t current_menu = ui_state_get(CURRENT_MENU);
 
     if (old_menu != current_menu) {
         screen_refresh();
     }
 
     switch (current_menu) {
-      case MIDI_TEMPO:     update_menu(UI_MIDI_TEMPO_SELECT);;    break;
-      case MIDI_MODIFY:    update_menu(UI_MIDI_MODIFY_SELECT);    break;
-      case MIDI_TRANSPOSE: update_menu(UI_MIDI_TRANSPOSE_SELECT); break;
-      case SETTINGS:       update_menu(UI_SETTINGS_SELECT);       break;
+      case MIDI_TEMPO:     update_menu(MIDI_TEMPO);;    break;
+      case MIDI_MODIFY:    update_menu(MIDI_MODIFY);    break;
+      case MIDI_TRANSPOSE: update_menu(MIDI_TRANSPOSE); break;
+      case SETTINGS:       update_menu(SETTINGS);       break;
       default: break;
     }
 
-    current_menu = ui_state_get(UI_CURRENT_MENU);
-    ui_state_modify(UI_OLD_MENU, UI_MODIFY_SET, current_menu);
+    current_menu = ui_state_get(CURRENT_MENU);
+    ui_state_modify(OLD_MENU, UI_MODIFY_SET, current_menu);
 
     // Btn3 toggles "currently sending" depending on menu
     static uint8_t OldBtn3State = 1;
     if (debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)) {
-      switch (ui_state_get(UI_CURRENT_MENU)) {
+      switch (ui_state_get(CURRENT_MENU)) {
         case MIDI_TEMPO:
           save_modify_u8(TEMPO_CURRENTLY_SENDING, SAVE_MODIFY_INCREMENT, 0);
           mt_start_stop(&htim2);
