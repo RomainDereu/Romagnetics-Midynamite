@@ -15,13 +15,13 @@
 void screen_update_midi_transpose(void)
 {
     screen_driver_Fill(Black);
-    menu_display(message->midi_transpose);
 
-    // On/Off status icon (not part of elems to avoid underline)
     midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
 
     const ui_element elems[] = {
         // type      save_item                 text                              font    x        y     ctrl_group_id
+        { ELEM_TEXT , 0,                          TEXT_(midi_transpose),       UI_6x8, TXT_LEFT, LINE_0, CTRL_TRANSPOSE_BOTH },
+
         // ---------- SHIFT page ----------
         { ELEM_TEXT , 0,                          TEXT_(shift_by),             UI_6x8, TXT_LEFT, LINE_1, CTRL_TRANSPOSE_SHIFT },
         { ELEM_ITEM , TRANSPOSE_MIDI_SHIFT_VALUE, TEXT_(neg_pos_80 + (80-36)), UI_6x8, 65,       LINE_1, CTRL_TRANSPOSE_SHIFT },
@@ -39,7 +39,6 @@ void screen_update_midi_transpose(void)
         { ELEM_TEXT , 0,                          TEXT_(send_base),            UI_6x8, TXT_LEFT, LINE_4, CTRL_TRANSPOSE_BOTH },
         { ELEM_ITEM , TRANSPOSE_SEND_ORIGINAL,     TEXT_(no_yes),              UI_6x8, 65,       LINE_4, CTRL_TRANSPOSE_BOTH },
     };
-
 
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 }

@@ -14,13 +14,13 @@
 void screen_update_midi_modify(void)
 {
     screen_driver_Fill(Black);
-    menu_display(message->midi_modify);
 
     draw_line(0, LINE_4, 127, LINE_4);
     midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
 
     const ui_element elems[] = {
         // type      save_item                text                        font    x       y           ctrl_group_id
+        { ELEM_TEXT , 0,                       TEXT_(midi_modify),        UI_6x8, TXT_LEFT, LINE_0,      CTRL_MODIFY_CHANGE },
         { ELEM_TEXT , 0,                       TEXT_(send_1_sem),         UI_6x8, TXT_LEFT, LINE_1,      CTRL_MODIFY_CHANGE },
         { ELEM_ITEM , MODIFY_SEND_TO_MIDI_CH1,  TEXT_(midi_channels),      UI_6x8, 50,      LINE_1,      CTRL_MODIFY_CHANGE },
 

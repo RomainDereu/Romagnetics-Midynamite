@@ -15,19 +15,11 @@ void screen_update_settings(void)
 {
     screen_driver_Fill(Black);
 
-    // Decide title by active sub-group(s)
-    const uint32_t active = ui_active_groups();
-    const char *title = message->about;  // default
-    if (active & (1u << (CTRL_SETTINGS_GLOBAL1 - 1)))      title = message->global_settings_1;
-    else if (active & (1u << (CTRL_SETTINGS_GLOBAL2 - 1))) title = message->global_settings_2;
-    else if (active & (1u << (CTRL_SETTINGS_FILTER  - 1))) title = message->MIDI_Filter;
-
-    menu_display(title);
-
     // Flat, group-gated UI elements (everything except the 16-bit filter grid)
     const ui_element elems[] = {
         // type      save_item                 text                         font    x        y     ctrl_group_id
         // -------- GLOBAL 1 --------
+        { ELEM_TEXT , 0,                       TEXT_(global_settings_1),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_TEXT , 0,                       TEXT_(start_menu),          UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_ITEM , SETTINGS_START_MENU,     TEXT_(menu_list),           UI_6x8, 70,       LINE_1, CTRL_SETTINGS_GLOBAL1 },
 
@@ -38,6 +30,7 @@ void screen_update_settings(void)
         { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(contrast_levels),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
 
         // -------- GLOBAL 2 --------
+        { ELEM_TEXT , 0,                       TEXT_(global_settings_2),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Thru),           UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_ITEM , SETTINGS_MIDI_THRU,      TEXT_(off_on),              UI_6x8, 80,       LINE_1, CTRL_SETTINGS_GLOBAL2 },
 
@@ -48,16 +41,16 @@ void screen_update_settings(void)
         { ELEM_ITEM , SETTINGS_CHANNEL_FILTER, TEXT_(off_on),              UI_6x8, 80,       LINE_3, CTRL_SETTINGS_GLOBAL2 },
 
         // -------- Filters --------
+        { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_TEXT , 0,                       TEXT_(X_equals_ignore_channel), UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_FILTER },
 
         // -------- ABOUT (text-only) --------
+        { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_version),       UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_ABOUT },
     };
 
-
-    // -------- FILTER GRID (custom draw, but only when its group is active) --------
     filter_controller();
 
     // Footer (can be CTRL_SETTINGS_BOTH if you prefer to gate it too)

@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define LINE_0 0
 #define LINE_1 15
 #define LINE_2 25
 #define LINE_3 35

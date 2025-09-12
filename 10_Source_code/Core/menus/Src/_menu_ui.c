@@ -13,11 +13,6 @@
 #include "utils.h"
 #include "text.h"
 
-void menu_display(const char * menu_message){
-	draw_line(0, 10, 127, 10);
-	write_68(menu_message, TXT_LEFT, 0);
-}
-
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 	draw_line(92, 10, 92, bottom_line);
 	uint8_t text_position = bottom_line/2;
@@ -111,6 +106,10 @@ void menu_ui_render(const ui_element *elems, size_t count) {
                 break;
         }
     }
+
+    //Separation line on top common to all menus
+    draw_line(0, 10, 127, 10);
+
     screen_driver_UpdateScreen();
 }
 
