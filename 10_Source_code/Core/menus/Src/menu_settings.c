@@ -30,7 +30,7 @@ void screen_update_settings(void)
         { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(contrast_levels),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
 
         // -------- GLOBAL 2 --------
-        { ELEM_TEXT , 0,                       TEXT_(global_settings_2),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
+        { ELEM_TEXT , 0,                       TEXT_(global_settings_2),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Thru),           UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_ITEM , SETTINGS_MIDI_THRU,      TEXT_(off_on),              UI_6x8, 80,       LINE_1, CTRL_SETTINGS_GLOBAL2 },
 
@@ -41,11 +41,11 @@ void screen_update_settings(void)
         { ELEM_ITEM , SETTINGS_CHANNEL_FILTER, TEXT_(off_on),              UI_6x8, 80,       LINE_3, CTRL_SETTINGS_GLOBAL2 },
 
         // -------- Filters --------
-        { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
+        { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_FILTER },
         { ELEM_TEXT , 0,                       TEXT_(X_equals_ignore_channel), UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_FILTER },
 
         // -------- ABOUT (text-only) --------
-        { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL1 },
+        { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_version),       UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_ABOUT },
