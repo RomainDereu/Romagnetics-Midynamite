@@ -5,6 +5,7 @@
  *      Author: Astaa
  *
  */
+#include "cmsis_os.h" //For osDelay
 #include "main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h"

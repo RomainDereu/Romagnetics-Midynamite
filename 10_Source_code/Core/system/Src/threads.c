@@ -98,8 +98,6 @@ static void MediumTasksThread(void *argument)
   ui_state_modify(OLD_MENU, UI_MODIFY_SET, 99);
   screen_refresh();
 
-  screen_refresh();
-
   for (;;) {
     menu_change_check();
 
