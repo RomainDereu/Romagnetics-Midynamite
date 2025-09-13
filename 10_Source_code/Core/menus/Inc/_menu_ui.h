@@ -8,7 +8,6 @@
 #ifndef MENU_INC_MENU_UI_H_
 #define MENU_INC_MENU_UI_H_
 
-
 #include <stdint.h>
 #include <stddef.h>
 
@@ -22,8 +21,6 @@
 #define B_LINE LINE_4 + 3
 
 #define TXT_LEFT 5
-
-
 
 // Fonts you already use via write_* functions
 typedef enum {
@@ -58,14 +55,12 @@ typedef struct {
 // ---------------------
 // API
 // ---------------------
-void menu_change_check(void);
-
 void initialize_screen(void);
-
 
 // Render an array of elements in order.
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
 
+void menu_change_check(void);
 
 //Control functions using UI elements
 void update_contrast_ui();

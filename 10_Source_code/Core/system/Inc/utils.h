@@ -50,7 +50,6 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 		                uint32_t      db_ms);
 
 
-void saving_settings_ui(void);
 
 
 #endif /* SRC_UTILS_H_ */

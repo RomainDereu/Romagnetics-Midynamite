@@ -80,6 +80,22 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
 
 //Helpers
 
+static void saving_settings_ui(void){
+    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
+		write_68(message->saving, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
+
+		store_settings();
+
+		write_68(message->saved, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
+		osDelay(1000);
+		write_68(message->save_instruction, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
+    }
+}
+
+
 static void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
 	draw_line(92, 10, 92, bottom_line);
 	uint8_t text_position = bottom_line/2;
@@ -183,13 +199,6 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 }
 
 
-
-
-
-
-
-
-
 /* ---------------------------
  * Menu helpers
  * --------------------------- */
@@ -201,26 +210,6 @@ void menu_change_check(){
 	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
 		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
 	  }
-}
-
-
-/* ---------------------------
- * Saving helper
- * --------------------------- */
-
-void saving_settings_ui(void){
-    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-		write_68(message->saving, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
-
-		store_settings();
-
-		write_68(message->saved, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
-		osDelay(1000);
-		write_68(message->save_instruction, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
-    }
 }
 
 
