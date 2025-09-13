@@ -5,24 +5,25 @@
  *      Author: Romain Dereu
  */
 
+#include "_menu_controller.h" // for menu_list_t
+
 #ifndef INC_MENUS_H_
 #define INC_MENUS_H_
 
 #define TEXT_(m) ((const char*)(message->m))
 
-#include "_menu_controller.h"
 
 //Individual menu updates
 void controller_update_tempo();
-void ui_code_midi_tempo();
+void ui_code_tempo();
 void screen_update_midi_tempo();
 
 void controller_update_modify(menu_list_t field);
-void ui_code_midi_modify();
+void ui_code_modify();
 void screen_update_midi_modify();
 
 void controller_update_transpose(menu_list_t field);
-void ui_code_midi_transpose();
+void ui_code_transpose();
 void screen_update_midi_transpose();
 
 void controller_update_settings();

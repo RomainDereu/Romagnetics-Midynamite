@@ -32,7 +32,7 @@ void screen_update_midi_tempo(void)
     menu_ui_render(MIDI_TEMPO, elems, sizeof(elems) / sizeof(elems[0]));
 }
 
-void ui_code_midi_tempo() {
+void ui_code_tempo() {
 
   //Vertical line  right of BPM
 	draw_line(64, 10, 64, 64);

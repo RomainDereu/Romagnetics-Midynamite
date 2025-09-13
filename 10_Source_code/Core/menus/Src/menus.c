@@ -36,10 +36,10 @@ void screen_update_menu(uint32_t flag){
 void ui_code_menu(){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MIDI_TEMPO:     ui_code_midi_tempo();     break;
-	  case MIDI_MODIFY:    ui_code_midi_modify();    break;
-	  case MIDI_TRANSPOSE: ui_code_midi_transpose(); break;
-	  case SETTINGS:       ui_code_settings();       break;
+	  case MIDI_TEMPO:     ui_code_tempo();     break;
+	  case MIDI_MODIFY:    ui_code_modify();    break;
+	  case MIDI_TRANSPOSE: ui_code_transpose(); break;
+	  case SETTINGS:       ui_code_settings();  break;
       }
 }
 
@@ -47,10 +47,10 @@ void ui_code_menu(){
 void controller_update_menu(menu_list_t field){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MIDI_TEMPO:     controller_update_tempo(field);break;
-	  case MIDI_MODIFY:    ui_code_midi_modify(field);    break;
-	  case MIDI_TRANSPOSE: ui_code_midi_transpose(field); break;
-	  case SETTINGS:       ui_code_settings(field);       break;
+	  case MIDI_TEMPO:     controller_update_tempo();     break;
+	  case MIDI_MODIFY:    controller_update_modify(field);    break;
+	  case MIDI_TRANSPOSE: controller_update_transpose(field); break;
+	  case SETTINGS:       controller_update_settings();  break;
       }
 }
 

@@ -56,7 +56,7 @@ void screen_update_midi_modify(void)
 }
 
 
-void ui_code_midi_modify()    {
+void ui_code_modify()    {
 
 	midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
 	//Bottom line above velocity
