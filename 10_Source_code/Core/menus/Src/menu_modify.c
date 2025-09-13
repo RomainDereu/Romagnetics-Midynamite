@@ -4,6 +4,7 @@
  *  Created on: Feb 27, 2025
  *      Author: Romain Dereu
  */
+#include "memory_main.h"
 #include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
@@ -46,4 +47,13 @@ void screen_update_midi_modify(void)
         { ELEM_ITEM , MODIFY_VEL_ABSOLUTE,      TEXT_(zer_to_300),         UI_6x8, 100,     B_LINE, CTRL_MODIFY_VEL_FIXED },
     };
     menu_ui_render(MIDI_MODIFY, elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
+}
+
+
+void ui_code_midi_modify()    {
+
+	midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
+	//Bottom line above velocity
+	draw_line(0, LINE_4, 127, LINE_4);
+
 }

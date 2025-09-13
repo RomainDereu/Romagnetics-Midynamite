@@ -47,3 +47,12 @@ void screen_update_settings(void)
     };
     menu_ui_render(SETTINGS, elems, sizeof(elems)/sizeof(elems[0]));
 }
+
+
+
+void ui_code_settings()  {
+	saving_settings_ui();
+	//Bottom line above save text
+	draw_line(0, LINE_4, 127, LINE_4);
+}
+

@@ -31,11 +31,6 @@ static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
 
-
-
-
-
-
 // -------------------------
 // Functions ran by each function
 // -------------------------
@@ -103,8 +98,6 @@ static void update_channel_filter(save_field_t field, uint8_t bit_index)
     mask ^= (1UL << bit_index);  // toggle exactly this bit
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
 }
-
-
 
 
 

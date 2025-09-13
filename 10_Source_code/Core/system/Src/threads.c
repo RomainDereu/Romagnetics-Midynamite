@@ -5,7 +5,6 @@
 #include "_menu_controller.h"
 #include "menus.h"
 
-#include "midi_tempo.h"
 #include "midi_transform.h"
 
 #include "stm32f4xx_hal.h"  // HAL types
@@ -14,7 +13,6 @@
 #include "utils.h"
 
 // Timers used inside threads (owned/initialized by CubeMX in main.c)
-extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
@@ -57,19 +55,12 @@ static const osThreadAttr_t s_medium_tasks_attrs = {
 static void DisplayUpdateThread(void *arg) {
   (void)arg;
   for (;;) {
-    uint32_t f = osEventFlagsWait(s_display_flags, DISPLAY_FLAG_MASK,
-                                  osFlagsWaitAny, osWaitForever);
-    uint8_t current = ui_state_get(CURRENT_MENU);
-    if (f & flag_for_menu((menu_list_t)current)) {
-      switch (current) {
-        case MIDI_TEMPO:     screen_update_midi_tempo();     break;
-        case MIDI_MODIFY:    screen_update_midi_modify();    break;
-        case MIDI_TRANSPOSE: screen_update_midi_transpose(); break;
-        case SETTINGS:       screen_update_settings();       break;
-      }
-      osDelay(30);
-
-    }
+    uint32_t f = osEventFlagsWait(s_display_flags,
+    							  DISPLAY_FLAG_MASK,
+                                  osFlagsWaitAny,
+								  osWaitForever);
+    screen_update_menu(f);
+    osDelay(30);
   }
 }
 
@@ -108,13 +99,8 @@ static void MediumTasksThread(void *argument)
         screen_refresh();
     }
 
-    switch (current_menu) {
-      case MIDI_TEMPO:     update_menu(MIDI_TEMPO);    break;
-      case MIDI_MODIFY:    update_menu(MIDI_MODIFY);    break;
-      case MIDI_TRANSPOSE: update_menu(MIDI_TRANSPOSE); break;
-      case SETTINGS:       update_menu(SETTINGS);       break;
-      default: break;
-    }
+    update_menu(current_menu);
+
 
     current_menu = ui_state_get(CURRENT_MENU);
     ui_state_modify(OLD_MENU, UI_MODIFY_SET, current_menu);
@@ -122,13 +108,7 @@ static void MediumTasksThread(void *argument)
     // Btn3 toggles "currently sending" depending on menu
     static uint8_t OldBtn3State = 1;
     if (debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)) {
-    	menu_list_t m = (menu_list_t)ui_state_get(CURRENT_MENU);
-    	save_field_t f = sending_field_for_menu(m);
-    	if (f != SAVE_FIELD_INVALID) {
-    	  save_modify_u8(f, SAVE_MODIFY_INCREMENT, 0);
-    	  if (m == MIDI_TEMPO) mt_start_stop(&htim2);
-    	  threads_display_notify(flag_for_menu(m));
-    	}
+    	start_stop_pressed();
     }
 
     // Panic (both buttons)

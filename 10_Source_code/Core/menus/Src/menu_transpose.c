@@ -34,3 +34,7 @@ void screen_update_midi_transpose(void)
     };
     menu_ui_render(MIDI_TRANSPOSE, elems, sizeof(elems)/sizeof(elems[0]));
 }
+
+void ui_code_midi_transpose() {
+	midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
+}

@@ -6,6 +6,7 @@
  */
 #include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
+#include "screen_driver.h"
 #include "menus.h"
 #include "text.h"
 
@@ -22,4 +23,13 @@ void screen_update_midi_tempo(void)
     };
 
     menu_ui_render(MIDI_TEMPO, elems, sizeof(elems) / sizeof(elems[0]));
+}
+
+void ui_code_midi_tempo() {
+
+  //Vertical line  right of BPM
+	draw_line(64, 10, 64, 64);
+  //Horizontal line above On / Off
+	draw_line(0, 40, 64, 40);
+
 }
