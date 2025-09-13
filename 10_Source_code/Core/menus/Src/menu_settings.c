@@ -11,7 +11,7 @@
 #include "text.h"
 
 void cont_update_settings()  {
-	return;
+    saving_settings_ui();
 }
 
 
@@ -57,8 +57,6 @@ void ui_update_settings(void)
 
 
 void ui_code_settings()  {
-	saving_settings_ui();
-	//Bottom line above save text
 	draw_line(0, LINE_4, 127, LINE_4);
 }
 

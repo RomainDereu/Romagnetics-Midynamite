@@ -13,7 +13,7 @@
 #include "screen_driver.h"
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
-#include "utils.h"
+#include "utils.h" //Debounce
 
 
 extern TIM_HandleTypeDef htim2;
@@ -25,9 +25,9 @@ void screen_update_menu(uint32_t flag){
     uint8_t current = ui_state_get(CURRENT_MENU);
     if (flag & flag_for_menu((menu_list_t)current)) {
       switch (current) {
-        case MENU_TEMPO:     ui_update_tempo();     break;
-        case MENU_MODIFY:    ui_update_modify();    break;
-        case MENU_TRANSPOSE: ui_update_transpose(); break;
+        case MENU_TEMPO:     ui_update_tempo();          break;
+        case MENU_MODIFY:    ui_update_modify();         break;
+        case MENU_TRANSPOSE: ui_update_transpose();      break;
         case MENU_SETTINGS:       ui_update_settings();  break;
       }
     }
@@ -47,28 +47,38 @@ void ui_code_menu(){
 void cont_update_menu(menu_list_t field){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MENU_TEMPO:     cont_update_tempo();     break;
+	  case MENU_TEMPO:     cont_update_tempo();          break;
 	  case MENU_MODIFY:    cont_update_modify(field);    break;
 	  case MENU_TRANSPOSE: cont_update_transpose(field); break;
-	  case MENU_SETTINGS:  cont_update_settings();  break;
+	  case MENU_SETTINGS:  cont_update_settings();       break;
       }
 }
 
 //save helper functions
-void saving_settings_ui(){
-    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-		write_68(message->saving, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
+void saving_settings_ui(void)
+{
+    // Needs persistent state for debounce across frames
+    static uint8_t save_btn_state = 1;
 
-		store_settings();
+    if (debounce_button(GPIOB, Btn1_Pin, &save_btn_state, 50)) {
+        // Immediate feedback
+        write_68(message->saving, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
 
-		write_68(message->saved, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
-		osDelay(1000);
-		write_68(message->save_instruction, TXT_LEFT, B_LINE);
-		screen_driver_UpdateScreen();
+        store_settings();
+
+        write_68(message->saved, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
+        osDelay(1000);
+
+        write_68(message->save_instruction, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
+
+        // Make sure the normal UI redraws ASAP after the save banner
+        threads_display_notify(flag_for_menu(MENU_SETTINGS));
     }
 }
+
 
 
 void update_contrast_ui() {
@@ -131,7 +141,3 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
     const char *text_print = message->off_on[on_or_off];
 	write_1118(text_print, 95, text_position);
 }
-
-
-
-
