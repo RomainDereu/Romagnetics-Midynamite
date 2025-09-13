@@ -24,12 +24,6 @@ typedef struct {
     uint8_t        ctrl_group_id; // CTRL_* visibility gate
 } ui_element;
 
-typedef struct {
-    menu_list_t           menu_id;
-    const ui_element     *elements;
-    size_t                count;
-} menu_ui_information;
-
 
 // =====================
 // Struct exposure
