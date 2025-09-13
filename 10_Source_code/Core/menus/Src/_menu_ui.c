@@ -32,6 +32,7 @@ static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     if (!s) return;
     switch (font) {
         case UI_6x8:   write_68(s, x, y); break;
+        case UI_6x8_2: break;
         case UI_11x18: write_1118(s, x, y); break;
         case UI_16x24: break;
     }

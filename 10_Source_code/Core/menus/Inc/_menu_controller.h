@@ -171,6 +171,7 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
 // ---------------------
 void select_press_menu_change(menu_list_t sel_field);
 
+int8_t ui_selected_bit(save_field_t f);
 uint8_t  ui_is_field_selected(save_field_t f);
 uint32_t ui_active_groups(void);
 
