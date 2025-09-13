@@ -25,10 +25,10 @@ void screen_update_menu(uint32_t flag){
     uint8_t current = ui_state_get(CURRENT_MENU);
     if (flag & flag_for_menu((menu_list_t)current)) {
       switch (current) {
-        case MENU_TEMPO:     screen_update_midi_tempo();     break;
-        case MENU_MODIFY:    screen_update_midi_modify();    break;
-        case MENU_TRANSPOSE: screen_update_midi_transpose(); break;
-        case MENU_SETTINGS:       screen_update_settings();  break;
+        case MENU_TEMPO:     ui_update_tempo();     break;
+        case MENU_MODIFY:    ui_update_modify();    break;
+        case MENU_TRANSPOSE: ui_update_transpose(); break;
+        case MENU_SETTINGS:       ui_update_settings();  break;
       }
     }
 }
@@ -44,13 +44,13 @@ void ui_code_menu(){
 }
 
 //menu_controller.c
-void controller_update_menu(menu_list_t field){
+void cont_update_menu(menu_list_t field){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MENU_TEMPO:     controller_update_tempo();     break;
-	  case MENU_MODIFY:    controller_update_modify(field);    break;
-	  case MENU_TRANSPOSE: controller_update_transpose(field); break;
-	  case MENU_SETTINGS:       controller_update_settings();  break;
+	  case MENU_TEMPO:     cont_update_tempo();     break;
+	  case MENU_MODIFY:    cont_update_modify(field);    break;
+	  case MENU_TRANSPOSE: cont_update_transpose(field); break;
+	  case MENU_SETTINGS:  cont_update_settings();  break;
       }
 }
 

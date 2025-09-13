@@ -11,12 +11,12 @@
 #include "screen_driver.h"
 #include "text.h"
 
-void controller_update_modify(menu_list_t field) {
+void cont_update_modify(menu_list_t field) {
 	toggle_subpage(field);
 }
 
 
-void screen_update_midi_modify(void)
+void ui_update_modify(void)
 {
     const ui_element elems[] = {
         // type      save_item                text                        font    x       y           ctrl_group_id

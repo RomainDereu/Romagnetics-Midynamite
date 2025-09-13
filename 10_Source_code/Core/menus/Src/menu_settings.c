@@ -10,12 +10,12 @@
 #include "screen_driver.h"
 #include "text.h"
 
-void controller_update_settings()  {
+void cont_update_settings()  {
 	return;
 }
 
 
-void screen_update_settings(void)
+void ui_update_settings(void)
 {
     const ui_element elems[] = {
         // type      save_item                 text                         font    x        y     ctrl_group_id
