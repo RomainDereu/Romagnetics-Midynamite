@@ -43,15 +43,15 @@ void screen_update_settings(void)
         // -------- Filters --------
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_FILTER },
         { ELEM_TEXT , 0,                       TEXT_(X_equals_ignore_channel), UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_FILTER },
+        { ELEM_16CH , SETTINGS_FILTERED_CH,    "X",                        UI_6x8_2,TXT_LEFT, LINE_2, CTRL_SETTINGS_FILTER },
+
 
         // -------- ABOUT (text-only) --------
-        { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_ABOUT },
-        { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
-        { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
-        { ELEM_TEXT , 0,                       TEXT_(about_version),       UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_ABOUT },
+        { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8,  TXT_LEFT, LINE_0, CTRL_SETTINGS_ABOUT },
+        { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8,  TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
+        { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8,  TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
     };
 
-    filter_controller();
 
     // Footer (can be CTRL_SETTINGS_BOTH if you prefer to gate it too)
     draw_line(0, LINE_4, 127, LINE_4);

@@ -73,7 +73,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_USB_THRU]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
     [SETTINGS_CHANNEL_FILTER]    = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
 
-    [SETTINGS_FILTERED_CHANNELS] = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
+    [SETTINGS_FILTERED_CH] = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
 };
 
 
@@ -443,7 +443,18 @@ static inline void toggle_selected_row(menu_list_t sel_field)
     nav_apply_selection(&s);
 }
 
-/* “Is this field selected?” simplified to a single compare. */
+
+int8_t ui_selected_bit(save_field_t f) {
+    if ((unsigned)f >= SAVE_FIELD_COUNT) return -1;
+    const ui_group_t  root = root_for_ctrl_id(menu_controls[f].groups);
+    const menu_list_t page = kRootToMenu[root];
+    const NavSel s = nav_selection(page);
+    if (s.field == f && s.is_bits) return (int8_t)s.bit;
+    return -1;
+}
+
+
+
 uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
@@ -563,19 +574,6 @@ uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_s
     return 0;
 }
 
-// ---------------------
-// Settings: 16-channel filter drawer
-// ---------------------
-void filter_controller(void) {
-    const uint32_t active = ui_active_groups();
-    if ((active & (1u << (CTRL_SETTINGS_FILTER - 1))) == 0) return;
-
-    const uint32_t mask     = (uint32_t)save_get(SETTINGS_FILTERED_CHANNELS);
-    const uint8_t  base_idx = (uint8_t)(SETTINGS_FILTERED_CHANNELS - SETTINGS_START_MENU);
-    const uint8_t  sel      = menu_nav_get_select(SETTINGS);
-
-    filter_controller_ui(mask, base_idx, sel);
-}
 
 
 static uint8_t menu_nav_end_auto(menu_list_t field)

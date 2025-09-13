@@ -187,7 +187,7 @@ static inline void screen_refresh(void) {
 }
 
 
-void     filter_controller(void);
+int8_t filter_selected_bits(save_field_t f);
 void     update_menu(menu_list_t menu);
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */

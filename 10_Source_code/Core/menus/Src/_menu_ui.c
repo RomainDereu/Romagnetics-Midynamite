@@ -41,6 +41,7 @@ static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, ui
 	if (!s) return;
     switch (font) {
         case UI_6x8:   write_underline_68(s, x, y, ul); break;
+        case UI_6x8_2: write_underline_68_2(s, x, y, ul); break;
         case UI_11x18: write_underline_1118(s, x, y, ul); break;
         case UI_16x24: write_underline_1624(s, x, y, ul); break;
     }
@@ -94,16 +95,10 @@ void menu_ui_render(const ui_element *elems, size_t count) {
         if (!elem_is_visible(e, active)) continue;
 
         switch (e->type) {
-            case ELEM_TEXT:
-                draw_text(e->text, e->x, e->y, e->font);
-                break;
-
-            case ELEM_ITEM:
-                draw_item_row(e);
-                break;
-
-            default:
-                break;
+        case ELEM_TEXT:   draw_text(e->text, e->x, e->y, e->font); break;
+        case ELEM_ITEM:   draw_item_row(e);                        break;
+        case ELEM_16CH:   menu_ui_draw_16ch(e);                          break;
+        default: break;
         }
     }
 
@@ -123,18 +118,30 @@ void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, u
     draw_text_ul(s, x, y, font, underline);
 }
 
-void menu_ui_draw_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
-    draw_line(x1, y1, x2, y2);
-}
 
 
 
-void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel){
-    for (uint8_t i = 0; i < 16; i++) {
-		const char  *label = (mask & (1u << i)) ? "X" : message->one_to_sixteen_one_char[i];
-		const uint8_t x    = (uint8_t)(5 + 10 * (i % 8));
-		const uint8_t y    = (i < 8) ? LINE_2 : LINE_3;
-		const uint8_t ul   = (uint8_t)(sel == (uint8_t)(base_idx + i));
-		write_underline_68_2(label, x, y, ul);
+
+void menu_ui_draw_16ch(const ui_element *e) {
+    const save_field_t f    = (save_field_t)e->save_item;
+    const uint32_t     mask = (uint32_t)save_get(f);
+    const int8_t       selb = ui_selected_bit(f);   // -1 if not selected
+
+    // Use the element's text as the "on" glyph, defaulting to "X"
+    const char *on_label = e->text ? e->text : "X";
+
+    const int16_t base_x = (int16_t)e->x;
+    const int16_t y1     = (int16_t)e->y;          // first row at LINE_*
+    const int16_t y2     = (int16_t)(y1 + 10);     // second row exactly +10 px
+
+    for (uint8_t i = 0; i < 16; ++i) {
+        const char  *label = (mask & (1u << i)) ? on_label
+                                                : message->one_to_sixteen_one_char[i];
+        const int16_t x    = (int16_t)(base_x + 10 * (i % 8));
+        const int16_t y    = (i < 8) ? y1 : y2;
+        const uint8_t ul   = (selb == (int8_t)i) ? 1u : 0u;
+
+        // Uses e->font (e.g., UI_6x8_2) to pick the correct underline writer
+        draw_text_ul(label, x, y, e->font, ul);
     }
 }

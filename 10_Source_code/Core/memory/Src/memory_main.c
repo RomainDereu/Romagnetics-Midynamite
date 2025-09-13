@@ -51,7 +51,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
     [SETTINGS_USB_THRU]          = {      0,          1,          0 },
     [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },
-    [SETTINGS_FILTERED_CHANNELS] = {      0,  0x0000FFFF,          0 },
+    [SETTINGS_FILTERED_CH] = {      0,  0x0000FFFF,          0 },
     [SETTINGS_ABOUT]             = {      0,          0,          0 },
 
     [SAVE_DATA_VALIDITY]         = {      0,  0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },

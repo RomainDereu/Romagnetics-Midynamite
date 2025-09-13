@@ -26,6 +26,7 @@
 // Fonts you already use via write_* functions
 typedef enum {
     UI_6x8,
+    UI_6x8_2, //For midi 16 Channels
     UI_11x18,
     UI_16x24
 } ui_font_t;
@@ -34,6 +35,7 @@ typedef enum {
 typedef enum {
     ELEM_TEXT,
 	ELEM_ITEM,
+	ELEM_16CH,
 } ui_elem_type_t;
 
 #define UI_CHOICE(tbl) ((const char*)(tbl))
@@ -65,10 +67,6 @@ void menu_ui_render(const ui_element *elems, size_t count);
 // Convenience helpers (optional)
 void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font);
 void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t underline);
-void menu_ui_draw_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-
-void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel);
-
-
+void menu_ui_draw_16ch(const ui_element *e);
 
 #endif /* MENU_INC_MENU_UI_H_ */

@@ -129,7 +129,7 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
     uint8_t channel = status_byte & 0x0F;
 
     if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
-        return (save_get(SETTINGS_FILTERED_CHANNELS) >> channel) & 0x01;
+        return (save_get(SETTINGS_FILTERED_CH) >> channel) & 0x01;
     }
 
     return 0;

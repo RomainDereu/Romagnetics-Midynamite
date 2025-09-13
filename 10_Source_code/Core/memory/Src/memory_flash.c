@@ -21,7 +21,7 @@ enum {
     IDX_U32_TEMPO_CLICK_RATE,
     IDX_U32_MODIFY_VEL_PM,
     IDX_U32_TRANSPOSE_SHIFT,
-    IDX_U32_SETTINGS_FILTERED_CHANNELS,
+    IDX_U32_SETTINGS_FILTERED_CH,
     U32_COUNT   /* keep last */
 };
 
@@ -93,7 +93,7 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
     u32tab[TEMPO_TEMPO_CLICK_RATE]     = &s->u32_vals[IDX_U32_TEMPO_CLICK_RATE];
     u32tab[MODIFY_VEL_PLUS_MINUS] = &s->u32_vals[IDX_U32_MODIFY_VEL_PM];
     u32tab[TRANSPOSE_MIDI_SHIFT_VALUE] = &s->u32_vals[IDX_U32_TRANSPOSE_SHIFT];
-    u32tab[SETTINGS_FILTERED_CHANNELS]      = &s->u32_vals[IDX_U32_SETTINGS_FILTERED_CHANNELS];
+    u32tab[SETTINGS_FILTERED_CH]      = &s->u32_vals[IDX_U32_SETTINGS_FILTERED_CH];
 
     /* CHECKSUM exposed via u32 path for readback tools */
     u32tab[SAVE_DATA_VALIDITY]              = (int32_t*)&s->check_data_validity;
