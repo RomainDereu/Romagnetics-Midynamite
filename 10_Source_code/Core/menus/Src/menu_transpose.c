@@ -9,12 +9,12 @@
 #include "menus.h"
 #include "text.h"
 
-void controller_update_transpose(menu_list_t field) {
+void cont_update_transpose(menu_list_t field) {
 	toggle_subpage(field);
 }
 
 
-void screen_update_midi_transpose(void)
+void ui_update_transpose(void)
 {
     const ui_element elems[] = {
         // type      save_item                 text                              font    x        y     ctrl_group_id

@@ -1,5 +1,5 @@
 /*
- * menu_controller.h
+ * _menu_controller.h
  *
  *  Created on: Sep 8, 2025
  *      Author: Astaa
@@ -29,23 +29,27 @@ typedef enum {
 // UI submenu id
 // ---------------------
 typedef enum {
-    UI_GROUP_TEMPO = 0,
-    UI_GROUP_MODIFY,
+    CTRL_TEMPO_ALL = 1,
 
-    UI_GROUP_TRANSPOSE_SHIFT,
-    UI_GROUP_TRANSPOSE_SCALED,
-    UI_GROUP_TRANSPOSE_BOTH,
+    CTRL_MODIFY_CHANGE,
+    CTRL_MODIFY_SPLIT,
+    CTRL_MODIFY_ALL,
+    CTRL_MODIFY_VEL_CHANGED,
+    CTRL_MODIFY_VEL_FIXED,
 
-    UI_GROUP_MODIFY_CHANGE,
-    UI_GROUP_MODIFY_SPLIT,
-    UI_GROUP_MODIFY_BOTH,
+    CTRL_TRANSPOSE_SHIFT,
+    CTRL_TRANSPOSE_SCALED,
+    CTRL_TRANSPOSE_ALL,
 
-    UI_GROUP_MODIFY_VEL_CHANGED,
-    UI_GROUP_MODIFY_VEL_FIXED,
+    CTRL_SETTINGS_GLOBAL1,
+    CTRL_SETTINGS_GLOBAL2,
+    CTRL_SETTINGS_FILTER,
+    CTRL_SETTINGS_ALL,
+    CTRL_SETTINGS_ABOUT,
+	CTRL_SETTINGS_ALWAYS,
 
-    UI_GROUP_SETTINGS,
-    UI_GROUP_NONE = 0xFF
-} ui_group_t;
+} ctrl_group_id_t;
+
 
 
 // ---------------------
@@ -84,33 +88,6 @@ typedef struct {
 } menu_controls_t;
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
-
-
-// ---------------------
-// Controller groups (bit flags)
-// ---------------------
-typedef enum {
-    CTRL_TEMPO_ALL = 1,
-
-    CTRL_MODIFY_CHANGE,
-    CTRL_MODIFY_SPLIT,
-    CTRL_MODIFY_ALL,
-    CTRL_MODIFY_VEL_CHANGED,
-    CTRL_MODIFY_VEL_FIXED,
-
-    CTRL_TRANSPOSE_SHIFT,
-    CTRL_TRANSPOSE_SCALED,
-    CTRL_TRANSPOSE_ALL,
-
-    CTRL_SETTINGS_GLOBAL1,
-    CTRL_SETTINGS_GLOBAL2,
-    CTRL_SETTINGS_FILTER,
-    CTRL_SETTINGS_ALL,
-    CTRL_SETTINGS_ABOUT,
-	CTRL_SETTINGS_ALWAYS,
-
-} ctrl_group_id_t;
-
 
 // ---------------------
 // Active list
