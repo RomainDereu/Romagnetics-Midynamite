@@ -195,6 +195,14 @@ static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_chann
 }
 
 static void change_velocity(midi_note *midi_msg) {
+
+	// If note off and 0, no need to change
+    uint8_t status_nibble = midi_msg->status & 0xF0;
+    if (status_nibble == 0x80 && midi_msg->velocity == 0) {
+        midi_msg->velocity = 0;
+        return;
+    }
+
     // int16 in case of overflow
     int32_t velocity = midi_msg->velocity;
 
