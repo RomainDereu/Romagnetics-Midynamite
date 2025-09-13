@@ -170,39 +170,37 @@ static void menu_ui_draw_16ch(const ui_element *e) {
 }
 
 
-void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
+// Each of these arrays & counts are defined in their own menu_xxx.c files
+extern const ui_element tempo_ui_elements[];
+extern const size_t     tempo_ui_count;
+extern const ui_element modify_ui_elements[];
+extern const size_t     modify_ui_count;
+extern const ui_element transpose_ui_elements[];
+extern const size_t     transpose_ui_count;
+extern const ui_element settings_ui_elements[];
+extern const size_t     settings_ui_count;
 
-    // --- Auto-select per-menu element table when not provided ---
-    if (elems == NULL || count == 0) {
-        switch (menu) {
-            case MIDI_TEMPO:
-                elems = tempo_ui_elements;
-                count = tempo_ui_count;
-                break;
-            case MIDI_MODIFY:
-                elems = modify_ui_elements;
-                count = modify_ui_count;
-                break;
-            case MIDI_TRANSPOSE:
-                elems = transpose_ui_elements;
-                count = transpose_ui_count;
-                break;
-            case SETTINGS:
-            default:
-                elems = settings_ui_elements;
-                count = settings_ui_count;
-                break;
-        }
+const menu_ui_information_t menu_ui_information[] = {
+    { MIDI_TEMPO,     tempo_ui_elements,     tempo_ui_count },
+    { MIDI_MODIFY,    modify_ui_elements,    modify_ui_count },
+    { MIDI_TRANSPOSE, transpose_ui_elements, transpose_ui_count },
+    { SETTINGS,       settings_ui_elements,  settings_ui_count },
+};
+
+void menu_ui_render(menu_list_t menu,
+                    const ui_element *elems,
+                    size_t count)
+{
+    if (!elems || count == 0) {
+        elems = menu_ui_information[menu].elements;
+        count = menu_ui_information[menu].count;
     }
 
     const uint32_t active = ui_active_groups();
-
     screen_driver_Fill(Black);
 
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
-
-        // Skip elements not in the active groups
         if (!elem_is_visible(e, active)) continue;
 
         switch (e->type) {
@@ -213,12 +211,8 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
         }
     }
 
-    // Separation line on top common to all menus
     draw_line(0, 10, 127, 10);
-
-    // Per-page extras (lines, on/off block, save UI, etc.)
     ind_menu_ui[menu](menu);
-
     screen_driver_UpdateScreen();
 }
 
