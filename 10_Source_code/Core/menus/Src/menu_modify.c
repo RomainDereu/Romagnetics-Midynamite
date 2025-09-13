@@ -7,14 +7,14 @@
 #include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
 #include "menus.h"
-#include "screen_driver.h"
 #include "text.h"
 
 void screen_update_midi_modify(void)
 {
     const ui_element elems[] = {
         // type      save_item                text                        font    x       y           ctrl_group_id
-        { ELEM_TEXT , 0,                       TEXT_(midi_modify),        UI_6x8, TXT_LEFT, LINE_0,      CTRL_MODIFY_CHANGE },
+        { ELEM_TEXT , 0,                       TEXT_(midi_modify),        UI_6x8, TXT_LEFT, LINE_0,      CTRL_MODIFY_ALL },
+
         { ELEM_TEXT , 0,                       TEXT_(send_1_sem),         UI_6x8, TXT_LEFT, LINE_1,      CTRL_MODIFY_CHANGE },
         { ELEM_ITEM , MODIFY_SEND_TO_MIDI_CH1,  TEXT_(midi_channels),      UI_6x8, 50,      LINE_1,      CTRL_MODIFY_CHANGE },
 

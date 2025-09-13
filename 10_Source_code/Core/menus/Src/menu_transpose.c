@@ -7,16 +7,13 @@
 #include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
 #include "menus.h"
-#include "midi_transform.h"
-#include "screen_driver.h"
 #include "text.h"
-
 
 void screen_update_midi_transpose(void)
 {
     const ui_element elems[] = {
         // type      save_item                 text                              font    x        y     ctrl_group_id
-        { ELEM_TEXT , 0,                          TEXT_(midi_transpose),       UI_6x8, TXT_LEFT, LINE_0, CTRL_TRANSPOSE_BOTH },
+        { ELEM_TEXT , 0,                          TEXT_(midi_transpose),       UI_6x8, TXT_LEFT, LINE_0, CTRL_TRANSPOSE_ALL },
 
         // ---------- SHIFT page ----------
         { ELEM_TEXT , 0,                          TEXT_(shift_by),             UI_6x8, TXT_LEFT, LINE_1, CTRL_TRANSPOSE_SHIFT },
@@ -32,9 +29,8 @@ void screen_update_midi_transpose(void)
         { ELEM_ITEM , TRANSPOSE_TRANSPOSE_SCALE,   TEXT_(scales),              UI_6x8, 40,       LINE_3, CTRL_TRANSPOSE_SCALED },
 
         // ---------- COMMON (both pages) ----------
-        { ELEM_TEXT , 0,                          TEXT_(send_base),            UI_6x8, TXT_LEFT, LINE_4, CTRL_TRANSPOSE_BOTH },
-        { ELEM_ITEM , TRANSPOSE_SEND_ORIGINAL,     TEXT_(no_yes),              UI_6x8, 65,       LINE_4, CTRL_TRANSPOSE_BOTH },
+        { ELEM_TEXT , 0,                          TEXT_(send_base),            UI_6x8, TXT_LEFT, LINE_4, CTRL_TRANSPOSE_ALL },
+        { ELEM_ITEM , TRANSPOSE_SEND_ORIGINAL,     TEXT_(no_yes),              UI_6x8, 65,       LINE_4, CTRL_TRANSPOSE_ALL },
     };
-
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 }

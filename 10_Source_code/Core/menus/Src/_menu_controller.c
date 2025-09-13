@@ -37,9 +37,9 @@ uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 // -------------------------
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     //                                wrap     handler             handler_arg   group
-    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO },
-    [TEMPO_CURRENTLY_SENDING]    = {   WRAP,  no_update,                0,      CTRL_TEMPO },
-    [TEMPO_SEND_TO_MIDI_OUT]     = {   WRAP,  update_value,             1,      CTRL_TEMPO },
+    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO_ALL },
+    [TEMPO_CURRENTLY_SENDING]    = {   WRAP,  no_update,                0,      CTRL_TEMPO_ALL },
+    [TEMPO_SEND_TO_MIDI_OUT]     = {   WRAP,  update_value,             1,      CTRL_TEMPO_ALL },
 
     [MODIFY_CHANGE_OR_SPLIT]     = {   WRAP,  no_update,                0,      0 },
     [MODIFY_VELOCITY_TYPE]       = {   WRAP,  no_update,                0,      0 },
@@ -51,12 +51,12 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [MODIFY_SPLIT_MIDI_CH2]      = { NO_WRAP, update_value,             1,      CTRL_MODIFY_SPLIT },
     [MODIFY_SPLIT_NOTE]          = { NO_WRAP, update_value,            12,      CTRL_MODIFY_SPLIT },
 
-    [MODIFY_SEND_TO_MIDI_OUT]    = {   WRAP,  update_value,             1,      CTRL_MODIFY_BOTH },
+    [MODIFY_SEND_TO_MIDI_OUT]    = {   WRAP,  update_value,             1,      CTRL_MODIFY_ALL },
 
     [MODIFY_VEL_PLUS_MINUS]      = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_CHANGED },
     [MODIFY_VEL_ABSOLUTE]        = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_FIXED },
 
-    [MODIFY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_BOTH },
+    [MODIFY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_ALL },
 
     [TRANSPOSE_TRANSPOSE_TYPE]   = {   WRAP,  no_update,                0,      0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = { NO_WRAP, update_value,            12,      CTRL_TRANSPOSE_SHIFT },
@@ -65,7 +65,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_INTERVAL]         = { NO_WRAP, update_value,             1,      CTRL_TRANSPOSE_SCALED },
     [TRANSPOSE_TRANSPOSE_SCALE]  = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_SCALED },
 
-    [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_BOTH },
+    [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_ALL },
     [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
 
     [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
@@ -106,9 +106,9 @@ static const menu_list_t kRootToMenu[] = {
 
 // Compact “ctrl_group_id_t -> root ui group” (replaces select_group_for_field_id)
 static inline ui_group_t root_for_ctrl_id(uint32_t id) {
-  if (id == CTRL_TEMPO) return UI_GROUP_TEMPO;
+  if (id == CTRL_TEMPO_ALL) return UI_GROUP_TEMPO;
   if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED) return UI_GROUP_MODIFY_BOTH;
-  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_BOTH)   return UI_GROUP_TRANSPOSE_BOTH;
+  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_ALL)   return UI_GROUP_TRANSPOSE_BOTH;
   if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ABOUT)   return UI_GROUP_SETTINGS;
   return UI_GROUP_TEMPO; // safe default
 }
@@ -185,10 +185,10 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 {
     switch (requested) {
         case UI_GROUP_TEMPO:
-            return flag_from_id(CTRL_TEMPO);
+            return flag_from_id(CTRL_TEMPO_ALL);
 
         case UI_GROUP_MODIFY_BOTH: {
-            uint32_t mask = flag_from_id(CTRL_MODIFY_BOTH);
+            uint32_t mask = flag_from_id(CTRL_MODIFY_ALL);
 
             int page = (int)save_get(MODIFY_CHANGE_OR_SPLIT);
             if (page == MIDI_MODIFY_SPLIT) mask |= flag_from_id(CTRL_MODIFY_SPLIT);
@@ -202,7 +202,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
         }
 
         case UI_GROUP_TRANSPOSE_BOTH: {
-            uint32_t mask = flag_from_id(CTRL_TRANSPOSE_BOTH);
+            uint32_t mask = flag_from_id(CTRL_TRANSPOSE_ALL);
             int t = (int)save_get(TRANSPOSE_TRANSPOSE_TYPE);
             if (t == MIDI_TRANSPOSE_SHIFT) mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
             else                            mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
@@ -225,7 +225,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
         }
 
         default:
-            return flag_from_id(CTRL_TEMPO);
+            return flag_from_id(CTRL_TEMPO_ALL);
     }
 }
 

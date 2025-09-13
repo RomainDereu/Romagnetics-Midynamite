@@ -7,9 +7,7 @@
 #include "_menu_controller.h" //CTRL_G
 #include "_menu_ui.h"
 #include "menus.h"
-#include "screen_driver.h"
 #include "text.h"
-
 
 void screen_update_settings(void)
 {

@@ -90,17 +90,17 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 // Controller groups (bit flags)
 // ---------------------
 typedef enum {
-    CTRL_TEMPO = 1,
+    CTRL_TEMPO_ALL = 1,
 
     CTRL_MODIFY_CHANGE,
     CTRL_MODIFY_SPLIT,
-    CTRL_MODIFY_BOTH,
+    CTRL_MODIFY_ALL,
     CTRL_MODIFY_VEL_CHANGED,
     CTRL_MODIFY_VEL_FIXED,
 
     CTRL_TRANSPOSE_SHIFT,
     CTRL_TRANSPOSE_SCALED,
-    CTRL_TRANSPOSE_BOTH,
+    CTRL_TRANSPOSE_ALL,
 
     CTRL_SETTINGS_GLOBAL1,
     CTRL_SETTINGS_GLOBAL2,
