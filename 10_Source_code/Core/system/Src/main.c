@@ -5,10 +5,12 @@
  */
 #include "main.h"
 #include "memory_main.h"
-#include "_menu_ui.h" //For the screen init
+#include "_menu_ui.h" //For init
+
 #include "midi_transform.h"
 #include "midi_tempo.h"
 #include "usb_device.h"
+
 #include "threads.h"
 
 

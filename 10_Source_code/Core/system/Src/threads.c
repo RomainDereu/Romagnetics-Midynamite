@@ -61,14 +61,8 @@ static void DisplayUpdateThread(void *arg) {
                                   osFlagsWaitAny, osWaitForever);
     uint8_t current = ui_state_get(CURRENT_MENU);
     if (f & flag_for_menu((menu_list_t)current)) {
-      switch (current) {
-        case MIDI_TEMPO:     screen_update_midi_tempo();     break;
-        case MIDI_MODIFY:    screen_update_midi_modify();    break;
-        case MIDI_TRANSPOSE: screen_update_midi_transpose(); break;
-        case SETTINGS:       screen_update_settings();       break;
-      }
+      menu_ui_render(current);
       osDelay(30);
-
     }
   }
 }
@@ -108,12 +102,7 @@ static void MediumTasksThread(void *argument)
         screen_refresh();
     }
 
-    switch (current_menu) {
-      case MIDI_TEMPO:     update_menu(MIDI_TEMPO);    break;
-      case MIDI_MODIFY:    update_menu(MIDI_MODIFY);    break;
-      case MIDI_TRANSPOSE: update_menu(MIDI_TRANSPOSE); break;
-      case SETTINGS:       update_menu(SETTINGS);       break;
-      default: break;
+    update_menu(current_menu);
     }
 
     current_menu = ui_state_get(CURRENT_MENU);
