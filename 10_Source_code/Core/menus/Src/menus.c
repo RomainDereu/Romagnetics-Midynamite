@@ -25,10 +25,10 @@ void screen_update_menu(uint32_t flag){
     uint8_t current = ui_state_get(CURRENT_MENU);
     if (flag & flag_for_menu((menu_list_t)current)) {
       switch (current) {
-        case MIDI_TEMPO:     screen_update_midi_tempo();     break;
-        case MIDI_MODIFY:    screen_update_midi_modify();    break;
-        case MIDI_TRANSPOSE: screen_update_midi_transpose(); break;
-        case SETTINGS:       screen_update_settings();       break;
+        case MENU_TEMPO:     screen_update_midi_tempo();     break;
+        case MENU_MODIFY:    screen_update_midi_modify();    break;
+        case MENU_TRANSPOSE: screen_update_midi_transpose(); break;
+        case MENU_SETTINGS:       screen_update_settings();  break;
       }
     }
 }
@@ -36,10 +36,10 @@ void screen_update_menu(uint32_t flag){
 void ui_code_menu(){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MIDI_TEMPO:     ui_code_tempo();     break;
-	  case MIDI_MODIFY:    ui_code_modify();    break;
-	  case MIDI_TRANSPOSE: ui_code_transpose(); break;
-	  case SETTINGS:       ui_code_settings();  break;
+	  case MENU_TEMPO:     ui_code_tempo();     break;
+	  case MENU_MODIFY:    ui_code_modify();    break;
+	  case MENU_TRANSPOSE: ui_code_transpose(); break;
+	  case MENU_SETTINGS:  ui_code_settings();  break;
       }
 }
 
@@ -47,10 +47,10 @@ void ui_code_menu(){
 void controller_update_menu(menu_list_t field){
     uint8_t current = ui_state_get(CURRENT_MENU);
 	switch (current) {
-	  case MIDI_TEMPO:     controller_update_tempo();     break;
-	  case MIDI_MODIFY:    controller_update_modify(field);    break;
-	  case MIDI_TRANSPOSE: controller_update_transpose(field); break;
-	  case SETTINGS:       controller_update_settings();  break;
+	  case MENU_TEMPO:     controller_update_tempo();     break;
+	  case MENU_MODIFY:    controller_update_modify(field);    break;
+	  case MENU_TRANSPOSE: controller_update_transpose(field); break;
+	  case MENU_SETTINGS:       controller_update_settings();  break;
       }
 }
 
@@ -119,7 +119,7 @@ void start_stop_pressed() {
 	save_field_t f = sending_field_for_menu(m);
 	if (f != SAVE_FIELD_INVALID) {
 	  save_modify_u8(f, SAVE_MODIFY_INCREMENT, 0);
-	  if (m == MIDI_TEMPO) mt_start_stop(&htim2);
+	  if (m == MENU_TEMPO) mt_start_stop(&htim2);
 	  threads_display_notify(flag_for_menu(m));
 	}
 }

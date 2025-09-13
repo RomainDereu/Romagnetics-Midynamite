@@ -157,17 +157,17 @@ static MenuActiveLists s_menu_lists;
 
 // --- Menu <-> Root group mapping (kills a few switch statements) ---
 static const ui_group_t kMenuToRoot[AMOUNT_OF_MENUS] = {
-  [MIDI_TEMPO]     = UI_GROUP_TEMPO,
-  [MIDI_MODIFY]    = UI_GROUP_MODIFY_BOTH,
-  [MIDI_TRANSPOSE] = UI_GROUP_TRANSPOSE_BOTH,
-  [SETTINGS]       = UI_GROUP_SETTINGS,
+  [MENU_TEMPO]     = UI_GROUP_TEMPO,
+  [MENU_MODIFY]    = UI_GROUP_MODIFY_BOTH,
+  [MENU_TRANSPOSE] = UI_GROUP_TRANSPOSE_BOTH,
+  [MENU_SETTINGS]       = UI_GROUP_SETTINGS,
 };
 
 static const menu_list_t kRootToMenu[] = {
-  [UI_GROUP_TEMPO]          = MIDI_TEMPO,
-  [UI_GROUP_MODIFY_BOTH]    = MIDI_MODIFY,
-  [UI_GROUP_TRANSPOSE_BOTH] = MIDI_TRANSPOSE,
-  [UI_GROUP_SETTINGS]       = SETTINGS,
+  [UI_GROUP_TEMPO]          = MENU_TEMPO,
+  [UI_GROUP_MODIFY_BOTH]    = MENU_MODIFY,
+  [UI_GROUP_TRANSPOSE_BOTH] = MENU_TRANSPOSE,
+  [UI_GROUP_SETTINGS]       = MENU_SETTINGS,
 };
 
 // Compact “ctrl_group_id_t -> root ui group” (replaces select_group_for_field_id)
@@ -280,7 +280,7 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
                           | flag_from_id(CTRL_SETTINGS_ALWAYS);
 
             const SettingsRowCounts rc = settings_row_counts();
-            const uint8_t sel = s_menu_selects[SETTINGS];
+            const uint8_t sel = s_menu_selects[MENU_SETTINGS];
 
             if (sel < rc.g1)                         mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
             else if (sel < (uint8_t)(rc.g1 + rc.g2)) mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
@@ -392,7 +392,7 @@ uint8_t menu_nav_get_select(menu_list_t field) {
 
 uint32_t ui_active_groups(void) {
     uint8_t m = ui_state_get(CURRENT_MENU);
-    if (m == 0xFF || m >= AMOUNT_OF_MENUS) m = SETTINGS;
+    if (m == 0xFF || m >= AMOUNT_OF_MENUS) m = MENU_SETTINGS;
     const ui_group_t root = kMenuToRoot[m];
     return ctrl_active_groups_from_ui_group(root);
 }
@@ -649,7 +649,7 @@ static uint8_t menu_nav_end_auto(menu_list_t field)
 
 void update_menu(menu_list_t menu)
 {
-  if (menu >= AMOUNT_OF_MENUS) menu = SETTINGS;
+  if (menu >= AMOUNT_OF_MENUS) menu = MENU_SETTINGS;
   const menu_list_t field = menu;
 
   menu_nav_begin_and_update(field);

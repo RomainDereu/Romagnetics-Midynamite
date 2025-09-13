@@ -15,10 +15,10 @@
 // Menu list
 // ---------------------
 typedef enum {
-    MIDI_TEMPO = 0,
-    MIDI_MODIFY,
-    MIDI_TRANSPOSE,
-    SETTINGS,
+    MENU_TEMPO = 0,
+    MENU_MODIFY,
+    MENU_TRANSPOSE,
+    MENU_SETTINGS,
     AMOUNT_OF_MENUS,   // number of menus
     CURRENT_MENU,      // UI state index
     OLD_MENU,          // UI state index

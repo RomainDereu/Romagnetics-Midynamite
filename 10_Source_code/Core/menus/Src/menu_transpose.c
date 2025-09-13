@@ -37,7 +37,7 @@ void screen_update_midi_transpose(void)
         { ELEM_TEXT , 0,                          TEXT_(send_base),            UI_6x8, TXT_LEFT, LINE_4, CTRL_TRANSPOSE_ALL },
         { ELEM_ITEM , TRANSPOSE_SEND_ORIGINAL,     TEXT_(no_yes),              UI_6x8, 65,       LINE_4, CTRL_TRANSPOSE_ALL },
     };
-    menu_ui_render(MIDI_TRANSPOSE, elems, sizeof(elems)/sizeof(elems[0]));
+    menu_ui_render(MENU_TRANSPOSE, elems, sizeof(elems)/sizeof(elems[0]));
 }
 
 void ui_code_transpose() {

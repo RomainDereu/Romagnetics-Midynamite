@@ -29,7 +29,7 @@ void screen_update_midi_tempo(void)
         { ELEM_TEXT ,  0,                     TEXT_(bpm),              UI_6x8,   80,      48     , CTRL_TEMPO_ALL },
     };
 
-    menu_ui_render(MIDI_TEMPO, elems, sizeof(elems) / sizeof(elems[0]));
+    menu_ui_render(MENU_TEMPO, elems, sizeof(elems) / sizeof(elems[0]));
 }
 
 void ui_code_tempo() {

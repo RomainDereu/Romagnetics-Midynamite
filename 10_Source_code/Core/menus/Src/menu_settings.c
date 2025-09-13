@@ -51,7 +51,7 @@ void screen_update_settings(void)
         // -------- Bottom part (always on) --------
         { ELEM_TEXT , 0,                       TEXT_(save_instruction),    UI_6x8, TXT_LEFT, B_LINE, CTRL_SETTINGS_ALWAYS },
     };
-    menu_ui_render(SETTINGS, elems, sizeof(elems)/sizeof(elems[0]));
+    menu_ui_render(MENU_SETTINGS, elems, sizeof(elems)/sizeof(elems[0]));
 }
 
 
