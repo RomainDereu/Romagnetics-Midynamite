@@ -14,6 +14,11 @@
 #include "utils.h"
 #include "text.h"
 
+void initialize_screen(void){
+  screen_driver_Init();
+  screen_driver_UpdateContrast();
+}
+
 
 static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     if (!s) return;
@@ -124,6 +129,30 @@ static const individual_menu_ui ind_menu_ui[AMOUNT_OF_MENUS] = {
 
 
 
+static void menu_ui_draw_16ch(const ui_element *e) {
+    const save_field_t f    = (save_field_t)e->save_item;
+    const uint32_t     mask = (uint32_t)save_get(f);
+    const int8_t       selb = ui_selected_bit(f);   // -1 if not selected
+
+    // Use the element's text as the "on" glyph, defaulting to "X"
+    const char *on_label = e->text ? e->text : "X";
+
+    const int16_t base_x = (int16_t)e->x;
+    const int16_t y1     = (int16_t)e->y;          // first row at LINE_*
+    const int16_t y2     = (int16_t)(y1 + 10);     // second row exactly +10 px
+
+    for (uint8_t i = 0; i < 16; ++i) {
+        const char  *label = (mask & (1u << i)) ? on_label
+                                                : message->one_to_sixteen_one_char[i];
+        const int16_t x    = (int16_t)(base_x + 10 * (i % 8));
+        const int16_t y    = (i < 8) ? y1 : y2;
+        const uint8_t ul   = (selb == (int8_t)i) ? 1u : 0u;
+
+        // Uses e->font (e.g., UI_6x8_2) to pick the correct underline writer
+        draw_text_ul(label, x, y, e->font, ul);
+    }
+}
+
 
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 
@@ -155,41 +184,10 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 
 
 
-void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
-    draw_text(s, x, y, font);
-}
-
-void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t underline) {
-    draw_text_ul(s, x, y, font, underline);
-}
 
 
 
 
-
-void menu_ui_draw_16ch(const ui_element *e) {
-    const save_field_t f    = (save_field_t)e->save_item;
-    const uint32_t     mask = (uint32_t)save_get(f);
-    const int8_t       selb = ui_selected_bit(f);   // -1 if not selected
-
-    // Use the element's text as the "on" glyph, defaulting to "X"
-    const char *on_label = e->text ? e->text : "X";
-
-    const int16_t base_x = (int16_t)e->x;
-    const int16_t y1     = (int16_t)e->y;          // first row at LINE_*
-    const int16_t y2     = (int16_t)(y1 + 10);     // second row exactly +10 px
-
-    for (uint8_t i = 0; i < 16; ++i) {
-        const char  *label = (mask & (1u << i)) ? on_label
-                                                : message->one_to_sixteen_one_char[i];
-        const int16_t x    = (int16_t)(base_x + 10 * (i % 8));
-        const int16_t y    = (i < 8) ? y1 : y2;
-        const uint8_t ul   = (selb == (int8_t)i) ? 1u : 0u;
-
-        // Uses e->font (e.g., UI_6x8_2) to pick the correct underline writer
-        draw_text_ul(label, x, y, e->font, ul);
-    }
-}
 
 
 /* ---------------------------

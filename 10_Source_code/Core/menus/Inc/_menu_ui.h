@@ -60,18 +60,14 @@ typedef struct {
 // ---------------------
 void menu_change_check(void);
 
+void initialize_screen(void);
+
 
 // Render an array of elements in order.
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
 
-// Convenience helpers (optional)
-void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font);
-void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t underline);
-void menu_ui_draw_16ch(const ui_element *e);
-
 
 //Control functions using UI elements
-
 void update_contrast_ui();
 
 #endif /* MENU_INC_MENU_UI_H_ */

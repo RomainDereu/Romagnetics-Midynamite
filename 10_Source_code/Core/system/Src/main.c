@@ -5,10 +5,10 @@
  */
 #include "main.h"
 #include "memory_main.h"
+#include "_menu_ui.h" //For the screen init
 #include "midi_transform.h"
 #include "midi_tempo.h"
 #include "usb_device.h"
-#include "screen_driver.h"
 #include "threads.h"
 
 
@@ -57,13 +57,11 @@ int main(void)
   MX_USART1_UART_Init();
   MX_I2C1_Init();
 
-  /* USER CODE BEGIN 2 */
-  // Romagnetics code
-  screen_driver_Init();
 
+  //Initializations
   save_load_from_flash();
+  initialize_screen();
 
-  screen_driver_UpdateContrast();
 
   if (save_get(TEMPO_CURRENTLY_SENDING) == 1) {
     mt_start_stop(&htim2);
