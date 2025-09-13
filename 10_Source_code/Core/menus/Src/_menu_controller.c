@@ -163,19 +163,19 @@ static const ctrl_group_id_t kMenuToRoot[AMOUNT_OF_MENUS] = {
 
 // Map a ctrl_group_id_t (any subgroup) to its owning menu
 static inline menu_list_t page_for_ctrl_id(uint32_t id) {
-  if (id == CTRL_TEMPO_ALL)                                   return MENU_TEMPO;
-  if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED) return MENU_MODIFY;
-  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_ALL)    return MENU_TRANSPOSE;
-  if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ALWAYS)  return MENU_SETTINGS; // include ALWAYS
+  if (id == CTRL_TEMPO_ALL)                                      return MENU_TEMPO;
+  if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED)  return MENU_MODIFY;
+  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_ALL)     return MENU_TRANSPOSE;
+  if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ALWAYS)   return MENU_SETTINGS; // include ALWAYS
   return MENU_TEMPO; // safe default
 }
 
 // Compact “ctrl_group_id_t -> root ctrl group”
 static inline ctrl_group_id_t root_for_ctrl_id(uint32_t id) {
-  if (id == CTRL_TEMPO_ALL)                                     return CTRL_TEMPO_ALL;
-  if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED) return CTRL_MODIFY_ALL;
-  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_ALL)    return CTRL_TRANSPOSE_ALL;
-  if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ALWAYS)  return CTRL_SETTINGS_ALL; // include ALWAYS
+  if (id == CTRL_TEMPO_ALL)                                      return CTRL_TEMPO_ALL;
+  if (id >= CTRL_MODIFY_CHANGE   && id <= CTRL_MODIFY_VEL_FIXED)  return CTRL_MODIFY_ALL;
+  if (id >= CTRL_TRANSPOSE_SHIFT && id <= CTRL_TRANSPOSE_ALL)     return CTRL_TRANSPOSE_ALL;
+  if (id >= CTRL_SETTINGS_GLOBAL1&& id <= CTRL_SETTINGS_ALWAYS)   return CTRL_SETTINGS_ALL; // include ALWAYS
   return CTRL_TEMPO_ALL; // safe default
 }
 
@@ -233,7 +233,7 @@ static inline uint8_t is_bits_item(save_field_t f) {
 }
 
 static SettingsRowCounts settings_row_counts(void) {
-  SettingsRowCounts c = {0,0,0,0};
+  SettingsRowCounts c = (SettingsRowCounts){0,0,0,0};
   for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
     const menu_controls_t mt = menu_controls[f];
     const uint8_t span = is_bits_item((save_field_t)f) ? 16u : 1u;
@@ -288,7 +288,7 @@ static uint32_t ctrl_active_groups_from_ctrl_root(ctrl_group_id_t requested)
             if (sel < rc.g1)                         mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
             else if (sel < (uint8_t)(rc.g1 + rc.g2)) mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
             else if (sel < rc.total)                 mask |= flag_from_id(CTRL_SETTINGS_FILTER);
-            else                                     /* ABOUT virtual */ ;
+            else                                     /* ABOUT (virtual) */ ;
 
             return mask;
         }
@@ -309,7 +309,7 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
         const menu_controls_t mt = menu_controls[f];
 
-        // Skip ABOUT completely from the list (it's a virtual row)
+        // Do NOT materialize ABOUT in the list (it's a virtual extra row)
         if (mt.groups == CTRL_SETTINGS_ABOUT) continue;
 
         // Quick reject: group not active
@@ -333,7 +333,7 @@ static void rebuild_list_for_group(ctrl_group_id_t group)
         ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
            | flag_from_id(CTRL_SETTINGS_GLOBAL2)
            | flag_from_id(CTRL_SETTINGS_FILTER)
-           /* ABOUT is virtual, do NOT include it */
+           /* ABOUT excluded from list; handled as virtual row */
            | flag_from_id(CTRL_SETTINGS_ALWAYS))
         :  ctrl_active_groups_from_ctrl_root(root);
 
@@ -452,7 +452,7 @@ static inline NavSel nav_selection(menu_list_t sel_field)
     return s;
 }
 
-/* Map the selection to its page selector for press-to-toggle (MODIFY/TRANSPOSE). */
+
 static inline save_field_t selector_for_press(const NavSel *s)
 {
     if (s->field == SAVE_FIELD_INVALID) return SAVE_FIELD_INVALID;
@@ -462,7 +462,6 @@ static inline save_field_t selector_for_press(const NavSel *s)
             return TRANSPOSE_TRANSPOSE_TYPE;
 
         case CTRL_MODIFY_ALL:
-            // Velocity subpage toggles by its own selector; otherwise CHANGE/SPLIT
             if (s->gid == CTRL_MODIFY_VEL_CHANGED || s->gid == CTRL_MODIFY_VEL_FIXED)
                 return MODIFY_VELOCITY_TYPE;
             return MODIFY_CHANGE_OR_SPLIT;
@@ -617,9 +616,9 @@ static uint8_t ui_state_increment(menu_list_t field) {
             value = (uint8_t)((value + 1u) % AMOUNT_OF_MENUS);
             break;
         case OLD_MENU:
-            return 1; // unchanged
+            return 1;
         default:
-            return 1; // selects handled elsewhere
+            return 1;
     }
     return ui_state_set(field, value);
 }
@@ -647,8 +646,6 @@ static uint8_t menu_nav_end_auto(menu_list_t field)
     return changed;
 }
 
-uint32_t ui_active_groups(void); // already defined above, keep for linker sanity if needed
-
 
 // -------------------------
 // Update flow per menu
@@ -659,6 +656,6 @@ void update_menu(menu_list_t menu)
   const menu_list_t field = menu;
 
   menu_nav_begin_and_update(field);
-  cont_update_menu(field);   // generic per-menu updater
+  cont_update_menu(field);
   (void)menu_nav_end_auto(field);
 }

@@ -122,8 +122,9 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
         }
     }
 
+    ui_code_menu();
+
     //Separation line on top common to all menus
     draw_line(0, 10, 127, 10);
-    ui_code_menu();
     screen_driver_UpdateScreen();
 }
