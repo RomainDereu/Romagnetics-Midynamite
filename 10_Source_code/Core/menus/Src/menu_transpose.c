@@ -9,6 +9,11 @@
 #include "menus.h"
 #include "text.h"
 
+void controller_update_transpose(menu_list_t field) {
+	toggle_subpage(field);
+}
+
+
 void screen_update_midi_transpose(void)
 {
     const ui_element elems[] = {

@@ -19,7 +19,7 @@
 extern TIM_HandleTypeDef htim2;
 
 
-
+//menu_ui.c
 void screen_update_menu(uint32_t flag){
 
     uint8_t current = ui_state_get(CURRENT_MENU);
@@ -43,7 +43,18 @@ void ui_code_menu(){
       }
 }
 
+//menu_controller.c
+void controller_update_menu(menu_list_t field){
+    uint8_t current = ui_state_get(CURRENT_MENU);
+	switch (current) {
+	  case MIDI_TEMPO:     controller_update_tempo(field);break;
+	  case MIDI_MODIFY:    ui_code_midi_modify(field);    break;
+	  case MIDI_TRANSPOSE: ui_code_midi_transpose(field); break;
+	  case SETTINGS:       ui_code_settings(field);       break;
+      }
+}
 
+//save helper functions
 void saving_settings_ui(){
     if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
 		write_68(message->saving, TXT_LEFT, B_LINE);
@@ -65,11 +76,41 @@ void update_contrast_ui() {
 }
 
 
+//menu_change functions
 void menu_change_check(){
 	 static uint8_t button_pressed = 0;
 	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
 		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
 	  }
+}
+
+static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2)
+{
+    static uint8_t prev_s1 = 1;
+
+    const uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
+    const uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
+
+    // Rising → falling on s1 while s2 is high
+    if (s1 == 0 && prev_s1 == 1 && s2 == 1) {
+        osDelay(100);
+        // Re-read after debounce
+        if (HAL_GPIO_ReadPin(port, pin1) == 0 && HAL_GPIO_ReadPin(port, pin2) == 1) {
+            prev_s1 = 0;
+            return 1;
+        }
+    }
+
+    prev_s1 = s1;
+    return 0;
+}
+
+
+// Unified “subpage toggle” used by MODIFY and TRANSPOSE
+void toggle_subpage(menu_list_t field) {
+  if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
+    select_press_menu_change(field);  // resets select + rebuilds list
+  }
 }
 
 

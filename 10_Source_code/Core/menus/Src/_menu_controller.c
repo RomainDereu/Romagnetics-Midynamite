@@ -83,10 +83,6 @@ void update_contrast(save_field_t f, uint8_t step) {
 }
 
 
-
-
-//Specific logic for the channel_filter
-// Toggle one channel bit per call when a detent is seen
 static void update_channel_filter(save_field_t field, uint8_t bit_index)
 {
     if (bit_index > 15) return;
@@ -650,68 +646,6 @@ static uint8_t menu_nav_end_auto(menu_list_t field)
 
 
 
-static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2)
-{
-    static uint8_t prev_s1 = 1;
-
-    const uint8_t s1 = HAL_GPIO_ReadPin(port, pin1);
-    const uint8_t s2 = HAL_GPIO_ReadPin(port, pin2);
-
-    // Rising → falling on s1 while s2 is high
-    if (s1 == 0 && prev_s1 == 1 && s2 == 1) {
-        osDelay(100);
-        // Re-read after debounce
-        if (HAL_GPIO_ReadPin(port, pin1) == 0 && HAL_GPIO_ReadPin(port, pin2) == 1) {
-            prev_s1 = 0;
-            return 1;
-        }
-    }
-
-    prev_s1 = s1;
-    return 0;
-}
-
-
-
-// Unified “subpage toggle” used by MODIFY and TRANSPOSE
-static inline void maybe_toggle_subpage(menu_list_t field) {
-  if (handle_menu_toggle(GPIOB, Btn1_Pin, Btn2_Pin)) {
-    select_press_menu_change(field);  // resets select + rebuilds list
-  }
-}
-
-
-
-static void control_tempo(menu_list_t field) {
-  //BPM recalculation
-  const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
-  const uint32_t rate = bpm ? (6000000u / (bpm * 24u)) : 0u;
-  save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, rate);
-}
-
-static void control_modify(menu_list_t field) {
-	maybe_toggle_subpage(field);
-}
-
-static void control_transpose(menu_list_t field) {
-	maybe_toggle_subpage(field);
-}
-
-static void control_settings(menu_list_t field)  {
-	return;
-}
-
-// One small tick per page (keeps update_menu tiny)
-typedef void (*individual_menu_control)(menu_list_t field);
-
-static const individual_menu_control ind_menu_control[AMOUNT_OF_MENUS] = {
-  [MIDI_TEMPO]     = control_tempo,
-  [MIDI_MODIFY]    = control_modify,
-  [MIDI_TRANSPOSE] = control_transpose,
-  [SETTINGS]       = control_settings,
-};
-
-
 
 void update_menu(menu_list_t menu)
 {
@@ -719,6 +653,6 @@ void update_menu(menu_list_t menu)
   const menu_list_t field = menu;
 
   menu_nav_begin_and_update(field);
-  ind_menu_control[field](field);
+  controller_update_menu(field);
   (void)menu_nav_end_auto(field);
 }

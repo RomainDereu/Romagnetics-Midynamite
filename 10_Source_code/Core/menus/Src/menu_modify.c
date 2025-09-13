@@ -11,6 +11,11 @@
 #include "screen_driver.h"
 #include "text.h"
 
+void controller_update_modify(menu_list_t field) {
+	toggle_subpage(field);
+}
+
+
 void screen_update_midi_modify(void)
 {
     const ui_element elems[] = {
