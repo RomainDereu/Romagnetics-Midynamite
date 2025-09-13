@@ -54,7 +54,6 @@ typedef struct {
 // ---------------------
 // API
 // ---------------------
-void menu_display(const char * menu_message);
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
 void menu_change_check(void);
@@ -67,7 +66,6 @@ void menu_ui_render(const ui_element *elems, size_t count);
 void menu_ui_draw_text(const char *s, int16_t x, int16_t y, ui_font_t font);
 void menu_ui_draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t underline);
 void menu_ui_draw_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-void menu_ui_draw_title(const char *title);
 
 void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel);
 

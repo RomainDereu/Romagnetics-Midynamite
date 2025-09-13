@@ -127,9 +127,7 @@ void menu_ui_draw_line(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
     draw_line(x1, y1, x2, y2);
 }
 
-void menu_ui_draw_title(const char *title) {
-    menu_display(title);
-}
+
 
 void filter_controller_ui(uint32_t mask, uint8_t base_idx, uint8_t sel){
     for (uint8_t i = 0; i < 16; i++) {
