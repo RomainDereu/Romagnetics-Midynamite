@@ -57,12 +57,6 @@ typedef struct {
 // ---------------------
 void initialize_screen(void);
 
-// Render an array of elements in order.
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
-
-void menu_change_check(void);
-
-//Control functions using UI elements
-void update_contrast_ui();
 
 #endif /* MENU_INC_MENU_UI_H_ */

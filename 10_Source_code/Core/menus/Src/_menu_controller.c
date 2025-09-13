@@ -9,6 +9,7 @@
 #include "main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h"
+#include "menus.h"
 #include "memory_main.h"
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "threads.h"

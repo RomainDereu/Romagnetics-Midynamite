@@ -5,13 +5,10 @@
  *      Author: Astaa
  */
 
-#include "cmsis_os.h" //osDelay
-#include "main.h"
 #include "_menu_ui.h"
 #include "_menu_controller.h"
 #include "memory_main.h"
 #include "screen_driver.h"
-#include "utils.h"
 #include "text.h"
 
 void initialize_screen(void){
@@ -126,31 +123,6 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 
     //Separation line on top common to all menus
     draw_line(0, 10, 127, 10);
-
     ui_code_menu();
-
     screen_driver_UpdateScreen();
-}
-
-
-/* ---------------------------
- * Menu helpers
- * --------------------------- */
-
-
-
-void menu_change_check(){
-	 static uint8_t button_pressed = 0;
-	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
-		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
-	  }
-}
-
-
-
-
-//Control functions using UI elements
-
-void update_contrast_ui() {
-    screen_driver_UpdateContrast();
 }

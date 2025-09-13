@@ -60,6 +60,18 @@ void saving_settings_ui(){
 }
 
 
+void update_contrast_ui() {
+    screen_driver_UpdateContrast();
+}
+
+
+void menu_change_check(){
+	 static uint8_t button_pressed = 0;
+	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
+		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
+	  }
+}
+
 
 void start_stop_pressed() {
 	menu_list_t m = (menu_list_t)ui_state_get(CURRENT_MENU);
@@ -78,3 +90,7 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
     const char *text_print = message->off_on[on_or_off];
 	write_1118(text_print, 95, text_position);
 }
+
+
+
+

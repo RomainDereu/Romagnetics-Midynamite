@@ -26,12 +26,15 @@ void screen_update_settings();
 
 
 //Menu helpers
-void saving_settings_ui();
-void ui_code_menu();
 void screen_update_menu(uint32_t flag);
+void ui_code_menu();
+void saving_settings_ui();
+void update_contrast_ui();
+
 
 
 //Thread related
+void menu_change_check(void);
 void start_stop_pressed();
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
