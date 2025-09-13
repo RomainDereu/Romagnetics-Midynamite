@@ -5,7 +5,7 @@
  *      Author: Romain Dereu
  */
 #include <string.h>
-#include "cmsis_os.h"
+#include "cmsis_os.h" //osDelay
 #include "memory_main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h" //For saving_settings_ui
@@ -58,12 +58,6 @@ int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     if (delta >=  ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return +1; }
     return 0; // no step
 }
-
-
-
-
-
-
 
 
 void no_update(save_field_t field, uint8_t arg) {
@@ -203,38 +197,5 @@ uint8_t debounce_button(GPIO_TypeDef *port,
 
 
 
-
-
-/* ---------------------------
- * GUI helpers
- * --------------------------- */
-//Checks for updates to a menu and refreshes the screen if needed
-uint8_t menu_check_for_updates(
-    const void *old_data,
-    const void *data_ptr,
-    size_t      sz,
-    uint8_t    *old_select,
-    uint8_t    *current_select)
-{
-    const uint8_t sel_changed  = (*old_select != *current_select);
-    const uint8_t data_changed = (memcmp(old_data, data_ptr, sz) != 0);
-    return (sel_changed || data_changed);
-}
-
-
-void saving_settings_ui(void){
-    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
-		write_68(message->saving, TXT_LEFT, BOTTOM_LINE);
-		screen_driver_UpdateScreen();
-
-		store_settings();
-
-		write_68(message->saved, TXT_LEFT, BOTTOM_LINE);
-		screen_driver_UpdateScreen();
-		osDelay(1000);
-		write_68(message->save_instruction, TXT_LEFT, BOTTOM_LINE);
-		screen_driver_UpdateScreen();
-    }
-}
 
 

@@ -5,6 +5,7 @@
  *      Author: Astaa
  */
 
+#include "cmsis_os.h" //osDelay
 #include "main.h"
 #include "_menu_ui.h"
 #include "_menu_controller.h"
@@ -13,20 +14,6 @@
 #include "utils.h"
 #include "text.h"
 
-void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	draw_line(92, 10, 92, bottom_line);
-	uint8_t text_position = bottom_line/2;
-    const char *text_print = message->off_on[on_or_off];
-	write_1118(text_print, 95, text_position);
-}
-
-
-void menu_change_check(){
-	 static uint8_t button_pressed = 0;
-	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
-		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
-	  }
-}
 
 static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     if (!s) return;
@@ -84,6 +71,9 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
 
 
 void menu_ui_render(const ui_element *elems, size_t count) {
+
+	screen_driver_Fill(Black);
+
     if (!elems || count == 0) return;
 
     // Ask controller which groups are active this frame
@@ -144,5 +134,39 @@ void menu_ui_draw_16ch(const ui_element *e) {
 
         // Uses e->font (e.g., UI_6x8_2) to pick the correct underline writer
         draw_text_ul(label, x, y, e->font, ul);
+    }
+}
+
+
+/* ---------------------------
+ * Menu helpers
+ * --------------------------- */
+
+
+
+void menu_change_check(){
+	 static uint8_t button_pressed = 0;
+	  if(debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)){
+		  ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
+	  }
+}
+
+
+/* ---------------------------
+ * Saving helper
+ * --------------------------- */
+
+void saving_settings_ui(void){
+    if (debounce_button(GPIOB, Btn1_Pin, NULL, 10)) {
+		write_68(message->saving, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
+
+		store_settings();
+
+		write_68(message->saved, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
+		osDelay(1000);
+		write_68(message->save_instruction, TXT_LEFT, B_LINE);
+		screen_driver_UpdateScreen();
     }
 }

@@ -14,10 +14,6 @@
 
 void screen_update_midi_transpose(void)
 {
-    screen_driver_Fill(Black);
-
-    midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
-
     const ui_element elems[] = {
         // type      save_item                 text                              font    x        y     ctrl_group_id
         { ELEM_TEXT , 0,                          TEXT_(midi_transpose),       UI_6x8, TXT_LEFT, LINE_0, CTRL_TRANSPOSE_BOTH },

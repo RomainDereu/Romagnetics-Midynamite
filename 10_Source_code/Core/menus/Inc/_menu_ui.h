@@ -17,7 +17,7 @@
 #define LINE_2 25
 #define LINE_3 35
 #define LINE_4 45
-#define BOTTOM_LINE LINE_4 + 3
+#define B_LINE LINE_4 + 3
 
 #define TXT_LEFT 5
 
@@ -56,8 +56,6 @@ typedef struct {
 // ---------------------
 // API
 // ---------------------
-void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
-
 void menu_change_check(void);
 
 

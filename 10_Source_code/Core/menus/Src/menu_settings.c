@@ -13,9 +13,6 @@
 
 void screen_update_settings(void)
 {
-    screen_driver_Fill(Black);
-
-    // Flat, group-gated UI elements (everything except the 16-bit filter grid)
     const ui_element elems[] = {
         // type      save_item                 text                         font    x        y     ctrl_group_id
         // -------- GLOBAL 1 --------
@@ -28,7 +25,6 @@ void screen_update_settings(void)
 
         { ELEM_TEXT , 0,                       TEXT_(contrast),            UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(contrast_levels),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
-
         // -------- GLOBAL 2 --------
         { ELEM_TEXT , 0,                       TEXT_(global_settings_2),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Thru),           UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL2 },
@@ -39,25 +35,17 @@ void screen_update_settings(void)
 
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),         UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_ITEM , SETTINGS_CHANNEL_FILTER, TEXT_(off_on),              UI_6x8, 80,       LINE_3, CTRL_SETTINGS_GLOBAL2 },
-
         // -------- Filters --------
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_FILTER },
         { ELEM_TEXT , 0,                       TEXT_(X_equals_ignore_channel), UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_FILTER },
         { ELEM_16CH , SETTINGS_FILTERED_CH,    "X",                        UI_6x8_2,TXT_LEFT, LINE_2, CTRL_SETTINGS_FILTER },
-
-
-        // -------- ABOUT (text-only) --------
+        // -------- ABOUT--------
         { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8,  TXT_LEFT, LINE_0, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8,  TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8,  TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_version),       UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_ABOUT },
+        // -------- Bottom part (always on) --------
+        { ELEM_TEXT , 0,                       TEXT_(save_instruction),    UI_6x8, TXT_LEFT, B_LINE, CTRL_SETTINGS_ALWAYS },
     };
-
-
-    // Footer (can be CTRL_SETTINGS_BOTH if you prefer to gate it too)
-    draw_line(0, LINE_4, 127, LINE_4);
-    write_68(message->save_instruction, TXT_LEFT, BOTTOM_LINE);
-
-    // Draw the flat, group-gated elements
     menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
 }

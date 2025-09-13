@@ -107,6 +107,7 @@ typedef enum {
     CTRL_SETTINGS_FILTER,
     CTRL_SETTINGS_ALL,
     CTRL_SETTINGS_ABOUT,
+	CTRL_SETTINGS_ALWAYS,
 
 } ctrl_group_id_t;
 

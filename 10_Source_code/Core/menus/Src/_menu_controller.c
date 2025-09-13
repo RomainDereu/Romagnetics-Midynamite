@@ -11,6 +11,9 @@
 #include "_menu_ui.h"
 #include "memory_main.h"
 #include "threads.h"
+
+#include "text.h" //Deleted later
+#include "screen_driver.h" //Deleted later
 #include "utils.h" //For the definitions of value updating functions
 
 extern TIM_HandleTypeDef htim3;
@@ -207,7 +210,8 @@ static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
         }
 
         case UI_GROUP_SETTINGS: {
-            uint32_t mask = flag_from_id(CTRL_SETTINGS_ALL);
+            uint32_t mask = flag_from_id(CTRL_SETTINGS_ALL)
+                          | flag_from_id(CTRL_SETTINGS_ALWAYS);
 
             const SettingsRowCounts rc = settings_row_counts();
             const uint8_t sel = s_menu_selects[SETTINGS];
@@ -260,7 +264,8 @@ static void rebuild_list_for_group(ui_group_t group)
         ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
            | flag_from_id(CTRL_SETTINGS_GLOBAL2)
            | flag_from_id(CTRL_SETTINGS_FILTER)
-           | flag_from_id(CTRL_SETTINGS_ABOUT))
+           | flag_from_id(CTRL_SETTINGS_ABOUT)
+           | flag_from_id(CTRL_SETTINGS_ALWAYS))
         :  ctrl_active_groups_from_ui_group(root);
 
     ctrl_build_active_fields(mask, list_for_root(root));
@@ -596,6 +601,14 @@ static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pi
     return 0;
 }
 
+static void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
+	draw_line(92, 10, 92, bottom_line);
+	uint8_t text_position = bottom_line/2;
+    const char *text_print = message->off_on[on_or_off];
+	write_1118(text_print, 95, text_position);
+}
+
+
 
 // Unified “subpage toggle” used by MODIFY and TRANSPOSE
 static inline void maybe_toggle_subpage(menu_list_t field) {
@@ -608,14 +621,35 @@ static inline void maybe_toggle_subpage(menu_list_t field) {
 typedef void (*MenuTickFn)(menu_list_t field);
 
 static void tick_tempo(menu_list_t field) {
+
+  //Vertical line  right of BPM
+  screen_driver_Line(64, 10, 64, 64, White);
+  //Horizontal line above On / Off
+  screen_driver_Line(0, 40, 64, 40, White);
+
+  //BPM recalculation
   const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
   const uint32_t rate = bpm ? (6000000u / (bpm * 24u)) : 0u;
   save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, rate);
 }
 
-static void tick_modify(menu_list_t field)    { maybe_toggle_subpage(field); }
-static void tick_transpose(menu_list_t field) { maybe_toggle_subpage(field); }
-static void tick_settings(menu_list_t field)  { saving_settings_ui(); }
+static void tick_modify(menu_list_t field)    {
+midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
+maybe_toggle_subpage(field);
+draw_line(0, LINE_4, 127, LINE_4);
+
+}
+
+static void tick_transpose(menu_list_t field) {
+midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
+maybe_toggle_subpage(field);
+}
+
+static void tick_settings(menu_list_t field)  {
+saving_settings_ui();
+//Bottom line above save text
+draw_line(0, LINE_4, 127, LINE_4);
+}
 
 static const MenuTickFn kMenuTick[AMOUNT_OF_MENUS] = {
   [MIDI_TEMPO]     = tick_tempo,
