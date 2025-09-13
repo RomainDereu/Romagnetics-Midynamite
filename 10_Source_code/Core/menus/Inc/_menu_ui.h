@@ -40,7 +40,15 @@ typedef enum {
 #define UI_CHOICE(tbl) ((const char*)(tbl))
 #define UI_TEXT_NUM    ((const char*)-1)
 
-
+typedef struct {
+    ui_elem_type_t type;
+    uint8_t        save_item;     // save_field_t index (fits in uint8_t in your layout)
+    const char    *text;          // TEXT_(...) or UI_CHOICE(...)
+    ui_font_t      font;
+    int16_t        x;
+    int16_t        y;
+    uint8_t        ctrl_group_id; // CTRL_* visibility gate
+} ui_element;
 
 // ---------------------
 // API
