@@ -180,65 +180,51 @@ static SettingsRowCounts settings_row_counts(void) {
 
 static uint32_t ctrl_active_groups_from_ui_group(ui_group_t requested)
 {
-    uint32_t mask = 0;
-
     switch (requested) {
         case UI_GROUP_TEMPO:
-            mask |= flag_from_id(CTRL_TEMPO);
-            break;
+            return flag_from_id(CTRL_TEMPO);
 
         case UI_GROUP_MODIFY_BOTH: {
-            mask |= flag_from_id(CTRL_MODIFY_BOTH);
+            uint32_t mask = flag_from_id(CTRL_MODIFY_BOTH);
 
             int page = (int)save_get(MODIFY_CHANGE_OR_SPLIT);
-            if (page == MIDI_MODIFY_SPLIT) {
-                mask |= flag_from_id(CTRL_MODIFY_SPLIT);
-            } else {
-                mask |= flag_from_id(CTRL_MODIFY_CHANGE);
-            }
+            if (page == MIDI_MODIFY_SPLIT) mask |= flag_from_id(CTRL_MODIFY_SPLIT);
+            else                           mask |= flag_from_id(CTRL_MODIFY_CHANGE);
 
             int vel = (int)save_get(MODIFY_VELOCITY_TYPE);
-            if (vel == MIDI_MODIFY_FIXED_VEL) {
-                mask |= flag_from_id(CTRL_MODIFY_VEL_FIXED);
-            } else {
-                mask |= flag_from_id(CTRL_MODIFY_VEL_CHANGED);
-            }
-        } break;
+            if (vel == MIDI_MODIFY_FIXED_VEL) mask |= flag_from_id(CTRL_MODIFY_VEL_FIXED);
+            else                               mask |= flag_from_id(CTRL_MODIFY_VEL_CHANGED);
+
+            return mask;
+        }
 
         case UI_GROUP_TRANSPOSE_BOTH: {
-            mask |= flag_from_id(CTRL_TRANSPOSE_BOTH);
+            uint32_t mask = flag_from_id(CTRL_TRANSPOSE_BOTH);
             int t = (int)save_get(TRANSPOSE_TRANSPOSE_TYPE);
-            if (t == MIDI_TRANSPOSE_SHIFT) {
-                mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
-            } else {
-                mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
-            }
-        } break;
+            if (t == MIDI_TRANSPOSE_SHIFT) mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
+            else                            mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
+            return mask;
+        }
 
         case UI_GROUP_SETTINGS: {
-            mask |= flag_from_id(CTRL_SETTINGS_ALL);
+            uint32_t mask = flag_from_id(CTRL_SETTINGS_ALL);
 
             const SettingsRowCounts rc = settings_row_counts();
             const uint8_t sel = s_menu_selects[SETTINGS];
 
-            if (sel < rc.g1) {
-                mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
-            } else if (sel < (uint8_t)(rc.g1 + rc.g2)) {
-                mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
-            } else if (sel < rc.total) {
-                mask |= flag_from_id(CTRL_SETTINGS_FILTER);
-            } else {
-                mask |= flag_from_id(CTRL_SETTINGS_ABOUT);
-            }
-        } break;
+            if (sel < rc.g1)                         mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
+            else if (sel < (uint8_t)(rc.g1 + rc.g2)) mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
+            else if (sel < rc.total)                 mask |= flag_from_id(CTRL_SETTINGS_FILTER);
+            else                                     mask |= flag_from_id(CTRL_SETTINGS_ABOUT);
+
+            return mask;
+        }
 
         default:
-            mask |= flag_from_id(CTRL_TEMPO);
-            break;
+            return flag_from_id(CTRL_TEMPO);
     }
-
-    return mask;
 }
+
 
 
 
