@@ -1,5 +1,6 @@
 /*
  * _menu_ui.h
+ *
  *  Created on: Aug 23, 2025
  *      Author: Astaa
  */
@@ -10,31 +11,30 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "_menu_controller.h" // for menu_list_t and save enums
+#include "_menu_controller.h" // For enum
 
-// Y positions
 #define LINE_0 0
 #define LINE_1 15
 #define LINE_2 25
 #define LINE_3 35
 #define LINE_4 45
-#define B_LINE (LINE_4 + 3)
+#define B_LINE LINE_4 + 3
 
 #define TXT_LEFT 5
 
-// Fonts used by write_* functions
+// Fonts you already use via write_* functions
 typedef enum {
     UI_6x8,
-    UI_6x8_2,   // for MIDI 16 channels grid
+    UI_6x8_2, //For midi 16 Channels
     UI_11x18,
     UI_16x24
 } ui_font_t;
 
-// Element kinds
+// What to render
 typedef enum {
     ELEM_TEXT,
-    ELEM_ITEM,
-    ELEM_16CH,
+	ELEM_ITEM,
+	ELEM_16CH,
 } ui_elem_type_t;
 
 #define UI_CHOICE(tbl) ((const char*)(tbl))
@@ -42,39 +42,27 @@ typedef enum {
 
 typedef struct {
     ui_elem_type_t type;
-    uint8_t        save_item;     // save_field_t index (fits in uint8_t in your layout)
-    const char    *text;          // TEXT_(...) or UI_CHOICE(...)
-    ui_font_t      font;
-    int16_t        x;
-    int16_t        y;
-    uint8_t        ctrl_group_id; // CTRL_* visibility gate
+    uint8_t save_item;
+    const char *text;
+    ui_font_t font;
+    int16_t x;
+    int16_t y;
+    uint8_t ctrl_group_id;
 } ui_element;
+
+
 
 // ---------------------
 // API
 // ---------------------
-#ifndef UNIT_TEST
-
 void initialize_screen(void);
+
+// Render an array of elements in order.
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
+
 void menu_change_check(void);
-void update_contrast_ui(void);
 
-#else // UNIT_TEST
+//Control functions using UI elements
+void update_contrast_ui();
 
-// No-op stubs for tests to avoid pulling display deps
-static inline void initialize_screen(void) {}
-
-static inline void menu_ui_render(menu_list_t menu,
-                                  const ui_element *elems,
-                                  size_t count)
-{
-    (void)menu; (void)elems; (void)count;
-}
-
-static inline void menu_change_check(void) {}
-static inline void update_contrast_ui(void) {}
-
-#endif // UNIT_TEST
-
-#endif // MENU_INC_MENU_UI_H_
+#endif /* MENU_INC_MENU_UI_H_ */
