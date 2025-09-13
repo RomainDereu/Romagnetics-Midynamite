@@ -172,27 +172,51 @@ static void menu_ui_draw_16ch(const ui_element *e) {
 
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 
+    // --- Auto-select per-menu element table when not provided ---
+    if (elems == NULL || count == 0) {
+        switch (menu) {
+            case MIDI_TEMPO:
+                elems = tempo_ui_elements;
+                count = tempo_ui_count;
+                break;
+            case MIDI_MODIFY:
+                elems = modify_ui_elements;
+                count = modify_ui_count;
+                break;
+            case MIDI_TRANSPOSE:
+                elems = transpose_ui_elements;
+                count = transpose_ui_count;
+                break;
+            case SETTINGS:
+            default:
+                elems = settings_ui_elements;
+                count = settings_ui_count;
+                break;
+        }
+    }
+
     const uint32_t active = ui_active_groups();
 
-	screen_driver_Fill(Black);
+    screen_driver_Fill(Black);
 
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
 
-        // New: skip elements not in the active groups
+        // Skip elements not in the active groups
         if (!elem_is_visible(e, active)) continue;
 
         switch (e->type) {
-        case ELEM_TEXT:   draw_text(e->text, e->x, e->y, e->font); break;
-        case ELEM_ITEM:   draw_item_row(e);                        break;
-        case ELEM_16CH:   menu_ui_draw_16ch(e);                          break;
-        default: break;
+            case ELEM_TEXT:  draw_text(e->text, e->x, e->y, e->font); break;
+            case ELEM_ITEM:  draw_item_row(e);                        break;
+            case ELEM_16CH:  menu_ui_draw_16ch(e);                    break;
+            default: break;
         }
     }
 
-    //Separation line on top common to all menus
+    // Separation line on top common to all menus
     draw_line(0, 10, 127, 10);
 
+    // Per-page extras (lines, on/off block, save UI, etc.)
     ind_menu_ui[menu](menu);
 
     screen_driver_UpdateScreen();
