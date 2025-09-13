@@ -35,17 +35,6 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	                       	 UART_HandleTypeDef **UART_list);
 
 
-int8_t encoder_read_step(TIM_HandleTypeDef *timer);
-
-void no_update(save_field_t field, uint8_t arg);
-void update_value(save_field_t field, uint8_t multiplier);
-
-
-
-void update_contrast(save_field_t f, uint8_t step);
-void update_channel_filter(save_field_t field, uint8_t bit_index);
-
-
 
 void all_notes_off(UART_HandleTypeDef *huart);
 void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,

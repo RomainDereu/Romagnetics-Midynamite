@@ -69,15 +69,67 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
     return (active_groups_mask & bit) ? 1u : 0u;
 }
 
+// -------------------------
+// Individual menu drawing
+// -------------------------
 
-void menu_ui_render(const ui_element *elems, size_t count) {
+//Helpers
+
+static void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
+	draw_line(92, 10, 92, bottom_line);
+	uint8_t text_position = bottom_line/2;
+    const char *text_print = message->off_on[on_or_off];
+	write_1118(text_print, 95, text_position);
+}
+
+//Individual menus
+
+static void ui_tempo(menu_list_t field) {
+
+  //Vertical line  right of BPM
+  screen_driver_Line(64, 10, 64, 64, White);
+  //Horizontal line above On / Off
+  screen_driver_Line(0, 40, 64, 40, White);
+
+}
+
+static void ui_modify(menu_list_t field)    {
+
+	midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
+	//Bottom line above velocity
+	draw_line(0, LINE_4, 127, LINE_4);
+
+}
+
+static void ui_transpose(menu_list_t field) {
+	midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
+}
+
+static void ui_settings(menu_list_t field)  {
+	saving_settings_ui();
+	//Bottom line above save text
+	draw_line(0, LINE_4, 127, LINE_4);
+}
+
+// One small tick per page (keeps update_menu tiny)
+typedef void (*individual_menu_ui)(menu_list_t field);
+
+static const individual_menu_ui ind_menu_ui[AMOUNT_OF_MENUS] = {
+  [MIDI_TEMPO]     = ui_tempo,
+  [MIDI_MODIFY]    = ui_modify,
+  [MIDI_TRANSPOSE] = ui_transpose,
+  [SETTINGS]       = ui_settings,
+};
+
+
+
+
+
+void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
+
+    const uint32_t active = ui_active_groups();
 
 	screen_driver_Fill(Black);
-
-    if (!elems || count == 0) return;
-
-    // Ask controller which groups are active this frame
-    const uint32_t active = ui_active_groups();
 
     for (size_t i = 0; i < count; ++i) {
         const ui_element *e = &elems[i];
@@ -95,6 +147,8 @@ void menu_ui_render(const ui_element *elems, size_t count) {
 
     //Separation line on top common to all menus
     draw_line(0, 10, 127, 10);
+
+    ind_menu_ui[menu](menu);
 
     screen_driver_UpdateScreen();
 }
@@ -169,4 +223,13 @@ void saving_settings_ui(void){
 		write_68(message->save_instruction, TXT_LEFT, B_LINE);
 		screen_driver_UpdateScreen();
     }
+}
+
+
+
+
+//Control functions using UI elements
+
+void update_contrast_ui() {
+    screen_driver_UpdateContrast();
 }

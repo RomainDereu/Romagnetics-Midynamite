@@ -9,7 +9,6 @@
 #include "memory_main.h"
 #include "_menu_controller.h"
 #include "_menu_ui.h" //For saving_settings_ui
-#include "screen_driver.h"   //For setcontrast
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
 #include "utils.h"
@@ -45,80 +44,6 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 	}
 
 }
-
-
-
-/* ---------------------------
- * Encoder helpers
- * --------------------------- */
-
-int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
-    int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
-    if (delta <= -ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return -1; }
-    if (delta >=  ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return +1; }
-    return 0; // no step
-}
-
-
-void no_update(save_field_t field, uint8_t arg) {
-    (void)field; (void)arg;
-}
-
-void update_value(save_field_t field, uint8_t multiplier)
-{
-    TIM_HandleTypeDef *timer = &htim4;
-
-    uint8_t active_mult = 1;
-    if (multiplier != 1) {
-        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
-        active_mult = (Btn2State == 0) ? multiplier : 1;
-    }
-
-    int8_t step = encoder_read_step(timer);
-    if (step == 0) return;
-
-    const int32_t delta = (int32_t)step * (int32_t)active_mult;
-
-    // Get current, add delta (no wrap here)
-    int32_t cur = (int32_t)save_get(field);
-    int32_t next = cur + delta;
-
-    // Let save layer apply the (single) wrap/clamp via SET
-    if (u32_fields[field]) {
-        (void)save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next);
-    } else {
-        (void)save_modify_u8(field,  SAVE_MODIFY_SET, (uint8_t)next);
-    }
-}
-
-
-
-void update_contrast(save_field_t f, uint8_t step) {
-    update_value(f, step);
-    screen_driver_UpdateContrast();
-}
-
-
-
-//Specific logic for the channel_filter
-// Toggle one channel bit per call when a detent is seen
-void update_channel_filter(save_field_t field, uint8_t bit_index)
-{
-    if (bit_index > 15) return;
-
-    TIM_HandleTypeDef *timer4 = &htim4;
-    int8_t step = encoder_read_step(timer4);
-    if (step == 0) return;
-
-    uint32_t mask = (uint32_t)save_get(field);
-    mask ^= (1UL << bit_index);  // toggle exactly this bit
-    (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
-}
-
-
-
-
-
 
 
 /* ---------------------------

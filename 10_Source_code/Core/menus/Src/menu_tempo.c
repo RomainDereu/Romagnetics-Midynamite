@@ -4,7 +4,7 @@
  *  Created on: Feb 1, 2025
  *      Author: Romain Dereu
  */
-#include "_menu_controller.h" //CTRL_G
+#include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
 #include "text.h"
@@ -21,5 +21,5 @@ void screen_update_midi_tempo(void)
         { ELEM_TEXT ,  0,                     TEXT_(bpm),              UI_6x8,   80,      48     , CTRL_TEMPO_ALL },
     };
 
-    menu_ui_render(elems, sizeof(elems) / sizeof(elems[0]));
+    menu_ui_render(MIDI_TEMPO, elems, sizeof(elems) / sizeof(elems[0]));
 }

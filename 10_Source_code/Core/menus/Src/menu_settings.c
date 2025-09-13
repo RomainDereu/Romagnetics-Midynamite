@@ -4,7 +4,7 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-#include "_menu_controller.h" //CTRL_G
+#include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
 #include "text.h"
@@ -45,5 +45,5 @@ void screen_update_settings(void)
         // -------- Bottom part (always on) --------
         { ELEM_TEXT , 0,                       TEXT_(save_instruction),    UI_6x8, TXT_LEFT, B_LINE, CTRL_SETTINGS_ALWAYS },
     };
-    menu_ui_render(elems, sizeof(elems)/sizeof(elems[0]));
+    menu_ui_render(SETTINGS, elems, sizeof(elems)/sizeof(elems[0]));
 }

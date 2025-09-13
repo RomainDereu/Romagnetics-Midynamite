@@ -10,13 +10,12 @@
 #include "_menu_controller.h"
 #include "_menu_ui.h"
 #include "memory_main.h"
+#include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "threads.h"
 
-#include "text.h" //Deleted later
-#include "screen_driver.h" //Deleted later
-#include "utils.h" //For the definitions of value updating functions
-
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
+
 
 typedef struct {
     uint8_t current_menu;
@@ -30,6 +29,83 @@ static uint8_t s_menu_selects[AMOUNT_OF_MENUS] = {0};
 static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
+
+
+
+
+
+
+
+// -------------------------
+// Functions ran by each function
+// -------------------------
+static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
+    int32_t delta = __HAL_TIM_GET_COUNTER(timer) - ENCODER_CENTER;
+    if (delta <= -ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return -1; }
+    if (delta >=  ENCODER_THRESHOLD) { __HAL_TIM_SET_COUNTER(timer, ENCODER_CENTER); return +1; }
+    return 0; // no step
+}
+
+
+
+static void no_update(save_field_t field, uint8_t arg) {
+    (void)field; (void)arg;
+}
+
+static void update_value(save_field_t field, uint8_t multiplier)
+{
+    TIM_HandleTypeDef *timer = &htim4;
+
+    uint8_t active_mult = 1;
+    if (multiplier != 1) {
+        uint8_t Btn2State = HAL_GPIO_ReadPin(GPIOB, Btn2_Pin);
+        active_mult = (Btn2State == 0) ? multiplier : 1;
+    }
+
+    int8_t step = encoder_read_step(timer);
+    if (step == 0) return;
+
+    const int32_t delta = (int32_t)step * (int32_t)active_mult;
+
+    // Get current, add delta (no wrap here)
+    int32_t cur = (int32_t)save_get(field);
+    int32_t next = cur + delta;
+
+    // Let save layer apply the (single) wrap/clamp via SET
+    if (u32_fields[field]) {
+        (void)save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next);
+    } else {
+        (void)save_modify_u8(field,  SAVE_MODIFY_SET, (uint8_t)next);
+    }
+}
+
+
+
+void update_contrast(save_field_t f, uint8_t step) {
+    update_value(f, step);
+    update_contrast_ui();
+}
+
+
+
+
+//Specific logic for the channel_filter
+// Toggle one channel bit per call when a detent is seen
+static void update_channel_filter(save_field_t field, uint8_t bit_index)
+{
+    if (bit_index > 15) return;
+
+    TIM_HandleTypeDef *timer4 = &htim4;
+    int8_t step = encoder_read_step(timer4);
+    if (step == 0) return;
+
+    uint32_t mask = (uint32_t)save_get(field);
+    mask ^= (1UL << bit_index);  // toggle exactly this bit
+    (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+}
+
+
+
 
 
 // -------------------------
@@ -601,13 +677,6 @@ static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pi
     return 0;
 }
 
-static void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
-	draw_line(92, 10, 92, bottom_line);
-	uint8_t text_position = bottom_line/2;
-    const char *text_print = message->off_on[on_or_off];
-	write_1118(text_print, 95, text_position);
-}
-
 
 
 // Unified “subpage toggle” used by MODIFY and TRANSPOSE
@@ -617,45 +686,35 @@ static inline void maybe_toggle_subpage(menu_list_t field) {
   }
 }
 
-// One small tick per page (keeps update_menu tiny)
-typedef void (*MenuTickFn)(menu_list_t field);
 
-static void tick_tempo(menu_list_t field) {
 
-  //Vertical line  right of BPM
-  screen_driver_Line(64, 10, 64, 64, White);
-  //Horizontal line above On / Off
-  screen_driver_Line(0, 40, 64, 40, White);
-
+static void control_tempo(menu_list_t field) {
   //BPM recalculation
   const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
   const uint32_t rate = bpm ? (6000000u / (bpm * 24u)) : 0u;
   save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, rate);
 }
 
-static void tick_modify(menu_list_t field)    {
-midi_display_on_off(save_get(MODIFY_SENDING), LINE_4);
-maybe_toggle_subpage(field);
-draw_line(0, LINE_4, 127, LINE_4);
-
+static void control_modify(menu_list_t field) {
+	maybe_toggle_subpage(field);
 }
 
-static void tick_transpose(menu_list_t field) {
-midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
-maybe_toggle_subpage(field);
+static void control_transpose(menu_list_t field) {
+	maybe_toggle_subpage(field);
 }
 
-static void tick_settings(menu_list_t field)  {
-saving_settings_ui();
-//Bottom line above save text
-draw_line(0, LINE_4, 127, LINE_4);
+static void control_settings(menu_list_t field)  {
+	return;
 }
 
-static const MenuTickFn kMenuTick[AMOUNT_OF_MENUS] = {
-  [MIDI_TEMPO]     = tick_tempo,
-  [MIDI_MODIFY]    = tick_modify,
-  [MIDI_TRANSPOSE] = tick_transpose,
-  [SETTINGS]       = tick_settings,
+// One small tick per page (keeps update_menu tiny)
+typedef void (*individual_menu_control)(menu_list_t field);
+
+static const individual_menu_control ind_menu_control[AMOUNT_OF_MENUS] = {
+  [MIDI_TEMPO]     = control_tempo,
+  [MIDI_MODIFY]    = control_modify,
+  [MIDI_TRANSPOSE] = control_transpose,
+  [SETTINGS]       = control_settings,
 };
 
 
@@ -666,6 +725,6 @@ void update_menu(menu_list_t menu)
   const menu_list_t field = menu;
 
   menu_nav_begin_and_update(field);
-  kMenuTick[field](field);
+  ind_menu_control[field](field);
   (void)menu_nav_end_auto(field);
 }
