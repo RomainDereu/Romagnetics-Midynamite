@@ -258,17 +258,20 @@ static uint32_t ctrl_active_groups_from_ctrl_root(ctrl_group_id_t requested)
             uint32_t mask = bit(CTRL_SETTINGS_ALL) | bit(CTRL_SETTINGS_ALWAYS);
 
             uint8_t sel = s_menu_selects[MENU_SETTINGS];
-            const uint8_t t0 = SETTINGS_ROWS_G1;                          // 0 .. t0-1
-            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);          // t0 .. t1-1
-            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);      // t1 .. t2-1 (ABOUT is t2)
+            const uint8_t t0 = SETTINGS_ROWS_G1;                         // 0 .. t0-1
+            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);         // t0 .. t1-1
+            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);     // t1 .. t2-1  (ABOUT is t2)
 
             if      (sel < t0) mask |= bit(CTRL_SETTINGS_GLOBAL1);
             else if (sel < t1) mask |= bit(CTRL_SETTINGS_GLOBAL2);
             else if (sel < t2) mask |= bit(CTRL_SETTINGS_FILTER);
-            // else ABOUT: keep only ALL + ALWAYS
+            else { // ABOUT
+                mask |= bit(CTRL_SETTINGS_ABOUT);   // <-- add this
+            }
 
             return mask;
         }
+
 
         default:
             return bit(CTRL_TEMPO_ALL);
