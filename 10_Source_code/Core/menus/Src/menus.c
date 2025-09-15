@@ -94,6 +94,12 @@ void menu_change_check(){
 	  }
 }
 
+
+static void refresh_screen(void){
+	menu_list_t menu = (menu_list_t)ui_state_get(CURRENT_MENU);
+	threads_display_notify(flag_for_menu(menu));
+}
+
 static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2)
 {
     static uint8_t prev_s1 = 1;
@@ -107,6 +113,7 @@ static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pi
         // Re-read after debounce
         if (HAL_GPIO_ReadPin(port, pin1) == 0 && HAL_GPIO_ReadPin(port, pin2) == 1) {
             prev_s1 = 0;
+            refresh_screen();
             return 1;
         }
     }
@@ -125,12 +132,12 @@ void toggle_subpage(menu_list_t field) {
 
 
 void start_stop_pressed() {
-	menu_list_t m = (menu_list_t)ui_state_get(CURRENT_MENU);
-	save_field_t f = sending_field_for_menu(m);
-	if (f != SAVE_FIELD_INVALID) {
-	  save_modify_u8(f, SAVE_MODIFY_INCREMENT, 0);
-	  if (m == MENU_TEMPO) mt_start_stop(&htim2);
-	  threads_display_notify(flag_for_menu(m));
+	menu_list_t menu = (menu_list_t)ui_state_get(CURRENT_MENU);
+	save_field_t field = sending_field_for_menu(menu);
+	if (field != SAVE_FIELD_INVALID) {
+	  save_modify_u8(field, SAVE_MODIFY_INCREMENT, 0);
+	  if (menu == MENU_TEMPO) {mt_start_stop(&htim2);}
+	  refresh_screen();
 	}
 }
 
