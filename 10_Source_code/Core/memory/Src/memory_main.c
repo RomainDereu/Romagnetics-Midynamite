@@ -156,7 +156,7 @@ static void mark_field_changed(save_field_t f) {
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
-int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
+static int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
 {
     if (min > max) { int32_t t = min; min = max; max = t; }
 

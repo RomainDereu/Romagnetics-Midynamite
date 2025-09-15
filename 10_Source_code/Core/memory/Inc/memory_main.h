@@ -138,21 +138,13 @@ uint8_t save_lock_with_retries(void);
 // Main getter
 int32_t save_get(save_field_t field);
 
-
-
 // Setters / modifiers
 uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_if_set);
 uint8_t save_modify_u8 (save_field_t field, save_modify_op_t op, uint8_t  value_if_set);
 
-
-
 //Save functions in memory_flash
 void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(void);
-
-//clamp used only by tests
-int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
-
 
 #ifdef UNIT_TEST
 // Re-init RAM image to defaults and notify UI
