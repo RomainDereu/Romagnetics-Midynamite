@@ -50,6 +50,14 @@ typedef struct {
     uint8_t ctrl_group_id;
 } ui_element;
 
+// -------------------------
+// Menu switch logic
+// -------------------------
+
+
+
+uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t  ui_state_get(menu_list_t field);
 
 
 // ---------------------

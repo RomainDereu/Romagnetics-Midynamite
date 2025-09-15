@@ -87,7 +87,7 @@ static void MediumTasksThread(void *argument)
   // Initial menu draw trigger
   ui_state_modify(CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
   ui_state_modify(OLD_MENU, UI_MODIFY_SET, 99);
-  screen_refresh();
+  refresh_screen();
 
   for (;;) {
     menu_change_check();
@@ -96,7 +96,7 @@ static void MediumTasksThread(void *argument)
     uint8_t current_menu = ui_state_get(CURRENT_MENU);
 
     if (old_menu != current_menu) {
-        screen_refresh();
+    	refresh_screen();
     }
 
     update_menu(current_menu);

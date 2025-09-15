@@ -158,14 +158,6 @@ void     save_mark_all_changed(void);
 
 uint8_t  menu_nav_get_select(menu_list_t field);
 
-uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
-uint8_t  ui_state_get(menu_list_t field);
-
-static inline void screen_refresh(void) {
-    threads_display_notify(flag_for_menu((menu_list_t)ui_state_get(CURRENT_MENU)));
-}
-
-
 int8_t filter_selected_bits(save_field_t f);
 void     update_menu(menu_list_t menu);
 

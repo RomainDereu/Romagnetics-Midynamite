@@ -18,15 +18,6 @@
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
-
-typedef struct {
-    uint8_t current_menu;
-    uint8_t old_menu;
-} ui_state_t;
-
-static volatile uint8_t ui_state_busy = 0;
-static ui_state_t ui_state = {0};
-
 static uint8_t s_menu_selects[AMOUNT_OF_MENUS] = {0};
 static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
@@ -568,66 +559,6 @@ static uint8_t has_menu_changed(menu_list_t field, uint8_t current_select)
     if (data_changed) clear_all_field_changed();
 
     return (uint8_t)(sel_changed | data_changed);
-}
-
-
-// -------------------------
-// UI state
-// -------------------------
-static int ui_state_try_lock(void) {
-    if (ui_state_busy) return 0;
-    ui_state_busy = 1;
-    return 1;
-}
-static void ui_state_unlock(void) { ui_state_busy = 0; }
-
-uint8_t ui_state_get(menu_list_t field) {
-    if (!ui_state_try_lock()) return 0xFF;
-
-    uint8_t value = 0;
-    switch (field) {
-        case CURRENT_MENU: value = ui_state.current_menu; break;
-        case OLD_MENU:     value = ui_state.old_menu;     break;
-        default:           value = 0;                     break;
-    }
-    ui_state_unlock();
-    return value;
-}
-
-static uint8_t ui_state_set(menu_list_t field, uint8_t value) {
-    if (!ui_state_try_lock()) return 0;
-
-    switch (field) {
-        case CURRENT_MENU: ui_state.current_menu = value; break;
-        case OLD_MENU:     ui_state.old_menu = value;     break;
-        default: break;
-    }
-    ui_state_unlock();
-    return 1;
-}
-
-static uint8_t ui_state_increment(menu_list_t field) {
-    uint8_t value = ui_state_get(field);
-    if (value == 0xFF) return 0xFF;
-
-    switch (field) {
-        case CURRENT_MENU:
-            value = (uint8_t)((value + 1u) % AMOUNT_OF_MENUS);
-            break;
-        case OLD_MENU:
-            return 1;
-        default:
-            return 1;
-    }
-    return ui_state_set(field, value);
-}
-
-uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set) {
-    switch(op) {
-        case UI_MODIFY_INCREMENT: return ui_state_increment(field);
-        case UI_MODIFY_SET:       return ui_state_set(field, value_if_set);
-    }
-    return 0;
 }
 
 

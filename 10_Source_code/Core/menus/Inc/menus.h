@@ -40,10 +40,10 @@ void saving_settings_ui();
 void update_contrast_ui();
 
 void menu_change_check();
+void refresh_screen();
 void toggle_subpage(menu_list_t field);
 
 //Thread related
-void menu_change_check(void);
 void start_stop_pressed();
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 

@@ -95,7 +95,7 @@ void menu_change_check(){
 }
 
 
-static void refresh_screen(void){
+void refresh_screen(void){
 	menu_list_t menu = (menu_list_t)ui_state_get(CURRENT_MENU);
 	threads_display_notify(flag_for_menu(menu));
 }

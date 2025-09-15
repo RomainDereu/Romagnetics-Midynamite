@@ -12,6 +12,14 @@
 #include "screen_driver.h"
 #include "text.h"
 
+typedef struct {
+    uint8_t current_menu;
+    uint8_t old_menu;
+} ui_state_t;
+
+static volatile uint8_t ui_state_busy = 0;
+static ui_state_t ui_state = {0};
+
 void initialize_screen(void){
   screen_driver_Init();
   screen_driver_UpdateContrast();
@@ -71,6 +79,72 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
     uint32_t bit = (1u << (id - 1));
     return (active_groups_mask & bit) ? 1u : 0u;
 }
+
+
+
+// -------------------------
+// Menu switch logic
+// -------------------------
+
+static int ui_state_try_lock(void) {
+    if (ui_state_busy) return 0;
+    ui_state_busy = 1;
+    return 1;
+}
+static void ui_state_unlock(void) { ui_state_busy = 0; }
+
+uint8_t ui_state_get(menu_list_t field) {
+    if (!ui_state_try_lock()) return 0xFF;
+
+    uint8_t value = 0;
+    switch (field) {
+        case CURRENT_MENU: value = ui_state.current_menu; break;
+        case OLD_MENU:     value = ui_state.old_menu;     break;
+        default:           value = 0;                     break;
+    }
+    ui_state_unlock();
+    return value;
+}
+
+static uint8_t ui_state_set(menu_list_t field, uint8_t value) {
+    if (!ui_state_try_lock()) return 0;
+
+    switch (field) {
+        case CURRENT_MENU: ui_state.current_menu = value; break;
+        case OLD_MENU:     ui_state.old_menu = value;     break;
+        default: break;
+    }
+    ui_state_unlock();
+    return 1;
+}
+
+static uint8_t ui_state_increment(menu_list_t field) {
+    uint8_t value = ui_state_get(field);
+    if (value == 0xFF) return 0xFF;
+
+    switch (field) {
+        case CURRENT_MENU:
+            value = (uint8_t)((value + 1u) % AMOUNT_OF_MENUS);
+            break;
+        case OLD_MENU:
+            return 1;
+        default:
+            return 1;
+    }
+    return ui_state_set(field, value);
+}
+
+uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set) {
+    switch(op) {
+        case UI_MODIFY_INCREMENT: return ui_state_increment(field);
+        case UI_MODIFY_SET:       return ui_state_set(field, value_if_set);
+    }
+    return 0;
+}
+
+
+
+
 
 // -------------------------
 // Individual menu drawing
