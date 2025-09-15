@@ -333,7 +333,6 @@ static void rebuild_list_for_group(ctrl_group_id_t group)
         ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
            | flag_from_id(CTRL_SETTINGS_GLOBAL2)
            | flag_from_id(CTRL_SETTINGS_FILTER)
-           /* ABOUT excluded from list; handled as virtual row */
            | flag_from_id(CTRL_SETTINGS_ALWAYS))
         :  ctrl_active_groups_from_ctrl_root(root);
 

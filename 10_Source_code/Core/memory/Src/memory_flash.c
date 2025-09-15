@@ -217,32 +217,6 @@ HAL_StatusTypeDef store_settings(void)
     return HAL_OK;
 }
 
-//save helper functions
-void saving_settings_ui(void)
-{
-    // Needs persistent state for debounce across frames
-    static uint8_t save_btn_state = 1;
-
-    if (debounce_button(GPIOB, Btn1_Pin, &save_btn_state, 50)) {
-        // Immediate feedback
-        write_68(message->saving, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        store_settings();
-
-        write_68(message->saved, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-        osDelay(1000);
-
-        write_68(message->save_instruction, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        // Make sure the normal UI redraws ASAP after the save banner
-        threads_display_notify(flag_for_menu(MENU_SETTINGS));
-    }
-}
-
-
 void save_load_from_flash(void)
 {
     const save_struct* flash_ptr = read_setting_memory();
