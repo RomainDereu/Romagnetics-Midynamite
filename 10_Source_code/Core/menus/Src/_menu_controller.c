@@ -38,16 +38,16 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-static void no_update(save_field_t field, uint8_t arg) {
+STATIC_PRODUCTION  void no_update(save_field_t field, uint8_t arg) {
     (void)field; (void)arg;
 }
 
 //Displayed but not updated
-static void shadow_select(save_field_t field, uint8_t arg) {
+STATIC_PRODUCTION  void shadow_select(save_field_t field, uint8_t arg) {
     (void)field; (void)arg;
 }
 
-static void update_value(save_field_t field, uint8_t multiplier)
+STATIC_PRODUCTION  void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
 
@@ -74,12 +74,12 @@ static void update_value(save_field_t field, uint8_t multiplier)
     }
 }
 
-void update_contrast(save_field_t f, uint8_t step) {
+STATIC_PRODUCTION void update_contrast(save_field_t f, uint8_t step) {
     update_value(f, step);
     update_contrast_ui();
 }
 
-static void update_channel_filter(save_field_t field, uint8_t bit_index)
+STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
 {
     if (bit_index > 15) return;
 
@@ -233,7 +233,7 @@ static inline uint8_t is_bits_item(save_field_t f) {
 
 
 // ==========================================================
-//    Generic "selector -> group" engine (self-contained)
+//    Minimal generic "selector -> group" engine
 // ==========================================================
 typedef uint8_t (*compute_case_fn)(void);  // returns active case index
 
@@ -347,9 +347,7 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
     out->count = count;
 }
 
-// Always rebuild on demand for the requested (collapsed) root.
-// NOTE: For SETTINGS we must navigate the *entire* page (G1+G2+FILTER+ABOUT),
-// so we build a union list instead of only the currently active subsection.
+// Rebuild on demand. For SETTINGS, build a union list so navigation spans the whole page.
 static const CtrlActiveList* get_list_for_group(ctrl_group_id_t group)
 {
     const ctrl_group_id_t root = root_ctrl_group(group);
@@ -423,11 +421,14 @@ uint32_t ui_active_groups(void) {
     return ctrl_active_mask_for_root(root);
 }
 
-// Begin + update select (single entry point)
+
+// -------------------------
+// Begin + update select
+// -------------------------
 void menu_nav_begin_and_update(menu_list_t field) {
     if (field >= AMOUNT_OF_MENUS) return;
     const ctrl_group_id_t g = kMenuToRoot[field];
-    // No explicit rebuild; lists are rebuilt on demand
+    // No explicit caching; lists are rebuilt on demand
     menu_nav_update_select(field, g);
 }
 
@@ -477,11 +478,9 @@ static inline NavSel nav_selection(menu_list_t sel_field)
 // -------------------------
 // Unified selector cycling (Modify/Transpose only)
 // -------------------------
-static const ctrl_root_spec_t* spec_for_root(ctrl_group_id_t root) { return find_spec(root); }
-
 static save_field_t selector_to_cycle_for_root(ctrl_group_id_t root, uint32_t gid)
 {
-    const ctrl_root_spec_t *spec = spec_for_root(root);
+    const ctrl_root_spec_t *spec = find_spec(root);
     if (!spec) return SAVE_FIELD_INVALID;
 
     for (uint8_t i = 0; i < spec->switch_count; ++i) {
@@ -506,7 +505,7 @@ void select_press_menu_change(menu_list_t sel_field) {
 
     save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
     if (sel_field < AMOUNT_OF_MENUS) s_menu_selects[sel_field] = 0;
-    // No manual rebuild needed; lists rebuild on next access
+    // No rebuild needed; next calls will rebuild on demand
 }
 
 

@@ -147,6 +147,9 @@ void save_load_from_flash(void);
 HAL_StatusTypeDef store_settings(void);
 
 #ifdef UNIT_TEST
+
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
+
 // Re-init RAM image to defaults and notify UI
 void memory_init_defaults(void);
 

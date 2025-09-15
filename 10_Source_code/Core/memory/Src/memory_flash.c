@@ -247,15 +247,5 @@ void memory_set_midi_thru(uint8_t v)
     (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1u : 0u);
 }
 
-// Optional generic helpers make tests concise and avoid touching internals.
-void ut_set_u8(save_field_t f, uint8_t v)
-{
-    (void)save_modify_u8(f, SAVE_MODIFY_SET, v);
-}
-
-void ut_set_u32(save_field_t f, uint32_t v)
-{
-    (void)save_modify_u32(f, SAVE_MODIFY_SET, v);
-}
 #endif
 

@@ -11,6 +11,16 @@
 #include <stdint.h>
 #include "memory_main.h"   // for save_field_t, SAVE_FIELD_COUNT, etc.
 
+// Will be defined somewhere else once functions to be exposed aren't related to memory
+#ifndef STATIC_PRODUCTION
+#  ifdef UNIT_TEST
+#    define STATIC_PRODUCTION   /* empty: export symbol to linker */
+#  else
+#    define STATIC_PRODUCTION static
+#  endif
+#endif
+
+
 // ---------------------
 // Menu list
 // ---------------------
@@ -160,5 +170,18 @@ uint8_t  menu_nav_get_select(menu_list_t field);
 
 int8_t filter_selected_bits(save_field_t f);
 void     update_menu(menu_list_t menu);
+
+#ifdef UNIT_TEST
+void no_update(save_field_t field, uint8_t arg);
+void shadow_select(save_field_t field, uint8_t arg);
+void update_value(save_field_t field, uint8_t multiplier);
+void update_contrast(save_field_t f, uint8_t step);
+void update_channel_filter(save_field_t field, uint8_t bit_index);
+
+#endif
+
+
+
+
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
