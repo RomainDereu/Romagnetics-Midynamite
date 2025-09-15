@@ -7,7 +7,6 @@
 #include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
-#include "screen_driver.h"
 #include "text.h"
 
 void cont_update_settings()  {

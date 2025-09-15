@@ -139,7 +139,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     [SETTINGS_FILTERED_CH]       = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
 
-	[SETTINGS_ABOUT]          =    { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
+    [SETTINGS_ABOUT]             = { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
 };
 
 
@@ -224,71 +224,108 @@ static CtrlActiveList* list_for_root(ctrl_group_id_t root) {
     }
 }
 
-static inline uint32_t flag_from_id(uint32_t id) {
-    return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u;
-}
-
-typedef struct { uint8_t g1, g2, filt, total; } SettingsRowCounts;
+static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
+static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
 
 static inline uint8_t is_bits_item(save_field_t f) {
     return menu_controls[f].handler == update_channel_filter;
 }
 
-// -------------------------
-// Active-group computation per MENU
-// -------------------------
-static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
 
-static uint32_t ctrl_active_groups_from_ctrl_root(ctrl_group_id_t requested)
+// ==========================================================
+//    Generic "selector -> group" engine (self-contained)
+// ==========================================================
+typedef uint8_t (*compute_case_fn)(void);  // returns active case index
+
+typedef struct {
+    save_field_t           selector;   // SAVE_FIELD_INVALID => virtual selector
+    uint8_t                cases;      // number of cases
+    const ctrl_group_id_t *groups;     // [cases] maps case index -> ctrl group
+    compute_case_fn        compute;    // if selector==INVALID, compute() must be set
+} ctrl_switch_t;
+
+typedef struct {
+    ctrl_group_id_t        root;       // *_ALL
+    const ctrl_switch_t   *switches;
+    uint8_t                switch_count;
+    uint8_t                include_always; // e.g. Settings wants CTRL_SETTINGS_ALWAYS
+} ctrl_root_spec_t;
+
+// ---- Compute functions for cases ----
+static uint8_t mod_case_change_split(void) {
+    return (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) ? 1 : 0; // 0:CHANGE, 1:SPLIT
+}
+static uint8_t mod_case_vel(void) {
+    return (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) ? 1 : 0; // 0:CHANGED, 1:FIXED
+}
+static uint8_t transp_case_type(void) {
+    return (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) ? 1 : 0; // 0:SHIFT, 1:SCALED
+}
+static uint8_t settings_case_page(void) {
+    uint8_t sel = s_menu_selects[MENU_SETTINGS];
+    const uint8_t t0 = SETTINGS_ROWS_G1;
+    const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);
+    const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);
+    if (sel < t0) return 0;         // GLOBAL1
+    if (sel < t1) return 1;         // GLOBAL2
+    if (sel < t2) return 2;         // FILTER
+    return 3;                        // ABOUT
+}
+
+// ---- Group arrays per selector ----
+static const ctrl_group_id_t kModChangeGroups[] = { CTRL_MODIFY_CHANGE,   CTRL_MODIFY_SPLIT  };
+static const ctrl_group_id_t kModVelGroups[]    = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
+static const ctrl_group_id_t kTranspGroups[]    = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
+static const ctrl_group_id_t kSettingsGroups[]  = { CTRL_SETTINGS_GLOBAL1, CTRL_SETTINGS_GLOBAL2,
+                                                    CTRL_SETTINGS_FILTER,  CTRL_SETTINGS_ABOUT };
+
+// ---- Switch lists per root ----
+static const ctrl_switch_t kSwitchesModify[] = {
+    { MODIFY_CHANGE_OR_SPLIT, 2, kModChangeGroups, mod_case_change_split },
+    { MODIFY_VELOCITY_TYPE,   2, kModVelGroups,    mod_case_vel          },
+};
+static const ctrl_switch_t kSwitchesTranspose[] = {
+    { TRANSPOSE_TRANSPOSE_TYPE, 2, kTranspGroups, transp_case_type },
+};
+static const ctrl_switch_t kSwitchesSettings[] = {
+    { SAVE_FIELD_INVALID, 4, kSettingsGroups, settings_case_page }, // virtual selector
+};
+
+// ---- Root specs ----
+static const ctrl_root_spec_t kRootSpecs[] = {
+    { CTRL_TEMPO_ALL,     NULL,                 0, 0 },
+    { CTRL_MODIFY_ALL,    kSwitchesModify,      (uint8_t)(sizeof(kSwitchesModify)/sizeof(kSwitchesModify[0])), 0 },
+    { CTRL_TRANSPOSE_ALL, kSwitchesTranspose,   (uint8_t)(sizeof(kSwitchesTranspose)/sizeof(kSwitchesTranspose[0])), 0 },
+    { CTRL_SETTINGS_ALL,  kSwitchesSettings,    (uint8_t)(sizeof(kSwitchesSettings)/sizeof(kSwitchesSettings[0])), 1 }, // include ALWAYS
+};
+
+static const ctrl_root_spec_t* find_spec(ctrl_group_id_t root) {
+    for (size_t i = 0; i < sizeof(kRootSpecs)/sizeof(kRootSpecs[0]); ++i)
+        if (kRootSpecs[i].root == root) return &kRootSpecs[i];
+    return NULL;
+}
+
+static uint32_t ctrl_active_mask_for_root(ctrl_group_id_t root)
 {
-    switch (requested) {
-        case CTRL_TEMPO_ALL:
-            return bit(CTRL_TEMPO_ALL);
+    uint32_t mask = bit(root);
 
-        case CTRL_MODIFY_ALL: {
-            uint32_t mask = bit(CTRL_MODIFY_ALL);
-            mask |= (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT)
-                    ? bit(CTRL_MODIFY_SPLIT) : bit(CTRL_MODIFY_CHANGE);
-            mask |= (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL)
-                    ? bit(CTRL_MODIFY_VEL_FIXED) : bit(CTRL_MODIFY_VEL_CHANGED);
-            return mask;
-        }
+    const ctrl_root_spec_t *spec = find_spec(root);
+    if (!spec) return mask;
 
-        case CTRL_TRANSPOSE_ALL: {
-            uint32_t mask = bit(CTRL_TRANSPOSE_ALL);
-            mask |= (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SHIFT)
-                    ? bit(CTRL_TRANSPOSE_SHIFT) : bit(CTRL_TRANSPOSE_SCALED);
-            return mask;
-        }
+    if (spec->include_always) mask |= bit(CTRL_SETTINGS_ALWAYS);
 
-        case CTRL_SETTINGS_ALL: {
-            uint32_t mask = bit(CTRL_SETTINGS_ALL) | bit(CTRL_SETTINGS_ALWAYS);
-
-            uint8_t sel = s_menu_selects[MENU_SETTINGS];
-            const uint8_t t0 = SETTINGS_ROWS_G1;
-            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);
-            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);
-
-            if      (sel < t0) mask |= bit(CTRL_SETTINGS_GLOBAL1);
-            else if (sel < t1) mask |= bit(CTRL_SETTINGS_GLOBAL2);
-            else if (sel < t2) mask |= bit(CTRL_SETTINGS_FILTER);
-            else { // ABOUT
-                mask |= bit(CTRL_SETTINGS_ABOUT);   // <-- add this
-            }
-
-            return mask;
-        }
-
-
-        default:
-            return bit(CTRL_TEMPO_ALL);
+    for (uint8_t i = 0; i < spec->switch_count; ++i) {
+        const ctrl_switch_t *sw = &spec->switches[i];
+        uint8_t idx = sw->compute ? sw->compute() : 0;
+        if (idx >= sw->cases) idx = 0;
+        mask |= bit(sw->groups[idx]);
     }
+    return mask;
 }
 
 
-
 // -------------------------
-// Build the active fields list (ABOUT is virtual)
+// Build the active fields list (ABOUT is real row; inert rows skipped)
 // -------------------------
 static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
@@ -310,23 +347,27 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
     out->count = count;
 }
 
-static void rebuild_list_for_group(ctrl_group_id_t group)
+// Always rebuild on demand for the requested (collapsed) root.
+// NOTE: For SETTINGS we must navigate the *entire* page (G1+G2+FILTER+ABOUT),
+// so we build a union list instead of only the currently active subsection.
+static const CtrlActiveList* get_list_for_group(ctrl_group_id_t group)
 {
     const ctrl_group_id_t root = root_ctrl_group(group);
 
-    const uint32_t mask = (root == CTRL_SETTINGS_ALL)
-        ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
-           | flag_from_id(CTRL_SETTINGS_GLOBAL2)
-           | flag_from_id(CTRL_SETTINGS_FILTER)
-	       | flag_from_id(CTRL_SETTINGS_ABOUT)
-           | flag_from_id(CTRL_SETTINGS_ALWAYS))
-        :  ctrl_active_groups_from_ctrl_root(root);
+    uint32_t mask;
+    if (root == CTRL_SETTINGS_ALL) {
+        mask =   flag_from_id(CTRL_SETTINGS_GLOBAL1)
+               | flag_from_id(CTRL_SETTINGS_GLOBAL2)
+               | flag_from_id(CTRL_SETTINGS_FILTER)
+               | flag_from_id(CTRL_SETTINGS_ABOUT)
+               | flag_from_id(CTRL_SETTINGS_ALWAYS);
+    } else {
+        mask = ctrl_active_mask_for_root(root);
+    }
 
-    ctrl_build_active_fields(mask, list_for_root(root));
-}
-
-static const CtrlActiveList* get_list_for_group(ctrl_group_id_t group) {
-    return list_for_root(root_ctrl_group(group));
+    CtrlActiveList *dst = list_for_root(root);
+    ctrl_build_active_fields(mask, dst);
+    return dst;
 }
 
 
@@ -379,19 +420,15 @@ uint32_t ui_active_groups(void) {
     uint8_t m = ui_state_get(CURRENT_MENU);
     if (m == 0xFF || m >= AMOUNT_OF_MENUS) m = MENU_SETTINGS;
     const ctrl_group_id_t root = kMenuToRoot[m];
-    return ctrl_active_groups_from_ctrl_root(root);
+    return ctrl_active_mask_for_root(root);
 }
 
 // Begin + update select (single entry point)
 void menu_nav_begin_and_update(menu_list_t field) {
     if (field >= AMOUNT_OF_MENUS) return;
-    ctrl_group_id_t g = kMenuToRoot[field];
-    rebuild_list_for_group(g);       // before reading encoder
+    const ctrl_group_id_t g = kMenuToRoot[field];
+    // No explicit rebuild; lists are rebuilt on demand
     menu_nav_update_select(field, g);
-
-    if (g == CTRL_SETTINGS_ALL) {
-        rebuild_list_for_group(g);   // recalc after ABOUT movement
-    }
 }
 
 
@@ -437,31 +474,39 @@ static inline NavSel nav_selection(menu_list_t sel_field)
 }
 
 
-static inline save_field_t selector_for_press(const NavSel *s)
+// -------------------------
+// Unified selector cycling (Modify/Transpose only)
+// -------------------------
+static const ctrl_root_spec_t* spec_for_root(ctrl_group_id_t root) { return find_spec(root); }
+
+static save_field_t selector_to_cycle_for_root(ctrl_group_id_t root, uint32_t gid)
 {
-    if (s->field == SAVE_FIELD_INVALID) return SAVE_FIELD_INVALID;
+    const ctrl_root_spec_t *spec = spec_for_root(root);
+    if (!spec) return SAVE_FIELD_INVALID;
 
-    switch (s->root) {
-        case CTRL_TRANSPOSE_ALL:
-            return TRANSPOSE_TRANSPOSE_TYPE;
-
-        case CTRL_MODIFY_ALL:
-            if (s->gid == CTRL_MODIFY_VEL_CHANGED || s->gid == CTRL_MODIFY_VEL_FIXED)
-                return MODIFY_VELOCITY_TYPE;
-            return MODIFY_CHANGE_OR_SPLIT;
-
-        default:
-            return SAVE_FIELD_INVALID;
+    for (uint8_t i = 0; i < spec->switch_count; ++i) {
+        const ctrl_switch_t *sw = &spec->switches[i];
+        if (sw->selector == SAVE_FIELD_INVALID) continue; // virtual selector: not cyclable
+        for (uint8_t k = 0; k < sw->cases; ++k) {
+            if (sw->groups[k] == gid) return sw->selector;
+        }
     }
+    return SAVE_FIELD_INVALID;
 }
 
 void select_press_menu_change(menu_list_t sel_field) {
     const NavSel s   = nav_selection(sel_field);
-    const save_field_t tgt = selector_for_press(&s);
+    if (s.field == SAVE_FIELD_INVALID) return;
+
+    // Only Modify/Transpose have cyclable selectors; Settings/Tempo are inert on press
+    if (s.root == CTRL_SETTINGS_ALL || s.root == CTRL_TEMPO_ALL) return;
+
+    const save_field_t tgt = selector_to_cycle_for_root(s.root, s.gid);
     if (tgt == SAVE_FIELD_INVALID) return;
+
     save_modify_u8(tgt, SAVE_MODIFY_INCREMENT, 0);
     if (sel_field < AMOUNT_OF_MENUS) s_menu_selects[sel_field] = 0;
-    rebuild_list_for_group(kMenuToRoot[sel_field]);
+    // No manual rebuild needed; lists rebuild on next access
 }
 
 

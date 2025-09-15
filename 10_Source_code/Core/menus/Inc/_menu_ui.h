@@ -65,6 +65,8 @@ uint8_t  ui_state_get(menu_list_t field);
 // ---------------------
 void initialize_screen(void);
 
+void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
 
 #endif /* MENU_INC_MENU_UI_H_ */

@@ -593,9 +593,7 @@ void write_underline_1624(const char* str, uint8_t x_align, uint8_t y_align, uin
 }
 
 
-void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
-	screen_driver_Line(x1, y1, x2, y2, White );
-}
+
 
 
 /* Draw a filled rectangle */

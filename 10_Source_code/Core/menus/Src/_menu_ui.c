@@ -61,6 +61,10 @@ void initialize_screen(void){
   screen_driver_UpdateContrast();
 }
 
+void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2){
+	screen_driver_Line(x1, y1, x2, y2, White );
+}
+
 static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     if (!s) return;
     switch (font) {
