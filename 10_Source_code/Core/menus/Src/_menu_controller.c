@@ -15,6 +15,10 @@
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "threads.h"
 
+#define SETTINGS_ROWS_G1      3u
+#define SETTINGS_ROWS_G2      3u
+#define SETTINGS_ROWS_FILTER 16u
+
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 
@@ -223,71 +227,54 @@ static inline uint8_t is_bits_item(save_field_t f) {
     return menu_controls[f].handler == update_channel_filter;
 }
 
-static SettingsRowCounts settings_row_counts(void) {
-  SettingsRowCounts c = (SettingsRowCounts){0,0,0,0};
-  for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
-    const menu_controls_t mt = menu_controls[f];
-    const uint8_t span = is_bits_item((save_field_t)f) ? 16u : 1u;
-
-    if      (mt.groups == CTRL_SETTINGS_GLOBAL1) c.g1   = (uint8_t)(c.g1   + span);
-    else if (mt.groups == CTRL_SETTINGS_GLOBAL2) c.g2   = (uint8_t)(c.g2   + span);
-    else if (mt.groups == CTRL_SETTINGS_FILTER)  c.filt = (uint8_t)(c.filt + span);
-  }
-  c.total = (uint8_t)(c.g1 + c.g2 + c.filt);
-  return c;
-}
-
-
 // -------------------------
 // Active-group computation per MENU
 // -------------------------
+static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
+
 static uint32_t ctrl_active_groups_from_ctrl_root(ctrl_group_id_t requested)
 {
     switch (requested) {
         case CTRL_TEMPO_ALL:
-            return flag_from_id(CTRL_TEMPO_ALL);
+            return bit(CTRL_TEMPO_ALL);
 
         case CTRL_MODIFY_ALL: {
-            uint32_t mask = flag_from_id(CTRL_MODIFY_ALL);
-
-            int page = (int)save_get(MODIFY_CHANGE_OR_SPLIT);
-            if (page == MIDI_MODIFY_SPLIT) mask |= flag_from_id(CTRL_MODIFY_SPLIT);
-            else                           mask |= flag_from_id(CTRL_MODIFY_CHANGE);
-
-            int vel = (int)save_get(MODIFY_VELOCITY_TYPE);
-            if (vel == MIDI_MODIFY_FIXED_VEL) mask |= flag_from_id(CTRL_MODIFY_VEL_FIXED);
-            else                               mask |= flag_from_id(CTRL_MODIFY_VEL_CHANGED);
-
+            uint32_t mask = bit(CTRL_MODIFY_ALL);
+            mask |= (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT)
+                    ? bit(CTRL_MODIFY_SPLIT) : bit(CTRL_MODIFY_CHANGE);
+            mask |= (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL)
+                    ? bit(CTRL_MODIFY_VEL_FIXED) : bit(CTRL_MODIFY_VEL_CHANGED);
             return mask;
         }
 
         case CTRL_TRANSPOSE_ALL: {
-            uint32_t mask = flag_from_id(CTRL_TRANSPOSE_ALL);
-            int t = (int)save_get(TRANSPOSE_TRANSPOSE_TYPE);
-            if (t == MIDI_TRANSPOSE_SHIFT) mask |= flag_from_id(CTRL_TRANSPOSE_SHIFT);
-            else                            mask |= flag_from_id(CTRL_TRANSPOSE_SCALED);
+            uint32_t mask = bit(CTRL_TRANSPOSE_ALL);
+            mask |= (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SHIFT)
+                    ? bit(CTRL_TRANSPOSE_SHIFT) : bit(CTRL_TRANSPOSE_SCALED);
             return mask;
         }
 
         case CTRL_SETTINGS_ALL: {
-            uint32_t mask = flag_from_id(CTRL_SETTINGS_ALL)
-                          | flag_from_id(CTRL_SETTINGS_ALWAYS);
+            uint32_t mask = bit(CTRL_SETTINGS_ALL) | bit(CTRL_SETTINGS_ALWAYS);
 
-            const SettingsRowCounts rc = settings_row_counts();
-            const uint8_t sel = s_menu_selects[MENU_SETTINGS];
+            uint8_t sel = s_menu_selects[MENU_SETTINGS];
+            const uint8_t t0 = SETTINGS_ROWS_G1;                          // 0 .. t0-1
+            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);          // t0 .. t1-1
+            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);      // t1 .. t2-1 (ABOUT is t2)
 
-            if (sel < rc.g1)                         mask |= flag_from_id(CTRL_SETTINGS_GLOBAL1);
-            else if (sel < (uint8_t)(rc.g1 + rc.g2)) mask |= flag_from_id(CTRL_SETTINGS_GLOBAL2);
-            else if (sel < rc.total)                 mask |= flag_from_id(CTRL_SETTINGS_FILTER);
-            else                                     /* ABOUT (virtual) */ ;
+            if      (sel < t0) mask |= bit(CTRL_SETTINGS_GLOBAL1);
+            else if (sel < t1) mask |= bit(CTRL_SETTINGS_GLOBAL2);
+            else if (sel < t2) mask |= bit(CTRL_SETTINGS_FILTER);
+            // else ABOUT: keep only ALL + ALWAYS
 
             return mask;
         }
 
         default:
-            return flag_from_id(CTRL_TEMPO_ALL);
+            return bit(CTRL_TEMPO_ALL);
     }
 }
+
 
 
 // -------------------------

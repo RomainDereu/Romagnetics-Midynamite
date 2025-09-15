@@ -80,8 +80,6 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
     return (active_groups_mask & bit) ? 1u : 0u;
 }
 
-
-
 // -------------------------
 // Menu switch logic
 // -------------------------
@@ -141,10 +139,6 @@ uint8_t ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_s
     }
     return 0;
 }
-
-
-
-
 
 // -------------------------
 // Individual menu drawing
