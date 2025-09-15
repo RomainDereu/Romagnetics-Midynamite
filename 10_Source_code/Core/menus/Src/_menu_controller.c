@@ -42,6 +42,11 @@ static void no_update(save_field_t field, uint8_t arg) {
     (void)field; (void)arg;
 }
 
+//Displayed but not updated
+static void shadow_select(save_field_t field, uint8_t arg) {
+    (void)field; (void)arg;
+}
+
 static void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
@@ -133,6 +138,8 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_CHANNEL_FILTER]    = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
 
     [SETTINGS_FILTERED_CH]       = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
+
+	[SETTINGS_ABOUT]          =    { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
 };
 
 
@@ -258,9 +265,9 @@ static uint32_t ctrl_active_groups_from_ctrl_root(ctrl_group_id_t requested)
             uint32_t mask = bit(CTRL_SETTINGS_ALL) | bit(CTRL_SETTINGS_ALWAYS);
 
             uint8_t sel = s_menu_selects[MENU_SETTINGS];
-            const uint8_t t0 = SETTINGS_ROWS_G1;                         // 0 .. t0-1
-            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);         // t0 .. t1-1
-            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);     // t1 .. t2-1  (ABOUT is t2)
+            const uint8_t t0 = SETTINGS_ROWS_G1;
+            const uint8_t t1 = (uint8_t)(t0 + SETTINGS_ROWS_G2);
+            const uint8_t t2 = (uint8_t)(t1 + SETTINGS_ROWS_FILTER);
 
             if      (sel < t0) mask |= bit(CTRL_SETTINGS_GLOBAL1);
             else if (sel < t1) mask |= bit(CTRL_SETTINGS_GLOBAL2);
@@ -290,9 +297,6 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
         const menu_controls_t mt = menu_controls[f];
 
-        // Do NOT materialize ABOUT in the list (it's a virtual extra row)
-        if (mt.groups == CTRL_SETTINGS_ABOUT) continue;
-
         // Quick reject: group not active
         const uint32_t gm = flag_from_id(mt.groups);
         if ((gm & active_groups) == 0) continue;
@@ -314,6 +318,7 @@ static void rebuild_list_for_group(ctrl_group_id_t group)
         ? (  flag_from_id(CTRL_SETTINGS_GLOBAL1)
            | flag_from_id(CTRL_SETTINGS_GLOBAL2)
            | flag_from_id(CTRL_SETTINGS_FILTER)
+	       | flag_from_id(CTRL_SETTINGS_ABOUT)
            | flag_from_id(CTRL_SETTINGS_ALWAYS))
         :  ctrl_active_groups_from_ctrl_root(root);
 
@@ -354,7 +359,6 @@ static void menu_nav_update_select(menu_list_t field, ctrl_group_id_t group)
 
     const CtrlActiveList* list = get_list_for_group(group);
     uint8_t rows = ctrl_row_count(list);
-    if (group == CTRL_SETTINGS_ALL) rows = (uint8_t)(rows + 1); // ABOUT is virtual last row
 
     if (rows == 0) { if (field < AMOUNT_OF_MENUS) s_menu_selects[field] = 0; return; }
     if (sel >= rows) sel = (uint8_t)(rows - 1);
