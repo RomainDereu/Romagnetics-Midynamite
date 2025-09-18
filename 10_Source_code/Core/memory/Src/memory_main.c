@@ -57,10 +57,6 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SAVE_DATA_VALIDITY]         = {      0,  0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },
 };
 
-// ---------------------
-// Runtime save copy
-// ---------------------
-
 static volatile uint8_t save_busy = 0;
 
 // ---------------------
