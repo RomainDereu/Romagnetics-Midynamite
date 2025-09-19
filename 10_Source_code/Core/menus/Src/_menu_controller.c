@@ -367,16 +367,11 @@ static uint8_t ctrl_row_count(const CtrlActiveList *list)
 // -------------------------
 static void menu_nav_update_select(menu_list_t page)
 {
-    const int8_t step = encoder_read_step(&htim3);
-
     uint8_t sel = (page < AMOUNT_OF_MENUS) ? s_menu_selects[page] : 0;
-    if (page < AMOUNT_OF_MENUS) s_prev_selects[page] = sel;
-    if (step == 0) return;
 
-    // If this page has a position-based selector, navigation spans union of its groups
-    const selector_def_t *pos_sel = first_pos_selector_for_page(page);
-
+    // Compute rows BEFORE saving prev / reading step
     uint8_t rows = 0;
+    const selector_def_t *pos_sel = first_pos_selector_for_page(page);
     if (pos_sel) {
         CtrlActiveList u = {0};
         build_union_for_groups(pos_sel->groups, pos_sel->cases, &u);
@@ -389,12 +384,20 @@ static void menu_nav_update_select(menu_list_t page)
     if (rows == 0) { if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = 0; return; }
     if (sel >= rows) sel = (uint8_t)(rows - 1);
 
+    // Now that sel is valid for this page, record prev
+    if (page < AMOUNT_OF_MENUS) s_prev_selects[page] = sel;
+
+    // Finally read the encoder and apply
+    const int8_t step = encoder_read_step(&htim3);
+    if (step == 0) return;
+
     int16_t v = (int16_t)sel + (int16_t)step;
     while (v < 0)     v += rows;
     while (v >= rows) v -= rows;
 
     if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = (uint8_t)v;
 }
+
 
 uint8_t menu_nav_get_select(menu_list_t page) {
     return (page < AMOUNT_OF_MENUS) ? s_menu_selects[page] : 0;
