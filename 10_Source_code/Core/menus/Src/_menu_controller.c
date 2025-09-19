@@ -23,7 +23,6 @@ static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
-
 // -------------------------
 // Encoder & value helpers (logic-agnostic)
 // -------------------------
@@ -34,10 +33,10 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-static void no_update(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
-static void shadow_select(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
+STATIC_PRODUCTION void no_update(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
+STATIC_PRODUCTION void shadow_select(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
 
-static void update_value(save_field_t field, uint8_t multiplier)
+STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
     uint8_t active_mult = 1;
@@ -63,7 +62,7 @@ void update_contrast(save_field_t f, uint8_t step) {
     update_contrast_ui();
 }
 
-static void update_channel_filter(save_field_t field, uint8_t bit_index)
+STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
 {
     if (bit_index > 15) return;
     int8_t step = encoder_read_step(&htim4);
@@ -72,7 +71,6 @@ static void update_channel_filter(save_field_t field, uint8_t bit_index)
     mask ^= (1UL << bit_index);
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
 }
-
 
 // -------------------------
 // Controller table (DATA)
@@ -123,7 +121,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_ABOUT]             = { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
 };
 
-
 // -------------------------
 // Utility (pure logic, data-agnostic)
 // -------------------------
@@ -158,10 +155,6 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
     return rows;
 }
 
-
-// ==========================================================
-//   Selectors: page-driven (no roots)
-// ==========================================================
 typedef uint8_t (*selector_compute_fn_t)(void);
 
 typedef enum {
@@ -171,14 +164,11 @@ typedef enum {
 
 typedef struct selector_def_s {
     selector_kind_t   kind;
-    uint8_t           cases;        // number of subgroup options
-    const ctrl_group_id_t *groups;  // array[cases]
-    // save-based:
-    save_field_t      field;        // SAVE_FIELD_INVALID if none
-    selector_compute_fn_t compute;  // optional override for index
-    uint8_t           cycle_on_press; // 1 => cyclable on press
-    // position-based:
-    // page to which this selector belongs (also set for save-based)
+    uint8_t           cases;
+    const ctrl_group_id_t *groups;
+    save_field_t      field;
+    selector_compute_fn_t compute;
+    uint8_t           cycle_on_press;
     menu_list_t       page;
 } selector_def_t;
 
@@ -280,7 +270,6 @@ static menu_list_t page_for_ctrl_id(uint32_t id) {
     return MENU_TEMPO;
 }
 
-
 // -------------------------
 // Active lists cache per page (logic uses these only)
 // -------------------------
@@ -302,7 +291,6 @@ static CtrlActiveList* list_for_page(menu_list_t page) {
         default:             return &s_menu_lists.tempo_item_list;
     }
 }
-
 
 // -------------------------
 // Active-mask from selector DATA (page-driven)
@@ -326,7 +314,6 @@ static uint32_t ctrl_active_mask_for_page(menu_list_t page)
     }
     return mask;
 }
-
 
 // -------------------------
 // Build active list (pure logic)
@@ -352,7 +339,6 @@ static const CtrlActiveList* get_list_for_page(menu_list_t page)
     return dst;
 }
 
-
 // -------------------------
 // Row counting (pure logic)
 // -------------------------
@@ -360,7 +346,6 @@ static uint8_t ctrl_row_count(const CtrlActiveList *list)
 {
     return rows_for_list(list);
 }
-
 
 // -------------------------
 // Navigation/select (pure logic)
@@ -398,7 +383,6 @@ static void menu_nav_update_select(menu_list_t page)
     if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = (uint8_t)v;
 }
 
-
 uint8_t menu_nav_get_select(menu_list_t page) {
     return (page < AMOUNT_OF_MENUS) ? s_menu_selects[page] : 0;
 }
@@ -413,7 +397,6 @@ void menu_nav_begin_and_update(menu_list_t page) {
     if (page >= AMOUNT_OF_MENUS) return;
     menu_nav_update_select(page);
 }
-
 
 // -------------------------
 // Selection resolution (pure logic)
@@ -478,7 +461,6 @@ static inline NavSel nav_selection(menu_list_t page)
     return s;
 }
 
-
 // -------------------------
 // Press-to-cycle (pure logic; data decides if/what cycles)
 // -------------------------
@@ -507,7 +489,6 @@ void select_press_menu_change(menu_list_t page) {
     }
 }
 
-
 // -------------------------
 // Apply/toggle selected row (pure logic)
 // -------------------------
@@ -524,7 +505,6 @@ static inline void toggle_selected_row(menu_list_t page)
     const NavSel s = nav_selection(page);
     nav_apply_selection(&s);
 }
-
 
 // -------------------------
 // Selection queries (pure logic)
@@ -543,7 +523,6 @@ uint8_t ui_is_field_selected(save_field_t f)
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
 }
-
 
 // -------------------------
 // Change-bit tracking (unchanged)
@@ -575,7 +554,6 @@ static uint8_t has_menu_changed(menu_list_t page, uint8_t current_select)
 
     return (uint8_t)(sel_changed | data_changed);
 }
-
 
 // -------------------------
 // End-of-frame + update flow (pure logic)

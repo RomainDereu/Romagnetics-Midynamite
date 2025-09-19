@@ -1,5 +1,4 @@
-/*
- * _menu_controller.h
+/* _menu_controller.h
  *
  *  Created on: Sep 8, 2025
  *      Author: Astaa
@@ -19,7 +18,6 @@
 #    define STATIC_PRODUCTION static
 #  endif
 #endif
-
 
 // ---------------------
 // Menu list
@@ -56,11 +54,9 @@ typedef enum {
     CTRL_SETTINGS_FILTER,
     CTRL_SETTINGS_ALL,
     CTRL_SETTINGS_ABOUT,
-	CTRL_SETTINGS_ALWAYS,
+    CTRL_SETTINGS_ALWAYS,
 
 } ctrl_group_id_t;
-
-
 
 // ---------------------
 // Modify ops
@@ -70,20 +66,17 @@ typedef enum {
     UI_MODIFY_SET,
 } ui_modify_op_t;
 
-
 // ---------------------
 // Field change bits
 // ---------------------
 #define CHANGE_BITS_WORDS (((SAVE_FIELD_COUNT) + 31) / 32)
 extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 
-
 // ---------------------
 // Wrapping options
 // ---------------------
 #define NO_WRAP  0
 #define WRAP     1
-
 
 // ---------------------
 // Menu controls
@@ -111,55 +104,35 @@ typedef struct {
     uint8_t  count;
 } CtrlActiveList;
 
-
 // =====================
 // Display flag helpers
 // =====================
 
-// 1) Display flags
-typedef enum {
-    FLAG_TEMPO      = (1u << 0),
-    FLAG_MODIFY     = (1u << 1),
-    FLAG_TRANSPOSE  = (1u << 2),
-    FLAG_SETTINGS   = (1u << 3)
-} DisplayFlags_t;
+// Forward declaration used elsewhere
+void threads_display_notify(uint32_t flags);
 
-// 2) Forward declarations used by helpers (implemented elsewhere)
-void    threads_display_notify(uint32_t flags);
-
-// 3) Menu → flag lookup
-static const DisplayFlags_t kMenuFlag[AMOUNT_OF_MENUS] = {
-    /* MIDI_TEMPO     */ FLAG_TEMPO,
-    /* MIDI_MODIFY    */ FLAG_MODIFY,
-    /* MIDI_TRANSPOSE */ FLAG_TRANSPOSE,
-    /* SETTINGS       */ FLAG_SETTINGS
-};
-
-// 4) Menu → "sending" save_field_t lookup
-static const save_field_t kMenuSendingField[AMOUNT_OF_MENUS] = {
-    /* MIDI_TEMPO     */ TEMPO_CURRENTLY_SENDING,
-    /* MIDI_MODIFY    */ MODIFY_SENDING,
-    /* MIDI_TRANSPOSE */ TRANSPOSE_SENDING,
-    /* SETTINGS       */ SAVE_FIELD_INVALID
-};
-
-// 5) Small helpers
-static inline DisplayFlags_t flag_for_menu(menu_list_t m) {
-    return (m < AMOUNT_OF_MENUS) ? kMenuFlag[m] : FLAG_TEMPO;
+// Return a single-bit mask for a menu.
+static inline uint32_t flag_for_menu(menu_list_t m) {
+    return (m < AMOUNT_OF_MENUS) ? (1u << (uint32_t)m) : (1u << (uint32_t)MENU_TEMPO);
 }
 
+// Menu → "sending" save_field_t lookup
 static inline save_field_t sending_field_for_menu(menu_list_t m) {
-    return (m < AMOUNT_OF_MENUS) ? kMenuSendingField[m] : SAVE_FIELD_INVALID;
+    switch (m) {
+        case MENU_TEMPO:     return TEMPO_CURRENTLY_SENDING;
+        case MENU_MODIFY:    return MODIFY_SENDING;
+        case MENU_TRANSPOSE: return TRANSPOSE_SENDING;
+        case MENU_SETTINGS:  return SAVE_FIELD_INVALID;
+        default:             return SAVE_FIELD_INVALID;
+    }
 }
-
-
 
 // ---------------------
 // UI API
 // ---------------------
 void select_press_menu_change(menu_list_t sel_field);
 
-int8_t ui_selected_bit(save_field_t f);
+int8_t   ui_selected_bit(save_field_t f);
 uint8_t  ui_is_field_selected(save_field_t f);
 uint32_t ui_active_groups(void);
 
@@ -168,7 +141,7 @@ void     save_mark_all_changed(void);
 
 uint8_t  menu_nav_get_select(menu_list_t field);
 
-int8_t filter_selected_bits(save_field_t f);
+int8_t   filter_selected_bits(save_field_t f);
 void     update_menu(menu_list_t menu);
 
 #ifdef UNIT_TEST
@@ -177,11 +150,6 @@ void shadow_select(save_field_t field, uint8_t arg);
 void update_value(save_field_t field, uint8_t multiplier);
 void update_contrast(save_field_t f, uint8_t step);
 void update_channel_filter(save_field_t field, uint8_t bit_index);
-
 #endif
-
-
-
-
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
