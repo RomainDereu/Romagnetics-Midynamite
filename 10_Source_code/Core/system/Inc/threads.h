@@ -12,6 +12,13 @@ typedef struct {
   TIM_HandleTypeDef *htim4; // encoder B
 } threads_ctx_t;
 
+typedef enum {
+    FLAG_TEMPO      = (1u << 0),
+    FLAG_MODIFY     = (1u << 1),
+    FLAG_TRANSPOSE  = (1u << 2),
+    FLAG_SETTINGS   = (1u << 3)
+} DisplayFlags_t;
+
 // Start all application threads (display, midi_core, medium_tasks)
 void threads_start();
 void threads_display_notify(uint32_t flags);
