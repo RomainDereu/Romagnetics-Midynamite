@@ -9,10 +9,8 @@
 #include "cmsis_os.h" //For osDelay
 #include "main.h"
 #include "_menu_controller.h"
-#include "_menu_ui.h"
 #include "menus.h"
 #include "memory_main.h"
-#include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "threads.h"
 
 extern TIM_HandleTypeDef htim3;
@@ -211,7 +209,7 @@ uint8_t menu_nav_get_select(menu_list_t page) {
 }
 
 uint32_t ui_active_groups(void) {
-    uint8_t m = ui_state_get(CURRENT_MENU);
+    uint8_t m = get_current_menu(CURRENT_MENU);
     if (m >= AMOUNT_OF_MENUS) m = 0;
     return ctrl_active_mask_for_page((menu_list_t)m); // from menus.c
 }

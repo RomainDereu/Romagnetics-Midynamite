@@ -91,8 +91,8 @@ static void MediumTasksThread(void *argument)
   for (;;) {
     menu_change_check();
 
-    uint8_t old_menu    = ui_state_get(OLD_MENU);
-    uint8_t current_menu = ui_state_get(CURRENT_MENU);
+    uint8_t old_menu    = get_current_menu(OLD_MENU);
+    uint8_t current_menu = get_current_menu(CURRENT_MENU);
 
     if (old_menu != current_menu) {
     	refresh_screen();
@@ -101,7 +101,7 @@ static void MediumTasksThread(void *argument)
     update_menu(current_menu);
 
 
-    current_menu = ui_state_get(CURRENT_MENU);
+    current_menu = get_current_menu(CURRENT_MENU);
     ui_state_modify(OLD_MENU, UI_MODIFY_SET, current_menu);
 
     // Btn3 toggles "currently sending" depending on menu

@@ -22,7 +22,7 @@ extern TIM_HandleTypeDef htim2;
 // ==============================
 
 void screen_update_menu(uint32_t flag){
-    uint8_t current = ui_state_get(CURRENT_MENU);
+    uint8_t current = get_current_menu(CURRENT_MENU);
     if (flag & flag_for_menu((menu_list_t)current)) {
         switch (current) {
             case MENU_TEMPO:     ui_update_tempo();          break;
@@ -34,7 +34,7 @@ void screen_update_menu(uint32_t flag){
 }
 
 void ui_code_menu(){
-    uint8_t current = ui_state_get(CURRENT_MENU);
+    uint8_t current = get_current_menu(CURRENT_MENU);
     switch (current) {
         case MENU_TEMPO:     ui_code_tempo();     break;
         case MENU_MODIFY:    ui_code_modify();    break;
@@ -44,7 +44,7 @@ void ui_code_menu(){
 }
 
 void cont_update_menu(menu_list_t field){
-    uint8_t current = ui_state_get(CURRENT_MENU);
+    uint8_t current = get_current_menu(CURRENT_MENU);
     switch (current) {
         case MENU_TEMPO:     cont_update_tempo();          break;
         case MENU_MODIFY:    cont_update_modify(field);    break;
@@ -344,7 +344,7 @@ void menu_change_check(){
 }
 
 void refresh_screen(){
-    menu_list_t menu = (menu_list_t)ui_state_get(CURRENT_MENU);
+    menu_list_t menu = (menu_list_t)get_current_menu(CURRENT_MENU);
     threads_display_notify(flag_for_menu(menu));
 }
 
@@ -378,7 +378,7 @@ void toggle_subpage(menu_list_t field) {
 }
 
 void start_stop_pressed() {
-    menu_list_t menu = (menu_list_t)ui_state_get(CURRENT_MENU);
+    menu_list_t menu = (menu_list_t)get_current_menu(CURRENT_MENU);
     save_field_t field = sending_field_for_menu(menu);
     if (field != SAVE_FIELD_INVALID) {
         save_modify_u8(field, SAVE_MODIFY_INCREMENT, 0);

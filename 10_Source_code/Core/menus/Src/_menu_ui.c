@@ -38,7 +38,7 @@ static inline void ui_menu_set(uint8_t v) {
 static inline void ui_menu_next(void) { ui_menu_set((uint8_t)(get_menus_state()->current_menu + 1u)); }
 
 // Public API kept stable
-uint8_t ui_state_get(menu_list_t field) {
+uint8_t get_current_menu(menu_list_t field) {
     switch (field) {
         case CURRENT_MENU: return ui_menu_current();
         case OLD_MENU:     return ui_menu_old();
