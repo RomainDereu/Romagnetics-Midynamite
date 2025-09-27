@@ -9,6 +9,7 @@
 #include "cmsis_os.h" //For osDelay
 #include "main.h"
 #include "_menu_controller.h"
+#include "_menu_ui.h"
 #include "menus.h"
 #include "memory_main.h"
 #include "threads.h"
@@ -55,9 +56,9 @@ STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
     else                  { (void)save_modify_u8 (field, SAVE_MODIFY_SET, (uint8_t) next); }
 }
 
-void update_contrast(save_field_t f, uint8_t step) {
+STATIC_PRODUCTION update_contrast(save_field_t f, uint8_t step) {
     update_value(f, step);
-    update_contrast_ui();
+    screen_driver_UpdateContrast();
 }
 
 STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)

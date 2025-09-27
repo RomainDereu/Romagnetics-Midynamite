@@ -5,7 +5,7 @@
  *      Author: Astaa
  */
 #include <stddef.h>
-
+#include "cmsis_os.h" //For osDelay
 #include "main.h" // Timer
 #include "menus.h"
 #include "_menu_ui.h"
@@ -330,10 +330,6 @@ void saving_settings_ui()
         // Make sure the normal UI redraws ASAP after the save banner
         threads_display_notify(flag_for_menu(MENU_SETTINGS));
     }
-}
-
-void update_contrast_ui() {
-    screen_driver_UpdateContrast();
 }
 
 void menu_change_check(){
