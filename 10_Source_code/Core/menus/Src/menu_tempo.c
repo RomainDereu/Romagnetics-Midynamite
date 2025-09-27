@@ -4,7 +4,6 @@
  *  Created on: Feb 1, 2025
  *      Author: Romain Dereu
  */
-#include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
 #include "screen_driver.h"

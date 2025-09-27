@@ -7,7 +7,7 @@
 
 #include <string.h>
 #include "memory_main.h"
-#include "_menu_controller.h"
+#include "_menu_controller.h" // for  save_mark_all_changed
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_flash.h"
 #include "utils.h"

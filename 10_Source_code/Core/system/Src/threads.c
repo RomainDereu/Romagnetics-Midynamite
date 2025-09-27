@@ -2,7 +2,6 @@
 #include "memory_main.h"
 #include "_menu_ui.h" //menu change check
 
-#include "_menu_controller.h"
 #include "menus.h"
 
 #include "midi_transform.h"

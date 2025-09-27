@@ -9,7 +9,6 @@
 #include "main.h" // Timer
 #include "menus.h"
 #include "_menu_ui.h"
-#include "_menu_controller.h"
 #include "midi_tempo.h"
 #include "screen_driver.h"
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)

@@ -5,7 +5,6 @@
  *      Author: Romain Dereu
  */
 #include "memory_main.h"
-#include "_menu_controller.h" //CTRL_G + enum
 #include "_menu_ui.h"
 #include "menus.h"
 #include "text.h"

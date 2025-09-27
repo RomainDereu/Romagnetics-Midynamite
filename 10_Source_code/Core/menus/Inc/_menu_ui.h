@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "_menu_controller.h" // For enum
+#include "_menu_controller.h" // Access to menu items
 
 #define LINE_0 0
 #define LINE_1 15
@@ -53,8 +53,10 @@ typedef struct {
 // -------------------------
 // Menu switch logic
 // -------------------------
-
-
+typedef enum {
+    UI_MODIFY_INCREMENT = 0,
+    UI_MODIFY_SET,
+} ui_modify_op_t;
 
 uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t  ui_state_get(menu_list_t field);

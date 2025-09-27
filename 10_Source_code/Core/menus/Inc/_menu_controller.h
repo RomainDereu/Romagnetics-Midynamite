@@ -45,13 +45,7 @@ typedef enum {
 
 } ctrl_group_id_t;
 
-// ---------------------
-// Modify ops
-// ---------------------
-typedef enum {
-    UI_MODIFY_INCREMENT = 0,
-    UI_MODIFY_SET,
-} ui_modify_op_t;
+
 
 // ---------------------
 // Field change bits
