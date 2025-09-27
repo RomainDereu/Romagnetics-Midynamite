@@ -6,8 +6,7 @@
  */
 #include "_menu_ui.h"
 #include "menus.h"
-#include "screen_driver.h"
-#include "text.h"
+#include "screen_driver.h" //draw_line
 
 void cont_update_tempo() {
   //BPM recalculation

@@ -8,11 +8,10 @@
 #include "cmsis_os.h" //For osDelay
 #include "main.h" // Timer
 #include "menus.h"
-#include "_menu_ui.h"
-#include "midi_tempo.h"
+#include "_menu_ui.h" // menu change functions
+#include "midi_tempo.h" //mt_start_stop
 #include "screen_driver.h" //Font
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
-#include "text.h"
 #include "utils.h" // Debounce
 
 extern TIM_HandleTypeDef htim2;

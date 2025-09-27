@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "memory_main.h"   // save_field_t, SAVE_FIELD_COUNT
+#include "text.h" //definition of message
 
 #define TEXT_(m) ((const char*)(message->m))
 

@@ -6,10 +6,7 @@
  */
 
 #include "_menu_ui.h"
-#include "menus.h"
-#include "memory_main.h"
 #include "screen_driver.h"
-#include "text.h"
 
 typedef struct {
     uint8_t current_menu;

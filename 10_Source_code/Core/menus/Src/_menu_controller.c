@@ -2,18 +2,12 @@
  * _menu_controller.c
  *
  *  Created on: Sep 8, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  *
- *  Data-driven: logic is menu/group-agnostic. Menu selectors/data live in menus.c.
  */
-#include "cmsis_os.h" //For osDelay
-#include "main.h"
 #include "_menu_controller.h"
-#include "_menu_ui.h"
-#include "menus.h"
-#include "memory_main.h"
-#include "screen_driver.h"
-#include "threads.h"
+#include "_menu_ui.h" //get_current_menu
+#include "screen_driver.h" //update_contrast
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;

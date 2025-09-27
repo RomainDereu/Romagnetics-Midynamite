@@ -4,13 +4,8 @@
  *  Created on: Aug 23, 2025
  *      Author: Romain Dereu
  */
-
-#include <string.h>
-
 #include "memory_main.h"
 #include "_menu_controller.h" //For STATIC_PRODUCTION
-#include "stm32f4xx_hal.h"
-
 
 // Expose for tests
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
