@@ -4,13 +4,36 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
+#include "main.h" // Timer
 #include "_menu_ui.h"
 #include "menus.h"
+#include "screen_driver.h"
 #include "text.h"
 #include "cmsis_os.h" //osDelay
+#include "utils.h" // Debounce
+
 
 void cont_update_settings()  {
-    saving_settings_ui();
+    // Needs persistent state for debounce across frames
+    static uint8_t save_btn_state = 1;
+
+    if (debounce_button(GPIOB, Btn1_Pin, &save_btn_state, 50)) {
+        // Immediate feedback
+        write_68(message->saving, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
+
+        store_settings();
+
+        write_68(message->saved, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
+        osDelay(1000);
+
+        write_68(message->save_instruction, TXT_LEFT, B_LINE);
+        screen_driver_UpdateScreen();
+
+        // Make sure the normal UI redraws ASAP after the save banner
+        threads_display_notify(flag_for_menu(MENU_SETTINGS));
+    }
 }
 
 

@@ -10,7 +10,7 @@
 #include "menus.h"
 #include "_menu_ui.h"
 #include "midi_tempo.h"
-#include "screen_driver.h"
+#include "screen_driver.h" //Font
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
 #include "utils.h" // Debounce
@@ -308,29 +308,6 @@ uint8_t menus_cycle_on_press(menu_list_t page)
 // ==============================
 // Save helper functions / small UI IO
 // ==============================
-void saving_settings_ui()
-{
-    // Needs persistent state for debounce across frames
-    static uint8_t save_btn_state = 1;
-
-    if (debounce_button(GPIOB, Btn1_Pin, &save_btn_state, 50)) {
-        // Immediate feedback
-        write_68(message->saving, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        store_settings();
-
-        write_68(message->saved, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-        osDelay(1000);
-
-        write_68(message->save_instruction, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        // Make sure the normal UI redraws ASAP after the save banner
-        threads_display_notify(flag_for_menu(MENU_SETTINGS));
-    }
-}
 
 void menu_change_check(){
     static uint8_t button_pressed = 0;
