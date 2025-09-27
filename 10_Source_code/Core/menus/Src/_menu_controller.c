@@ -4,7 +4,7 @@
  *  Created on: Sep 8, 2025
  *      Author: Astaa
  *
- *  Data-driven: logic is menu/group-agnostic. Page-driven selectors; no kRoots.
+ *  Data-driven: logic is menu/group-agnostic. Menu selectors/data live in menus.c.
  */
 #include "cmsis_os.h" //For osDelay
 #include "main.h"
@@ -131,21 +131,6 @@ static inline uint8_t is_bits_item(save_field_t f) {
     return menu_controls[f].handler == update_channel_filter;
 }
 
-static void build_union_for_groups(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out) {
-    uint8_t count = 0;
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-        const menu_controls_t mt = menu_controls[f];
-        if (mt.handler == no_update) continue;   // skip inert rows
-        for (uint8_t g = 0; g < n_groups; ++g) {
-            if (mt.groups == groups[g]) {
-                out->fields_idx[count++] = f;
-                break;
-            }
-        }
-    }
-    out->count = count;
-}
-
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
     for (uint8_t i = 0; i < list->count; ++i) {
@@ -153,166 +138,6 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
         rows += is_bits_item(f) ? 16 : 1;
     }
     return rows;
-}
-
-typedef uint8_t (*selector_compute_fn_t)(void);
-
-typedef enum {
-    SEL_SAVE_BASED = 0,
-    SEL_POSITION_BASED
-} selector_kind_t;
-
-typedef struct selector_def_s {
-    selector_kind_t   kind;
-    uint8_t           cases;
-    const ctrl_group_id_t *groups;
-    save_field_t      field;
-    selector_compute_fn_t compute;
-    uint8_t           cycle_on_press;
-    menu_list_t       page;
-} selector_def_t;
-
-static uint8_t idx_from_save(save_field_t f, uint8_t cases) {
-    int32_t v = (f != SAVE_FIELD_INVALID) ? save_get(f) : 0;
-    if (v < 0) v = 0;
-    uint8_t idx = (uint8_t)v;
-    return (idx < cases) ? idx : 0;
-}
-
-// ----- save-based computes (data) -----
-static uint8_t sel_mod_change_split(void) { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)   ? 1 : 0; }
-static uint8_t sel_mod_vel_type(void)    { return (save_get(MODIFY_VELOCITY_TYPE)    == MIDI_MODIFY_FIXED_VEL)? 1 : 0; }
-static uint8_t sel_transpose_type(void)  { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED)? 1 : 0; }
-static uint8_t sel_fixed0(void)          { return 0; } // for single-case selectors (ALWAYS)
-
-// -------------------------
-// Selector table (DATA only, page-driven)
-// -------------------------
-static const selector_def_t kSelectors[] = {
-    // TEMPO: ALWAYS include CTRL_TEMPO_ALL
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_TEMPO_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TEMPO },
-
-    // MODIFY: ALWAYS + type splits
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_MODIFY },
-
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT },
-      MODIFY_CHANGE_OR_SPLIT,  sel_mod_change_split, 1, MENU_MODIFY },
-
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED },
-      MODIFY_VELOCITY_TYPE,    sel_mod_vel_type,     1, MENU_MODIFY },
-
-    // TRANSPOSE: ALWAYS + type split
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TRANSPOSE },
-
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED },
-      TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
-
-    // SETTINGS: ALWAYS + page-position selector
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_SETTINGS_ALWAYS },
-      SAVE_FIELD_INVALID,       sel_fixed0,           0, MENU_SETTINGS },
-
-    { SEL_POSITION_BASED, 4,
-      (const ctrl_group_id_t[]){ CTRL_SETTINGS_GLOBAL1, CTRL_SETTINGS_GLOBAL2, CTRL_SETTINGS_FILTER, CTRL_SETTINGS_ABOUT },
-      SAVE_FIELD_INVALID,       NULL,                  0, MENU_SETTINGS },
-};
-
-static const size_t kSelectorsCount = sizeof(kSelectors)/sizeof(kSelectors[0]);
-
-// helpers to find selectors for a given page
-static const selector_def_t* first_pos_selector_for_page(menu_list_t page) {
-    for (size_t i = 0; i < kSelectorsCount; ++i)
-        if (kSelectors[i].page == page && kSelectors[i].kind == SEL_POSITION_BASED) return &kSelectors[i];
-    return NULL;
-}
-
-// compute index for a position-based selector from its page row
-static uint8_t idx_from_position_selector(const selector_def_t *sel) {
-    CtrlActiveList u = {0};
-    build_union_for_groups(sel->groups, sel->cases, &u);
-
-    const uint8_t sel_row = (sel->page < AMOUNT_OF_MENUS) ? s_menu_selects[sel->page] : 0;
-    uint8_t cursor = 0;
-
-    for (uint8_t i = 0; i < u.count; ++i) {
-        const save_field_t f = (save_field_t)u.fields_idx[i];
-        const uint8_t span  = is_bits_item(f) ? 16u : 1u;
-
-        if (sel_row < (uint8_t)(cursor + span)) {
-            const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
-            for (uint8_t k = 0; k < sel->cases; ++k)
-                if (sel->groups[k] == gid) return k;
-            return 0;
-        }
-        cursor = (uint8_t)(cursor + span);
-    }
-    return 0;
-}
-
-// page lookup for a given ctrl group id (scan selectors)
-static menu_list_t page_for_ctrl_id(uint32_t id) {
-    for (size_t i = 0; i < kSelectorsCount; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
-        for (uint8_t k = 0; k < sel->cases; ++k) {
-            if (sel->groups[k] == id) return sel->page;
-        }
-    }
-    // Fallback (shouldn't happen if EVERY page has an ALWAYS selector covering *_ALL)
-    return MENU_TEMPO;
-}
-
-// -------------------------
-// Active lists cache per page (logic uses these only)
-// -------------------------
-typedef struct {
-    CtrlActiveList tempo_item_list;
-    CtrlActiveList modify_item_list;
-    CtrlActiveList transpose_item_list;
-    CtrlActiveList settings_item_list;
-} MenuActiveLists;
-
-static MenuActiveLists s_menu_lists;
-
-static CtrlActiveList* list_for_page(menu_list_t page) {
-    switch (page) {
-        case MENU_TEMPO:     return &s_menu_lists.tempo_item_list;
-        case MENU_MODIFY:    return &s_menu_lists.modify_item_list;
-        case MENU_TRANSPOSE: return &s_menu_lists.transpose_item_list;
-        case MENU_SETTINGS:  return &s_menu_lists.settings_item_list;
-        default:             return &s_menu_lists.tempo_item_list;
-    }
-}
-
-// -------------------------
-// Active-mask from selector DATA (page-driven)
-// -------------------------
-static uint32_t ctrl_active_mask_for_page(menu_list_t page)
-{
-    uint32_t mask = 0;
-
-    for (size_t i = 0; i < kSelectorsCount; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
-        if (sel->page != page) continue;
-
-        uint8_t idx = 0;
-        if (sel->kind == SEL_SAVE_BASED) {
-            idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->cases);
-        } else { // SEL_POSITION_BASED
-            idx = idx_from_position_selector(sel);
-        }
-        if (idx >= sel->cases) idx = 0;
-        mask |= bit(sel->groups[idx]);
-    }
-    return mask;
 }
 
 // -------------------------
@@ -333,8 +158,8 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
 
 static const CtrlActiveList* get_list_for_page(menu_list_t page)
 {
-    const uint32_t mask = ctrl_active_mask_for_page(page);
-    CtrlActiveList *dst = list_for_page(page);
+    const uint32_t mask = ctrl_active_mask_for_page(page); // from menus.c
+    CtrlActiveList *dst = list_for_page(page);             // from menus.c
     ctrl_build_active_fields(mask, dst);
     return dst;
 }
@@ -356,10 +181,8 @@ static void menu_nav_update_select(menu_list_t page)
 
     // Compute rows BEFORE saving prev / reading step
     uint8_t rows = 0;
-    const selector_def_t *pos_sel = first_pos_selector_for_page(page);
-    if (pos_sel) {
-        CtrlActiveList u = {0};
-        build_union_for_groups(pos_sel->groups, pos_sel->cases, &u);
+    CtrlActiveList u = {0};
+    if (build_union_for_position_page(page, &u)) { // from menus.c
         rows = rows_for_list(&u);
     } else {
         const CtrlActiveList* list = get_list_for_page(page);
@@ -390,7 +213,7 @@ uint8_t menu_nav_get_select(menu_list_t page) {
 uint32_t ui_active_groups(void) {
     uint8_t m = ui_state_get(CURRENT_MENU);
     if (m >= AMOUNT_OF_MENUS) m = 0;
-    return ctrl_active_mask_for_page((menu_list_t)m);
+    return ctrl_active_mask_for_page((menu_list_t)m); // from menus.c
 }
 
 void menu_nav_begin_and_update(menu_list_t page) {
@@ -420,11 +243,8 @@ static inline NavSel nav_selection(menu_list_t page)
     s.bit   = 0xFF;
     s.field = SAVE_FIELD_INVALID;
 
-    const selector_def_t *pos_sel = first_pos_selector_for_page(page);
-    if (pos_sel) {
-        CtrlActiveList u = {0};
-        build_union_for_groups(pos_sel->groups, pos_sel->cases, &u);
-
+    CtrlActiveList u = {0};
+    if (build_union_for_position_page(page, &u)) { // position-based page (from menus.c)
         uint8_t cursor = 0;
         for (uint8_t i = 0; i < u.count; ++i) {
             const save_field_t f = (save_field_t)u.fields_idx[i];
@@ -462,29 +282,10 @@ static inline NavSel nav_selection(menu_list_t page)
 }
 
 // -------------------------
-// Press-to-cycle (pure logic; data decides if/what cycles)
+// Press-to-cycle (menus decides if/what cycles)
 // -------------------------
-static const selector_def_t* save_selector_owning_gid_in_page(menu_list_t page, uint32_t gid)
-{
-    for (size_t i = 0; i < kSelectorsCount; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
-        if (sel->page != page) continue;
-        if (sel->kind != SEL_SAVE_BASED) continue;
-        for (uint8_t k = 0; k < sel->cases; ++k)
-            if (sel->groups[k] == gid) return sel;
-    }
-    return NULL;
-}
-
 void select_press_menu_change(menu_list_t page) {
-    const NavSel s = nav_selection(page);
-    if (s.field == SAVE_FIELD_INVALID) return;
-
-    const selector_def_t *owner = save_selector_owning_gid_in_page(page, s.gid);
-    if (!owner || !owner->cycle_on_press) return;
-
-    if (owner->field != SAVE_FIELD_INVALID) {
-        save_modify_u8(owner->field, SAVE_MODIFY_INCREMENT, 0);
+    if (menus_cycle_on_press(page)) { // from menus.c
         if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = 0;
     }
 }
@@ -511,7 +312,7 @@ static inline void toggle_selected_row(menu_list_t page)
 // -------------------------
 int8_t ui_selected_bit(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return -1;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups);
+    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
     const NavSel s = nav_selection(page);
     return (s.field == f && s.is_bits) ? (int8_t)s.bit : -1;
 }
@@ -519,7 +320,7 @@ int8_t ui_selected_bit(save_field_t f) {
 uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups);
+    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
     const NavSel s = nav_selection(page);
     return (s.field == f) ? 1u : 0u;
 }

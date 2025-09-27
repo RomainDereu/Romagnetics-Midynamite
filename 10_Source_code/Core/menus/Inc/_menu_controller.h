@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "memory_main.h"   // for save_field_t, SAVE_FIELD_COUNT, etc.
+#include "menus.h" // for menu_list_t, CtrlActiveList, list_for_page
 
 // Will be defined somewhere else once functions to be exposed aren't related to memory
 #ifndef STATIC_PRODUCTION
@@ -18,20 +19,6 @@
 #    define STATIC_PRODUCTION static
 #  endif
 #endif
-
-// ---------------------
-// Menu list
-// ---------------------
-typedef enum {
-    MENU_TEMPO = 0,
-    MENU_MODIFY,
-    MENU_TRANSPOSE,
-    MENU_SETTINGS,
-    AMOUNT_OF_MENUS,   // number of menus
-    CURRENT_MENU,      // UI state index
-    OLD_MENU,          // UI state index
-    STATE_FIELD_COUNT  // total UI state slots
-} menu_list_t;
 
 // ---------------------
 // UI submenu id
@@ -92,18 +79,6 @@ typedef struct {
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
-// ---------------------
-// Active list
-// ---------------------
-#ifndef MENU_ACTIVE_LIST_CAP
-#define MENU_ACTIVE_LIST_CAP 64
-#endif
-
-typedef struct {
-    uint16_t fields_idx[MENU_ACTIVE_LIST_CAP];
-    uint8_t  count;
-} CtrlActiveList;
-
 // =====================
 // Display flag helpers
 // =====================
@@ -130,7 +105,7 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
 // ---------------------
 // UI API
 // ---------------------
-void select_press_menu_change(menu_list_t sel_field);
+void     select_press_menu_change(menu_list_t sel_field);
 
 int8_t   ui_selected_bit(save_field_t f);
 uint8_t  ui_is_field_selected(save_field_t f);
@@ -141,7 +116,7 @@ void     save_mark_all_changed(void);
 
 uint8_t  menu_nav_get_select(menu_list_t field);
 
-int8_t   filter_selected_bits(save_field_t f);
+int8_t   filter_selected_bits(save_field_t f); // (if implemented elsewhere)
 void     update_menu(menu_list_t menu);
 
 #ifdef UNIT_TEST
