@@ -58,7 +58,7 @@ typedef enum {
     UI_MODIFY_SET,
 } ui_modify_op_t;
 
-uint8_t  ui_state_modify(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
+uint8_t  set_current_menu(menu_list_t field, ui_modify_op_t op, uint8_t value_if_set);
 uint8_t  get_current_menu(menu_list_t field);
 
 

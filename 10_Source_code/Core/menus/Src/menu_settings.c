@@ -7,6 +7,7 @@
 #include "_menu_ui.h"
 #include "menus.h"
 #include "text.h"
+#include "cmsis_os.h" //osDelay
 
 void cont_update_settings()  {
     saving_settings_ui();

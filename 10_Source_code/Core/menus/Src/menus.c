@@ -5,7 +5,7 @@
  *      Author: Astaa
  */
 #include <stddef.h>
-#include "cmsis_os.h"
+
 #include "main.h" // Timer
 #include "menus.h"
 #include "_menu_ui.h"
@@ -339,7 +339,7 @@ void update_contrast_ui() {
 void menu_change_check(){
     static uint8_t button_pressed = 0;
     if (debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)) {
-        ui_state_modify(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
+        set_current_menu(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
     }
 }
 

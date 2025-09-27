@@ -84,8 +84,8 @@ static void MediumTasksThread(void *argument)
   (void)argument;
 
   // Initial menu draw trigger
-  ui_state_modify(CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
-  ui_state_modify(OLD_MENU, UI_MODIFY_SET, 99);
+  set_current_menu(CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
+  set_current_menu(OLD_MENU, UI_MODIFY_SET, 99);
   refresh_screen();
 
   for (;;) {
@@ -102,7 +102,7 @@ static void MediumTasksThread(void *argument)
 
 
     current_menu = get_current_menu(CURRENT_MENU);
-    ui_state_modify(OLD_MENU, UI_MODIFY_SET, current_menu);
+    set_current_menu(OLD_MENU, UI_MODIFY_SET, current_menu);
 
     // Btn3 toggles "currently sending" depending on menu
     static uint8_t OldBtn3State = 1;

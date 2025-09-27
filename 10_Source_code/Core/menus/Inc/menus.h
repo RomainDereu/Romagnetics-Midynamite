@@ -65,8 +65,6 @@ void screen_update_menu(uint32_t flag);
 void ui_code_menu();
 void cont_update_menu(menu_list_t field);
 
-void saving_settings_ui();
-void update_contrast_ui();
 
 void menu_change_check();
 void refresh_screen();
